@@ -1,0 +1,20 @@
+# Modules sit in group folders; each one's name is its folder's (`-m storage-room`). Sorted within each group.
+modules:
+  # The host Android runs, and the app it runs: navigation, the container, the screens.
+  - apps/androidApp
+  - apps/app
+
+  # `core` is the app (pure Kotlin); the rest are replaceable shells round it: a storage engine, the design
+  # system, and the helpers tests share.
+  - libs/core
+  - libs/core-testing
+  - libs/design
+  - libs/storage-room
+
+  # Build plugins: `./kotlin check lint`, `./kotlin do format`, `./kotlin check detekt`.
+  - tooling/detekt-plugin
+  - tooling/lint-plugin
+
+plugins:
+  - ./tooling/detekt-plugin
+  - ./tooling/lint-plugin

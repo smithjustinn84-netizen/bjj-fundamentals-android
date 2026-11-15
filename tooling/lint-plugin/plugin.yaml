@@ -1,0 +1,18 @@
+tasks:
+  lint:
+    action: !dev.justinsmith.bjj.lint.lint
+      moduleRoot: ${module.rootDir}
+      editorConfig: ${project.rootDir}/.editorconfig
+      warningsOnly: ${pluginSettings.warningsOnly}
+  format:
+    action: !dev.justinsmith.bjj.lint.format
+      moduleRoot: ${module.rootDir}
+      editorConfig: ${project.rootDir}/.editorconfig
+
+checks:
+  - name: lint
+    performedBy: lint
+
+commands:
+  - name: format
+    performedBy: format

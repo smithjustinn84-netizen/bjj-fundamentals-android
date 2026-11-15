@@ -1,0 +1,19 @@
+# The app: its models, its rules (spaced repetition, the teaching order, search, the map's layout, a figure's
+# geometry), its starter content, the storage interface and the services written against it. Pure Kotlin: nothing
+# from Android, Compose or the JVM's own library, so every rule is tested on the plain JVM in milliseconds.
+description: "The app minus its UI: models, rules, starter content, AppStorage, services"
+product:
+  type: kmp/lib
+  platforms: [android, jvm]
+
+apply:
+  - //templates/tested-lib.module-template.yaml
+
+dependencies:
+  # Exported: the models are @Serializable, and the storage interface speaks in Flows.
+  - $kotlin.serialization.json: exported
+  - $libs.kotlinx.coroutines.core: exported
+
+settings:
+  kotlin:
+    serialization: json

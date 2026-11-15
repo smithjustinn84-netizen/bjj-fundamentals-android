@@ -1,0 +1,54 @@
+# The app itself: the composition root (`bindings/`, `di/`), its one back stack (`nav/`, App.kt) and every
+# screen (`ui/<screen>/`). What the Android host runs.
+description: "The app: back stack, DI container, screens"
+product:
+  type: kmp/lib
+  platforms: [android, jvm]
+
+apply:
+  - //templates/tested-lib.module-template.yaml
+  - //templates/compose-stability.module-template.yaml
+
+dependencies:
+  - //libs/design: exported
+  - //libs/core
+  # Named only in `di/`, which picks the engine (tools/check_layers.py).
+  - //libs/storage-room
+  - $compose.runtime
+  - $compose.foundation: exported
+  - $compose.ui
+  - $compose.preview
+  - $libs.androidx.lifecycle.viewmodel: exported
+  - $libs.androidx.lifecycle.viewmodel.compose: exported
+  - $libs.androidx.lifecycle.runtime.compose
+  - $libs.androidx.lifecycle.viewmodel.navigation3
+  - $libs.androidx.navigation3.runtime
+  - $libs.androidx.navigation3.ui
+  - $libs.koin.core
+  - $libs.koin.compose
+  - $libs.koin.core.viewmodel
+  - $libs.koin.compose.viewmodel
+  - $libs.kermit
+
+dependencies@android:
+  - $compose.uiTooling
+  # The system's file pickers, for a backup saved and opened.
+  - $libs.androidx.activity.compose
+
+# Compose UI tests run on the desktop JVM only: common `test/` also runs as Android local tests, which have
+# no Robolectric here, so `runComposeUiTest` lives in `test@jvm/`.
+test-dependencies@jvm:
+  - $compose.uiTest
+  # Skiko's native renderer; without it `runComposeUiTest` fails with LibraryLoadException.
+  - $compose.desktop.currentOs
+  # Dispatchers.Main for viewModelScope: the tests compose the real routes.
+  - $libs.kotlinx.coroutines.swing
+  # `verify()`, which checks the whole Koin graph by reflection (JVM only).
+  - $libs.koin.test
+
+settings:
+  compose:
+    enabled: true
+  kotlin:
+    # The navigation keys are @Serializable, for the saved back stack.
+    serialization: json

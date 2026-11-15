@@ -1,0 +1,9 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <!-- BjjPalette.bg: the window behind the app, so nothing flashes white before the first frame. -->
+    <color name="ground">#FFEFE6D2</color>
+    <!-- The launcher icon: paper, the belt and its bar. -->
+    <color name="icon_paper">#FFF5EFDD</color>
+    <color name="icon_belt">#FFD23B2A</color>
+    <color name="icon_ink">#FF17140F</color>
+</resources>

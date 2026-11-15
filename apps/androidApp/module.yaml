@@ -1,0 +1,31 @@
+description: "Android host: manifest, resources"
+product: android/app
+
+apply:
+  - //templates/compose-stability.module-template.yaml
+
+dependencies:
+  - //apps/app
+  - $libs.koin.core
+  - $libs.androidx.activity.compose
+
+settings:
+  compose: enabled
+  android:
+    namespace: dev.justinsmith.bjj
+    applicationId: dev.justinsmith.bjj
+    # Pinned rather than left to the toolchain's defaults, so a toolchain upgrade cannot silently
+    # move the SDK level the app is compiled and tested against.
+    compileSdk: 37
+    targetSdk: 37
+    minSdk: 26
+    versionCode: 1
+    versionName: "0.1.0"
+  kotlin:
+    allWarningsAsErrors: true
+
+plugins:
+  lint-plugin:
+    enabled: true
+  detekt-plugin:
+    enabled: true

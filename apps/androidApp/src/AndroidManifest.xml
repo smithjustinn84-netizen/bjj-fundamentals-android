@@ -1,0 +1,30 @@
+<?xml version="1.0" encoding="utf-8"?>
+<manifest xmlns:android="http://schemas.android.com/apk/res/android">
+
+    <!-- The one thing that contacts another site: YouTube's player, for a study item's bookmarked video
+         (VideoPlayer, in app). A normal permission: granted at install, no prompt. -->
+    <uses-permission android:name="android.permission.INTERNET"/>
+    <!-- Whether to show that player or the drawing: offline, the drawing. Also normal, no prompt. -->
+    <uses-permission android:name="android.permission.ACCESS_NETWORK_STATE"/>
+
+    <application
+            android:name=".BjjApplication"
+            android:allowBackup="true"
+            android:icon="@mipmap/ic_launcher"
+            android:label="@string/app_name"
+            android:roundIcon="@mipmap/ic_launcher"
+            android:supportsRtl="true"
+            android:theme="@style/Theme.Bjj">
+        <activity
+                android:exported="true"
+                android:name=".MainActivity"
+                android:windowSoftInputMode="adjustResize">
+            <intent-filter>
+                <action android:name="android.intent.action.MAIN"/>
+
+                <category android:name="android.intent.category.LAUNCHER"/>
+            </intent-filter>
+        </activity>
+    </application>
+
+</manifest>

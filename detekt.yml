@@ -1,0 +1,158 @@
+# Overrides on top of detekt's default config (the plugin passes --build-upon-default-config). Only
+# list what differs from https://github.com/detekt/detekt/blob/v2.0.0-alpha.6/detekt-core/src/main/resources/default-detekt-config.yml
+# Formatting is ktlint's job (`./kotlin check lint`); detekt's ktlint wrapper is deliberately not added.
+
+naming:
+  FunctionNaming:
+    # Composables are PascalCase functions by convention.
+    ignoreAnnotated: ['Composable']
+    # The default only knows Gradle's test dirs; Amper also has test@<platform>/. Backticked test names. The
+    # storage contract in core-testing is a test class that lives in a library, so other modules can extend it.
+    excludes: ['**/test/**', '**/test@*/**', '**/core-testing/**']
+  InvalidPackageDeclaration:
+    # Amper's src/ is the package root, with no dev/justinsmith/bjj/ directories above it.
+    rootPackage: 'dev.justinsmith.bjj'
+    # The plugins keep their own package (…bjj.lint, …bjj.detekt) directly in src/. Paths are relative to a
+    # module's group folder.
+    excludes: ['**/lint-plugin/**', '**/detekt-plugin/**']
+  MatchingDeclarationName:
+    # Off for the same reason as ktlint's filename rule (.editorconfig): expect/actual files are named
+    # after the expect side (Platform.android.kt holds AndroidPlatform), plugin files after their role.
+    active: false
+
+complexity:
+  CyclomaticComplexMethod:
+    # A `when` that maps each enum value to one expression is a table, not branching logic.
+    ignoreSimpleWhenEntries: true
+  LongMethod:
+    # Compose layouts put one named argument per line, so a modest layout runs past the default 60.
+    allowedLines: 80
+  LongParameterList:
+    # Stateless screens take their state plus one callback per event; defaulted params are optional.
+    ignoreDefaultParameters: true
+  TooManyFunctions:
+    # Private functions count too: a screen file that keeps growing private composables is how a god
+    # file starts. A Route/Screen pair plus a dozen small private pieces fits; more wants splitting.
+    allowedFunctionsPerFile: 15
+    allowedFunctionsPerClass: 15
+
+style:
+  ForbiddenImport:
+    # One container per process, started by the app's entry points (`initAppKoin`) and nowhere else: a library
+    # or a test that started or stopped the global one would leak it between tests. Tests build their own.
+    active: true
+    forbiddenImports:
+      - value: 'org.koin.core.context.startKoin'
+        reason: 'Only the app starts the container: initAppKoin.'
+      - value: 'org.koin.core.context.stopKoin'
+        reason: 'Only the app stops the container: stopAppKoin.'
+      - value: 'org.koin.core.context.GlobalContext'
+        reason: 'Take what you need by constructor: only the app reaches the container itself.'
+    # The app module (paths are relative to a module's group folder) and its hosts.
+    excludes: ['**/app/src/**', '**/app/src@*/**', '**/androidApp/**']
+  MagicNumber:
+    # As FunctionNaming: cover Amper's test@<platform>/ dirs, and the tests that live in core-testing.
+    excludes: ['**/test/**', '**/test@*/**', '**/core-testing/**']
+  ReturnCount:
+    # Early-return guards (`if (state.isDone) return state`) read better than nesting.
+    excludeGuardClauses: true
+  UnusedPrivateFunction:
+    # Previews are private and only reached by the IDE's preview tooling.
+    ignoreAnnotated: ['Preview', 'PreviewFormFactors']
+
+# Compose rules (io.nlopez.compose.rules:detekt). Rules that need type resolution are skipped, since the
+# plugin runs detekt in light mode.
+Compose:
+  ComposableAnnotationNaming:
+    active: true
+  ComposableNaming:
+    active: true
+  ComposableNestingDepth:
+    active: false
+  ComposableParamOrder:
+    active: true
+  CompositionLocalAllowlist:
+    active: true
+    # The theme's own locals, read through BjjTheme like MaterialTheme's; and the colour text and icons take
+    # where they stand, which a painted button or block sets for what it holds.
+    allowedCompositionLocals: ['LocalBjjPalette', 'LocalArtPalette', 'LocalContentColor']
+  CompositionLocalNaming:
+    active: true
+  ConditionHoist:
+    active: true
+  ContentEmitterReturningValues:
+    active: true
+  ContentTrailingLambda:
+    active: true
+  ContentSlotReused:
+    active: true
+  DefaultsVisibility:
+    active: true
+  InvalidReadOnlyComposable:
+    active: true
+  LambdaParameterEventTrailing:
+    active: true
+  LambdaParameterInRestartableEffect:
+    active: true
+  Material2:
+    # The app draws its own components over foundation; this catches a stray androidx.compose.material import.
+    active: true
+  MissingNonRestartableComposable:
+    active: true
+  MissingReadOnlyComposable:
+    active: true
+  ModifierClickableOrder:
+    active: true
+  ModifierComposed:
+    active: true
+  ModifierMissing:
+    active: true
+    # These open their own window over the app, so they put nothing in the caller's layout.
+    contentEmittersDenylist: ['Dialog', 'DialogCard', 'ConfirmDialog', 'ChoiceDialog']
+  ModifierNaming:
+    active: true
+  ModifierNotUsedAtRoot:
+    active: true
+  ModifierReused:
+    active: true
+  ModifierShouldBeForwardedToEveryBranch:
+    active: true
+  ModifierWithoutDefault:
+    active: true
+  MultipleEmitters:
+    active: true
+  MutableParams:
+    active: true
+  MutableStateAutoboxing:
+    active: true
+  MutableStateParam:
+    active: true
+  ParameterNaming:
+    active: true
+  PreviewAnnotationNaming:
+    active: true
+  PreviewNaming:
+    active: false
+  PreviewPublic:
+    active: true
+  RememberContentMissing:
+    active: true
+  RememberMissing:
+    active: true
+  StaleRememberUpdatedStateInRemember:
+    active: true
+  StateParam:
+    active: true
+  UnnecessaryComposable:
+    active: true
+  UnnecessaryLaunchedEffect:
+    active: true
+  UnstableCollections:
+    active: false
+  VarsWithoutStateBacking:
+    active: true
+  ViewModelForwarding:
+    active: true
+  ViewModelInjection:
+    # XRoute exists to resolve the ViewModel from Koin; the stateless XScreen is the testable half.
+    active: false

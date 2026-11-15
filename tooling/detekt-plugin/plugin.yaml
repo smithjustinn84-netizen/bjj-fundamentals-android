@@ -1,0 +1,11 @@
+tasks:
+  detekt:
+    action: !dev.justinsmith.bjj.detekt.detekt
+      moduleRoot: ${module.rootDir}
+      config: ${project.rootDir}/detekt.yml
+      reportDir: ${taskOutputDir}
+      warningsOnly: ${pluginSettings.warningsOnly}
+
+checks:
+  - name: detekt
+    performedBy: detekt

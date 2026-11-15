@@ -1,0 +1,11 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- A belt across the icon with its rank bar, inside the adaptive icon's 66dp safe zone. -->
+<vector xmlns:android="http://schemas.android.com/apk/res/android"
+        android:width="108dp"
+        android:height="108dp"
+        android:viewportWidth="108"
+        android:viewportHeight="108">
+    <path android:fillColor="@color/icon_belt" android:strokeColor="@color/icon_ink" android:strokeWidth="2.5"
+          android:pathData="M26,45h56v18h-56z"/>
+    <path android:fillColor="@color/icon_ink" android:pathData="M60,45h14v18h-14z"/>
+</vector>

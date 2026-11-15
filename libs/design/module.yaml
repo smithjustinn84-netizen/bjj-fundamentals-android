@@ -1,0 +1,39 @@
+# The look: the theme and tokens, the woodblock components, the icons, and every drawing (figures, diagrams,
+# the belt, the position map). It draws what `core` calculates and knows nothing of storage or screens.
+description: "Design system: theme, tokens, components, icons, drawings"
+product:
+  type: kmp/lib
+  platforms: [android, jvm]
+
+apply:
+  - //templates/tested-lib.module-template.yaml
+  - //templates/compose-stability.module-template.yaml
+
+dependencies:
+  # Geometry and models only: what a drawing is of.
+  - //libs/core: exported
+  - $compose.runtime
+  - $compose.foundation: exported
+  - $compose.ui
+  - $compose.components.resources
+  - $compose.preview
+
+# Renders the @Preview functions in the IDE. Amper has no debug-only dependency scope, so it ships in release
+# builds too; R8 strips what the app never calls.
+dependencies@android:
+  - $compose.uiTooling
+
+# Compose UI tests run on the desktop JVM only: common `test/` also runs as Android local tests, which have
+# no Robolectric here, so `runComposeUiTest` lives in `test@jvm/`.
+test-dependencies@jvm:
+  - $compose.uiTest
+  # Skiko's native renderer; without it `runComposeUiTest` fails with LibraryLoadException.
+  - $compose.desktop.currentOs
+  - $libs.kotlinx.coroutines.swing
+
+settings:
+  compose:
+    enabled: true
+    resources:
+      packageName: dev.justinsmith.bjj.design.resources
+      exposedAccessors: true

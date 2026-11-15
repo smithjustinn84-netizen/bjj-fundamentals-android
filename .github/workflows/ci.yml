@@ -1,0 +1,122 @@
+name: CI
+
+# `main` and pull requests. A jj bookmark pushed without a PR gets no run of its own: start one from the
+# Actions tab or with `gh workflow run CI --ref <bookmark>`.
+on:
+  push:
+    branches: [main]
+    paths-ignore: ['**.md', 'docs/**']
+  pull_request:
+    paths-ignore: ['**.md', 'docs/**']
+  workflow_dispatch:
+
+concurrency:
+  group: ci-${{ github.ref }}
+  cancel-in-progress: true
+
+# Nothing here may write, and nothing reads a secret. Never switch a trigger to `pull_request_target`.
+permissions:
+  contents: read
+
+env:
+  KOTLIN_CLI_NO_WELCOME_BANNER: "1"
+
+# The same stages as the local check (CLAUDE.md, "Definition of done"). Change one, change the other.
+jobs:
+  static:
+    name: layers, lint, detekt
+    # Pinned rather than `-latest`, so an image migration cannot change the build under us.
+    runs-on: ubuntu-24.04
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v7
+
+      # No setup-java: the ./kotlin wrapper provisions its own JRE and toolchain. This cache holds the
+      # toolchain, the JRE, the Maven dependencies and the Android SDK components it installs itself. Each
+      # job keeps its own, since each downloads a different set; only `main` saves, as a pull request's
+      # cache is visible to that PR alone.
+      - name: Restore the Kotlin toolchain and dependencies
+        id: cache
+        uses: actions/cache/restore@v6
+        with:
+          path: ~/.cache/JetBrains/Kotlin
+          key: kotlin-static-${{ runner.os }}-${{ hashFiles('kotlin', 'project.yaml', '**/module.yaml', 'libs.versions.toml') }}
+          restore-keys: kotlin-static-${{ runner.os }}-
+
+      - name: Imports only point inward
+        run: |
+          python3 tools/check_layers.py --self-test
+          python3 tools/check_layers.py
+
+      - name: Lint
+        run: ./kotlin check lint
+
+      - name: Detekt
+        run: ./kotlin check detekt
+
+      # detekt.html and detekt.sarif per module, for a failure the log only summarises.
+      - name: Attach the detekt reports
+        if: failure()
+        uses: actions/upload-artifact@v7
+        with:
+          name: detekt-reports
+          path: build/tasks/_*_detekt@detekt-plugin/
+          if-no-files-found: ignore
+
+      - name: Save the Kotlin toolchain and dependencies
+        if: github.ref == 'refs/heads/main' && steps.cache.outputs.cache-hit != 'true'
+        uses: actions/cache/save@v6
+        with:
+          path: ~/.cache/JetBrains/Kotlin
+          key: ${{ steps.cache.outputs.cache-primary-key }}
+
+  check:
+    name: build, test
+    runs-on: ubuntu-24.04
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@v7
+
+      - name: Restore the Kotlin toolchain and dependencies
+        id: cache
+        uses: actions/cache/restore@v6
+        with:
+          path: ~/.cache/JetBrains/Kotlin
+          key: kotlin-check-${{ runner.os }}-${{ hashFiles('kotlin', 'project.yaml', '**/module.yaml', 'libs.versions.toml') }}
+          restore-keys: kotlin-check-${{ runner.os }}-
+
+      - name: Build
+        run: ./kotlin build
+
+      # Both platforms: the android fragment's tests are plain JVM unit tests.
+      - name: Test
+        run: ./kotlin test
+
+      # JUnit XML per module and platform, for a failure the log only summarises.
+      - name: Attach the test reports
+        if: failure()
+        uses: actions/upload-artifact@v7
+        with:
+          name: test-reports
+          path: build/reports/
+          if-no-files-found: ignore
+
+      - name: Save the Kotlin toolchain and dependencies
+        if: github.ref == 'refs/heads/main' && steps.cache.outputs.cache-hit != 'true'
+        uses: actions/cache/save@v6
+        with:
+          path: ~/.cache/JetBrains/Kotlin
+          key: ${{ steps.cache.outputs.cache-primary-key }}
+
+  # The one check a branch rule needs to require.
+  ci:
+    name: CI
+    if: always()
+    needs: [static, check]
+    runs-on: ubuntu-24.04
+    timeout-minutes: 5
+    steps:
+      - name: Every job passed
+        run: |
+          test "${{ needs.static.result }}" = "success"
+          test "${{ needs.check.result }}" = "success"

@@ -1,0 +1,6 @@
+<resources>
+    <!-- Ground behind the app, so nothing flashes white before the first frame in either theme. -->
+    <style name="Theme.Bjj" parent="@android:style/Theme.Material.Light.NoActionBar">
+        <item name="android:windowBackground">@color/ground</item>
+    </style>
+</resources>
