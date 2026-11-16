@@ -28,6 +28,7 @@ import dev.justinsmith.bjj.design.theme.typeColor
 import dev.justinsmith.bjj.nav.Editor
 import dev.justinsmith.bjj.nav.LearnSection
 import dev.justinsmith.bjj.nav.LearnTab
+import dev.justinsmith.bjj.nav.Nav
 import dev.justinsmith.bjj.nav.PositionDetail
 import dev.justinsmith.bjj.nav.TransitionDetail
 import dev.justinsmith.bjj.resources.Res
@@ -42,17 +43,12 @@ import dev.justinsmith.bjj.resources.learn_technique_tap
 import dev.justinsmith.bjj.resources.learn_technique_who
 import dev.justinsmith.bjj.resources.learn_technique_who_and_end
 import dev.justinsmith.bjj.resources.learn_try_this_drill
-import dev.justinsmith.bjj.ui.common.DetailHeader
 import dev.justinsmith.bjj.ui.common.ItemPicture
 import dev.justinsmith.bjj.ui.common.ItemRef
-import dev.justinsmith.bjj.ui.common.LinkedVideos
 import dev.justinsmith.bjj.ui.common.Loading
 import dev.justinsmith.bjj.ui.common.Missing
-import dev.justinsmith.bjj.ui.common.Nav
-import dev.justinsmith.bjj.ui.common.NotesBlock
 import dev.justinsmith.bjj.ui.common.Page
-import dev.justinsmith.bjj.ui.common.Pager
-import dev.justinsmith.bjj.ui.common.PagerTarget
+import dev.justinsmith.bjj.ui.common.PointList
 import dev.justinsmith.bjj.ui.common.TechniqueLinks
 import dev.justinsmith.bjj.ui.common.VideoActions
 import dev.justinsmith.bjj.ui.common.label

@@ -68,6 +68,7 @@ import dev.justinsmith.bjj.design.theme.Radius
 import dev.justinsmith.bjj.design.theme.Spacing
 import dev.justinsmith.bjj.design.theme.Type
 import dev.justinsmith.bjj.design.theme.typeColor
+import dev.justinsmith.bjj.nav.Nav
 import dev.justinsmith.bjj.nav.PositionDetail
 import dev.justinsmith.bjj.nav.TransitionDetail
 import dev.justinsmith.bjj.resources.Res
@@ -77,7 +78,6 @@ import dev.justinsmith.bjj.resources.map_no_techniques_from_here
 import dev.justinsmith.bjj.resources.map_select_prompt
 import dev.justinsmith.bjj.resources.map_submissions
 import dev.justinsmith.bjj.resources.map_ways_in
-import dev.justinsmith.bjj.ui.common.Nav
 import dev.justinsmith.bjj.ui.common.SideBySide
 import dev.justinsmith.bjj.ui.common.TransitionList
 import dev.justinsmith.bjj.ui.common.hasRail

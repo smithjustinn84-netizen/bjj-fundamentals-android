@@ -17,7 +17,6 @@ dependencies:
   - $compose.runtime
   - $compose.foundation: exported
   - $compose.ui
-  - $compose.preview
   # Screen text: `composeResources/values/*.xml`, read through the generated `Res.string.*`.
   - $compose.components.resources
   - $libs.androidx.lifecycle.viewmodel: exported
@@ -30,10 +29,8 @@ dependencies:
   - $libs.koin.compose
   - $libs.koin.core.viewmodel
   - $libs.koin.compose.viewmodel
-  - $libs.kermit
 
 dependencies@android:
-  - $compose.uiTooling
   # The system's file pickers, for a backup saved and opened.
   - $libs.androidx.activity.compose
 

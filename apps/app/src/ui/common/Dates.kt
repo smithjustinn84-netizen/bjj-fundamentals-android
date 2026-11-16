@@ -1,4 +1,4 @@
-package dev.justinsmith.bjj.ui.home
+package dev.justinsmith.bjj.ui.common
 
 import dev.justinsmith.bjj.core.LocalZone
 import dev.justinsmith.bjj.core.dayKeyOf

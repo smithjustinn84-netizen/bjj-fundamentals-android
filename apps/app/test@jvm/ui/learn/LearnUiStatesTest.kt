@@ -1,39 +1,27 @@
-package dev.justinsmith.bjj.ui
+package dev.justinsmith.bjj.ui.learn
 
 import dev.justinsmith.bjj.core.CardKind
 import dev.justinsmith.bjj.core.FOUNDATION_LESSONS
 import dev.justinsmith.bjj.core.Grade
 import dev.justinsmith.bjj.core.ItemKind
-import dev.justinsmith.bjj.core.LinkedKind
 import dev.justinsmith.bjj.core.MapOrientation
-import dev.justinsmith.bjj.core.PositionRole
 import dev.justinsmith.bjj.core.StudyItem
 import dev.justinsmith.bjj.core.TransitionType
 import dev.justinsmith.bjj.core.services.Snapshot
-import dev.justinsmith.bjj.core.services.VideoInput
 import dev.justinsmith.bjj.core.testing.TestCore
 import dev.justinsmith.bjj.core.testing.testCore
 import dev.justinsmith.bjj.design.components.Progress
 import dev.justinsmith.bjj.ui.common.OtherEnd
-import dev.justinsmith.bjj.ui.learn.TransitionDetailUiState
-import dev.justinsmith.bjj.ui.learn.blueBeltUiState
-import dev.justinsmith.bjj.ui.learn.lessonsUiState
-import dev.justinsmith.bjj.ui.learn.positionsUiState
-import dev.justinsmith.bjj.ui.learn.transitionDetailUiState
-import dev.justinsmith.bjj.ui.review.CardFace
-import dev.justinsmith.bjj.ui.review.cardFace
-import dev.justinsmith.bjj.ui.videos.videosUiState
 import kotlinx.coroutines.test.runTest
 import kotlin.test.Test
 import kotlin.test.assertEquals
 import kotlin.test.assertFalse
 import kotlin.test.assertIs
 import kotlin.test.assertNotNull
-import kotlin.test.assertNull
 import kotlin.test.assertTrue
 
-/** What each screen is told to draw, worked out from the starter library and what a test then stores. */
-class ScreenStatesTest {
+/** What the pages behind the Learn tab are told to draw, from the starter library and what a test then stores. */
+class LearnUiStatesTest {
     private val t: TestCore = testCore()
 
     private suspend fun snapshot(): Snapshot = t.core.queries.snapshot()
@@ -97,41 +85,5 @@ class ScreenStatesTest {
         val defence = assertIs<TransitionDetailUiState.Ready>(transitionDetailUiState(snapshot(), "armbar-defence"))
         assertEquals(listOf("armbar-guard"), defence.links.answers.map { it.id })
         assertEquals(TransitionDetailUiState.Missing, transitionDetailUiState(snapshot(), "nothing"))
-    }
-
-    @Test
-    fun `bookmarks name what they are about and are found by title note or that name`() = runTest {
-        val starter = videosUiState(snapshot(), query = "").total
-        val note = "frame the xiphoid"
-        t.core.videos.add(VideoInput("Elbow escape details", "abcdefghijk", 0, LinkedKind.Position, "mount", note))
-        t.core.videos.add(VideoInput("Open mat", "abcdefghijk", 0, LinkedKind.None, "", ""))
-        val all = videosUiState(snapshot(), query = "")
-        assertEquals(starter + 2, all.total)
-        assertEquals(all.total, all.shown.size)
-        assertNull(all.shown.first { it.video.title == "Open mat" }.about)
-        assertTrue(all.about.any { it.item.kind == ItemKind.Transition })
-
-        val byNote = videosUiState(snapshot(), query = " XIPHOID ")
-        assertEquals(listOf("Elbow escape details"), byNote.shown.map { it.video.title })
-        assertEquals("Mount", byNote.shown.single().about?.name)
-        assertTrue(videosUiState(snapshot(), query = "mount").shown.any { it.video.title == "Elbow escape details" })
-        assertEquals(all.total, videosUiState(snapshot(), query = "zzzz").total)
-        assertTrue(videosUiState(snapshot(), query = "zzzz").shown.isEmpty())
-    }
-
-    @Test
-    fun `every kind of study card has a face and a card about nothing has none`() = runTest {
-        val snapshot = snapshot()
-        fun face(kind: CardKind, id: String) = cardFace(snapshot.library, snapshot.videos, StudyItem(kind, id))
-
-        assertEquals("safety", assertIs<CardFace.ConceptCard>(face(CardKind.Concept, "safety")).concept.id)
-        assertEquals("mount", assertIs<CardFace.PositionCard>(face(CardKind.Position, "mount")).position.id)
-        val technique = assertIs<CardFace.TechniqueCard>(face(CardKind.Transition, "armbar-guard"))
-        assertNotNull(technique.fromName)
-        assertEquals(listOf("armbar-defence"), technique.links.defences.map { it.id })
-        val situation = assertIs<CardFace.SituationCard>(face(CardKind.Situation, "mount:${PositionRole.Bottom.key}"))
-        assertTrue(situation.options.isNotEmpty() && situation.goals.isNotEmpty())
-
-        for (kind in CardKind.entries) assertNull(face(kind, "nothing"))
     }
 }

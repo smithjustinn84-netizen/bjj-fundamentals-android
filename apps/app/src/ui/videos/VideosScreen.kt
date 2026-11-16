@@ -18,6 +18,7 @@ import dev.justinsmith.bjj.design.components.SectionHead
 import dev.justinsmith.bjj.design.components.TextInput
 import dev.justinsmith.bjj.design.theme.BjjTheme
 import dev.justinsmith.bjj.design.theme.Sizes
+import dev.justinsmith.bjj.nav.Nav
 import dev.justinsmith.bjj.nav.itemKey
 import dev.justinsmith.bjj.resources.Res
 import dev.justinsmith.bjj.resources.tab_more
@@ -31,7 +32,6 @@ import dev.justinsmith.bjj.resources.videos_search
 import dev.justinsmith.bjj.resources.videos_search_placeholder
 import dev.justinsmith.bjj.ui.common.BackLink
 import dev.justinsmith.bjj.ui.common.Loading
-import dev.justinsmith.bjj.ui.common.Nav
 import dev.justinsmith.bjj.ui.common.Page
 import dev.justinsmith.bjj.ui.common.PageHead
 import dev.justinsmith.bjj.ui.common.VideoActions

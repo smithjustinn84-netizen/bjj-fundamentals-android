@@ -34,6 +34,7 @@ import dev.justinsmith.bjj.design.theme.Type
 import dev.justinsmith.bjj.nav.Editor
 import dev.justinsmith.bjj.nav.LearnSection
 import dev.justinsmith.bjj.nav.LearnTab
+import dev.justinsmith.bjj.nav.Nav
 import dev.justinsmith.bjj.nav.ReviewTab
 import dev.justinsmith.bjj.nav.TransitionDetail
 import dev.justinsmith.bjj.resources.Res
@@ -50,13 +51,9 @@ import dev.justinsmith.bjj.resources.learn_from_position
 import dev.justinsmith.bjj.resources.learn_starter_techniques_missing
 import dev.justinsmith.bjj.ui.common.Columns
 import dev.justinsmith.bjj.ui.common.EmptyState
-import dev.justinsmith.bjj.ui.common.LearnSwitch
 import dev.justinsmith.bjj.ui.common.Loading
-import dev.justinsmith.bjj.ui.common.Nav
 import dev.justinsmith.bjj.ui.common.Page
-import dev.justinsmith.bjj.ui.common.ProgressLegend
 import dev.justinsmith.bjj.ui.common.RowCard
-import dev.justinsmith.bjj.ui.common.StarterOffer
 import org.jetbrains.compose.resources.stringResource
 import org.koin.compose.viewmodel.koinViewModel
 

@@ -33,9 +33,9 @@ private data class Session(
     val saving: Boolean = false,
 )
 
-sealed interface SessionUiState {
+sealed interface ReviewSessionUiState {
     /** Before the session has its cards, and for a moment while a card whose item is gone is dropped. */
-    data object Loading : SessionUiState
+    data object Loading : ReviewSessionUiState
 
     data class Active(
         val card: CardFace,
@@ -47,7 +47,7 @@ sealed interface SessionUiState {
         val saving: Boolean,
         /** When the card would come back for each grade, in words. */
         val intervals: Map<Grade, String>,
-    ) : SessionUiState
+    ) : ReviewSessionUiState
 
     data class Complete(
         val doneCount: Int,
@@ -56,7 +56,7 @@ sealed interface SessionUiState {
         val streakDays: Int,
         /** How many cards another round with the same deck and setting would hold. */
         val moreWaiting: Int,
-    ) : SessionUiState
+    ) : ReviewSessionUiState
 }
 
 /**
@@ -72,7 +72,7 @@ class ReviewSessionViewModel(
 ) : ViewModel() {
     private val session = MutableStateFlow(Session())
 
-    val uiState: StateFlow<SessionUiState> = screenState(appData, session, ::toUiState)
+    val uiState: StateFlow<ReviewSessionUiState> = screenState(appData, session, ::toUiState)
 
     init {
         viewModelScope.launch { appData.snapshot.filterNotNull().collect(::follow) }
@@ -91,21 +91,21 @@ class ReviewSessionViewModel(
         }
     }
 
-    private fun toUiState(snapshot: Snapshot?, session: Session): SessionUiState {
+    private fun toUiState(snapshot: Snapshot?, session: Session): ReviewSessionUiState {
         val queue = session.queue
-        if (snapshot == null || queue == null) return SessionUiState.Loading
+        if (snapshot == null || queue == null) return ReviewSessionUiState.Loading
         val now = clock.now()
         val current = queue.firstOrNull()
-            ?: return SessionUiState.Complete(
+            ?: return ReviewSessionUiState.Complete(
                 doneCount = session.doneCount,
                 tally = session.tally,
                 streakDays = studyStats(snapshot, now, clock.zone).streakDays,
                 moreWaiting = queueNow(snapshot).size,
             )
         val lib = snapshot.library
-        val face = cardFace(lib, snapshot.videos, current) ?: return SessionUiState.Loading
+        val face = cardFace(lib, snapshot.videos, current) ?: return ReviewSessionUiState.Loading
         val card = reviewOf(lib, current.kind, current.id) ?: newReviewState(current.kind, current.id, now)
-        return SessionUiState.Active(
+        return ReviewSessionUiState.Active(
             card = face,
             revealed = session.revealed,
             doneCount = session.doneCount,

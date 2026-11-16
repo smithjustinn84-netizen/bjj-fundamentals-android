@@ -42,6 +42,14 @@ Imports only point inward: `ui → bindings → storage → core`. **`libs/core`
 
 `tools/check_layers.py` enforces the import rules.
 
+Inside `apps/app` the same checker keeps the screens apart, which is what a module per feature would buy without its cost:
+
+- Under `ui/`, `common`, `map` and `video` are shared; every other package is a screen. A screen imports the shared packages and itself, never another screen. What two screens need moves to `ui/common`; what one screen needs lives in that screen's package, not in `common`.
+- A shared package never imports a screen.
+- `bindings/`, `nav/` and `platform/` are below the screens and import neither `ui` nor `di`. Only `di/` and `App.kt` name every screen.
+
+Do not split `apps/app` into feature modules: every screen reads the one `Snapshot` and the one set of string resources, so each module would depend on the same base and isolate nothing the checker does not already.
+
 Where does new code go?
 
 - A rule or calculation ("when is a card due", "is this link valid") → a pure function in `core`, taking `now` as a parameter, with a test.
@@ -69,13 +77,14 @@ Where does new code go?
 - A composable never takes a `Library` or a `Snapshot` and never calls a core function that does: lookups, counts, what is next and what is missing are worked out for it. It gets plain values and the row models in `ui/common/Models.kt` (`CardLink`, `TechniqueRow`, `Named`, …), and may call core's label and format helpers (`type.label`, `roleLabel`, `formatMatTime`). What is typed or toggled but not yet saved (a form's draft, a search box's text, which side is showing) stays in the composable.
 - A ViewModel holds no rules of its own, and takes only what it uses: `AppData`, the one core service it writes through (`ItemService`, `ReviewService`, …), `Clock` when it needs the time, and its page's `NavKey` when the page is about one thing (`koinViewModel { parametersOf(key) }`). Never `Core` or `CoreEnv`. Register it in `di/AppKoin.kt`; a new key type also goes in the container test's list.
 - A ViewModel tells its screen what happened through its state, never through a callback or a one-off event: the editor's `outcome` and the log's `saved` count are state the route reacts to.
-- A page moves to another through the `Nav` it is handed, never the back stack itself.
+- A page moves to another through the `Nav` it is handed (`nav/Nav.kt`), never the back stack itself.
+- One screen per file: `XScreen.kt` holds `XRoute` and `XScreen`, `XViewModel.kt` holds `XUiState`, `xUiState` and `XViewModel`, all named for the same `X`. A list and its detail page are two screens.
 - Every destination is a `@Serializable` `NavKey` in `nav/Routes.kt`, registered in `navConfiguration` and given an `entry<…>` (both in `App.kt`). The bar has five tabs, the same on every window size.
 - No raw `dp`, `sp`, colour or duration in a screen: they come from `design/theme` (`Spacing`, `Radius`, `Sizes`, `TextSizes`, `Motion`, `BjjTheme.palette`).
-- Screen text is in string resources: `apps/app/composeResources/values/`, one file per area (`strings.xml` for the shell and shared words, then `strings_<area>.xml` with names prefixed `<area>_`), read with `stringResource(Res.string.x)`. Counts are `<plurals>`, never core's `plural`. A ViewModel exposes an enum, a sealed type or a `StringResource`, and the screen resolves it. Write `'` and `"` plainly in the XML and a single `%` for a percent sign: this toolchain does not unescape `\'` or `%%`. Still in code: labels that core's own logic uses (search, card prompts, `core/Labels.kt`), core's formatters (`formatMatTime`, `describeInterval`) and the weekday and month names in `ui/home/TodayLabel.kt`. `tools/check_strings.py` enforces this: it fails on a name that is unused, duplicated or in the wrong file, on those escapes, and on a literal of two or more words in `apps/app/src*/ui/` or `App.kt`. Text that must stay in code takes `// text-in-code: <why>` on its line.
+- Screen text is in string resources: `apps/app/composeResources/values/`, one file per area (`strings.xml` for the shell and shared words, then `strings_<area>.xml` with names prefixed `<area>_`), read with `stringResource(Res.string.x)`. Counts are `<plurals>`, never core's `plural`. A ViewModel exposes an enum, a sealed type or a `StringResource`, and the screen resolves it. Write `'` and `"` plainly in the XML and a single `%` for a percent sign: this toolchain does not unescape `\'` or `%%`. Still in code: labels that core's own logic uses (search, card prompts, `core/Labels.kt`), core's formatters (`formatMatTime`, `describeInterval`) and the weekday and month names in `ui/common/Dates.kt`. `tools/check_strings.py` enforces this: it fails on a name that is unused, duplicated or in the wrong file, on those escapes, and on a literal of two or more words in `apps/app/src*/ui/` or `App.kt`. Text that must stay in code takes `// text-in-code: <why>` on its line.
 - Services set `id`, `createdAt`, `updatedAt`. Callers pass an `...Input` type without them. Multi-step writes go in one `storage.transaction`.
 - No magic numbers: name the constant and say what it means. Comments explain why, not what. No commented-out code.
-- Tests use `kotlin.test` with hand-written fakes and `testCore()`; no mocking library. Test names are backticked sentences without commas.
+- Tests use `kotlin.test` with hand-written fakes and `testCore()`; no mocking library. Test names are backticked sentences without commas. A test sits in the folder of what it tests (`test@jvm/ui/review/` for `src/ui/review/`); a ViewModel's test extends `ViewModelTest` (`apps/app/test@jvm/ui/ViewModelTest.kt`).
 
 ## Look and motion
 

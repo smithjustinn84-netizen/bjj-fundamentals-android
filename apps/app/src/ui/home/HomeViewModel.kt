@@ -38,6 +38,7 @@ import dev.justinsmith.bjj.ui.common.SearchUi
 import dev.justinsmith.bjj.ui.common.cardLink
 import dev.justinsmith.bjj.ui.common.screenState
 import dev.justinsmith.bjj.ui.common.searchUi
+import dev.justinsmith.bjj.ui.common.todayLabel
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 

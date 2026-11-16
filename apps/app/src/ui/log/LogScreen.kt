@@ -48,6 +48,7 @@ import dev.justinsmith.bjj.design.icons.BjjIcons
 import dev.justinsmith.bjj.design.theme.BjjTheme
 import dev.justinsmith.bjj.design.theme.Spacing
 import dev.justinsmith.bjj.design.theme.Type
+import dev.justinsmith.bjj.nav.Nav
 import dev.justinsmith.bjj.nav.PositionDetail
 import dev.justinsmith.bjj.nav.TransitionDetail
 import dev.justinsmith.bjj.resources.Res
@@ -93,11 +94,10 @@ import dev.justinsmith.bjj.resources.log_techniques_choose
 import dev.justinsmith.bjj.resources.log_worked
 import dev.justinsmith.bjj.ui.common.EmptyState
 import dev.justinsmith.bjj.ui.common.Loading
-import dev.justinsmith.bjj.ui.common.Nav
 import dev.justinsmith.bjj.ui.common.Page
 import dev.justinsmith.bjj.ui.common.PageHead
 import dev.justinsmith.bjj.ui.common.SideBySide
-import dev.justinsmith.bjj.ui.home.formatDay
+import dev.justinsmith.bjj.ui.common.formatDay
 import org.jetbrains.compose.resources.StringResource
 import org.jetbrains.compose.resources.stringResource
 import org.koin.compose.viewmodel.koinViewModel
@@ -109,17 +109,17 @@ private const val DEFAULT_CLASS_MINUTES = 60
 private val MINUTE_PRESETS = listOf(45, 60, 90, 120)
 
 @Composable
-fun TrainingLogRoute(nav: Nav) {
+fun LogRoute(nav: Nav) {
     val viewModel = koinViewModel<LogViewModel>()
     val state by viewModel.uiState.collectAsStateWithLifecycle()
     when (val ready = state) {
         LogUiState.Loading -> Loading()
-        is LogUiState.Ready -> TrainingLogScreen(ready, nav, viewModel::save, viewModel::remove)
+        is LogUiState.Ready -> LogScreen(ready, nav, viewModel::save, viewModel::remove)
     }
 }
 
 @Composable
-fun TrainingLogScreen(
+fun LogScreen(
     state: LogUiState.Ready,
     nav: Nav,
     onSave: (String?, TrainingEntryInput) -> Unit,

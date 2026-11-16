@@ -28,6 +28,7 @@ import dev.justinsmith.bjj.design.components.Notice
 import dev.justinsmith.bjj.design.theme.Sizes
 import dev.justinsmith.bjj.design.theme.Spacing
 import dev.justinsmith.bjj.design.theme.Type
+import dev.justinsmith.bjj.nav.Nav
 import dev.justinsmith.bjj.resources.Res
 import dev.justinsmith.bjj.resources.backup_about
 import dev.justinsmith.bjj.resources.backup_erase_button
@@ -68,7 +69,6 @@ import dev.justinsmith.bjj.resources.backup_unknown_date
 import dev.justinsmith.bjj.resources.common_cancel
 import dev.justinsmith.bjj.resources.tab_more
 import dev.justinsmith.bjj.ui.common.BackLink
-import dev.justinsmith.bjj.ui.common.Nav
 import dev.justinsmith.bjj.ui.common.Page
 import dev.justinsmith.bjj.ui.common.PageHead
 import org.jetbrains.compose.resources.stringResource

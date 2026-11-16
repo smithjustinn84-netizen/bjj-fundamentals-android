@@ -79,6 +79,7 @@ import dev.justinsmith.bjj.design.theme.gradeColor
 import dev.justinsmith.bjj.design.theme.onGradeColor
 import dev.justinsmith.bjj.nav.LearnSection
 import dev.justinsmith.bjj.nav.LearnTab
+import dev.justinsmith.bjj.nav.Nav
 import dev.justinsmith.bjj.nav.ReviewSession
 import dev.justinsmith.bjj.nav.TodayTab
 import dev.justinsmith.bjj.nav.TransitionDetail
@@ -100,7 +101,6 @@ import dev.justinsmith.bjj.resources.review_open_full_page
 import dev.justinsmith.bjj.resources.review_position
 import dev.justinsmith.bjj.resources.review_show_answer
 import dev.justinsmith.bjj.ui.common.Loading
-import dev.justinsmith.bjj.ui.common.Nav
 import dev.justinsmith.bjj.ui.common.Page
 import org.jetbrains.compose.resources.pluralStringResource
 import org.jetbrains.compose.resources.stringResource
@@ -112,16 +112,16 @@ fun ReviewSessionRoute(key: ReviewSession, nav: Nav) {
     val viewModel = koinViewModel<ReviewSessionViewModel> { parametersOf(key) }
     val state by viewModel.uiState.collectAsStateWithLifecycle()
     when (val session = state) {
-        SessionUiState.Loading -> Loading()
+        ReviewSessionUiState.Loading -> Loading()
 
-        is SessionUiState.Complete -> SessionComplete(
+        is ReviewSessionUiState.Complete -> SessionComplete(
             state = session,
             onAgain = viewModel::restart,
             onDone = { nav.selectTab(TodayTab) },
             onPositions = { nav.selectTab(LearnTab(LearnSection.Positions)) },
         )
 
-        is SessionUiState.Active -> ActiveSession(
+        is ReviewSessionUiState.Active -> ActiveSession(
             state = session,
             onEnd = nav.back,
             onReveal = viewModel::reveal,
@@ -133,7 +133,7 @@ fun ReviewSessionRoute(key: ReviewSession, nav: Nav) {
 
 @Composable
 private fun ActiveSession(
-    state: SessionUiState.Active,
+    state: ReviewSessionUiState.Active,
     onEnd: () -> Unit,
     onReveal: () -> Unit,
     onGrade: (Grade) -> Unit,
@@ -257,7 +257,7 @@ private const val ENTER_FROM = 4
 private const val LEAVE_TO = 3
 
 @Composable
-private fun Dock(state: SessionUiState.Active, onReveal: () -> Unit, onGrade: (Grade) -> Unit) {
+private fun Dock(state: ReviewSessionUiState.Active, onReveal: () -> Unit, onGrade: (Grade) -> Unit) {
     val p = BjjTheme.palette
     Column(Modifier.fillMaxWidth().background(p.surface), horizontalAlignment = Alignment.CenterHorizontally) {
         Box(Modifier.fillMaxWidth().height(Sizes.line).background(p.outline))
@@ -348,7 +348,7 @@ private fun GradeBreakdown(tally: Map<Grade, Int>, modifier: Modifier = Modifier
 
 @Composable
 private fun SessionComplete(
-    state: SessionUiState.Complete,
+    state: ReviewSessionUiState.Complete,
     onAgain: () -> Unit,
     onDone: () -> Unit,
     onPositions: () -> Unit,

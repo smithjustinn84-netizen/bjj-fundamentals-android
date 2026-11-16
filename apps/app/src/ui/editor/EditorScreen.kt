@@ -39,6 +39,7 @@ import dev.justinsmith.bjj.design.theme.BjjTheme
 import dev.justinsmith.bjj.design.theme.Sizes
 import dev.justinsmith.bjj.design.theme.Spacing
 import dev.justinsmith.bjj.nav.Editor
+import dev.justinsmith.bjj.nav.Nav
 import dev.justinsmith.bjj.nav.itemKey
 import dev.justinsmith.bjj.nav.listKey
 import dev.justinsmith.bjj.resources.Res
@@ -67,7 +68,6 @@ import dev.justinsmith.bjj.resources.editor_summary_hint
 import dev.justinsmith.bjj.ui.common.BackLink
 import dev.justinsmith.bjj.ui.common.Loading
 import dev.justinsmith.bjj.ui.common.Missing
-import dev.justinsmith.bjj.ui.common.Nav
 import org.jetbrains.compose.resources.StringResource
 import org.jetbrains.compose.resources.pluralStringResource
 import org.jetbrains.compose.resources.stringResource

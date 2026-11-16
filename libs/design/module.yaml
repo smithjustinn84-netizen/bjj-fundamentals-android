@@ -15,13 +15,6 @@ dependencies:
   - $compose.runtime
   - $compose.foundation: exported
   - $compose.ui
-  - $compose.components.resources
-  - $compose.preview
-
-# Renders the @Preview functions in the IDE. Amper has no debug-only dependency scope, so it ships in release
-# builds too; R8 strips what the app never calls.
-dependencies@android:
-  - $compose.uiTooling
 
 # Compose UI tests run on the desktop JVM only: common `test/` also runs as Android local tests, which have
 # no Robolectric here, so `runComposeUiTest` lives in `test@jvm/`.
@@ -34,6 +27,3 @@ test-dependencies@jvm:
 settings:
   compose:
     enabled: true
-    resources:
-      packageName: dev.justinsmith.bjj.design.resources
-      exposedAccessors: true

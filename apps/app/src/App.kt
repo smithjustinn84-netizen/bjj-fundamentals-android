@@ -47,6 +47,7 @@ import dev.justinsmith.bjj.nav.LearnSection
 import dev.justinsmith.bjj.nav.LearnTab
 import dev.justinsmith.bjj.nav.LogTab
 import dev.justinsmith.bjj.nav.MoreTab
+import dev.justinsmith.bjj.nav.Nav
 import dev.justinsmith.bjj.nav.PositionDetail
 import dev.justinsmith.bjj.nav.ReviewSession
 import dev.justinsmith.bjj.nav.ReviewTab
@@ -60,7 +61,6 @@ import dev.justinsmith.bjj.nav.replaceTop
 import dev.justinsmith.bjj.nav.selectTab
 import dev.justinsmith.bjj.platform.SystemBars
 import dev.justinsmith.bjj.ui.backup.BackupRoute
-import dev.justinsmith.bjj.ui.common.Nav
 import dev.justinsmith.bjj.ui.common.hasRail
 import dev.justinsmith.bjj.ui.common.hasWideRail
 import dev.justinsmith.bjj.ui.editor.EditorRoute
@@ -72,7 +72,7 @@ import dev.justinsmith.bjj.ui.learn.LessonsRoute
 import dev.justinsmith.bjj.ui.learn.PositionDetailRoute
 import dev.justinsmith.bjj.ui.learn.PositionsRoute
 import dev.justinsmith.bjj.ui.learn.TransitionDetailRoute
-import dev.justinsmith.bjj.ui.log.TrainingLogRoute
+import dev.justinsmith.bjj.ui.log.LogRoute
 import dev.justinsmith.bjj.ui.more.MoreRoute
 import dev.justinsmith.bjj.ui.review.ReviewRoute
 import dev.justinsmith.bjj.ui.review.ReviewSessionRoute
@@ -180,7 +180,7 @@ private fun Pages(backStack: NavBackStack<NavKey>, nav: Nav, modifier: Modifier 
                 }
                 entry<ReviewTab> { key -> ReviewRoute(key, nav) }
                 entry<ReviewSession> { key -> ReviewSessionRoute(key, nav) }
-                entry<LogTab> { TrainingLogRoute(nav) }
+                entry<LogTab> { LogRoute(nav) }
                 entry<MoreTab> { MoreRoute(nav) }
                 entry<ConceptDetail> { key -> ConceptDetailRoute(key, nav) }
                 entry<PositionDetail> { key -> PositionDetailRoute(key, nav) }

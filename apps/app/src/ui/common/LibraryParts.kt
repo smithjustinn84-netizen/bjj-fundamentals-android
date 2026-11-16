@@ -2,7 +2,6 @@ package dev.justinsmith.bjj.ui.common
 
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.runtime.Composable
@@ -21,13 +20,10 @@ import dev.justinsmith.bjj.core.ItemKind
 import dev.justinsmith.bjj.core.endSideLabel
 import dev.justinsmith.bjj.core.label
 import dev.justinsmith.bjj.design.components.BjjText
-import dev.justinsmith.bjj.design.components.Button
-import dev.justinsmith.bjj.design.components.ButtonKind
-import dev.justinsmith.bjj.design.components.Card
+import dev.justinsmith.bjj.design.components.Bullets
 import dev.justinsmith.bjj.design.components.Divider
 import dev.justinsmith.bjj.design.components.RowLink
 import dev.justinsmith.bjj.design.components.Section
-import dev.justinsmith.bjj.design.components.Segmented
 import dev.justinsmith.bjj.design.components.Tag
 import dev.justinsmith.bjj.design.components.TextInput
 import dev.justinsmith.bjj.design.components.woodblock
@@ -36,11 +32,7 @@ import dev.justinsmith.bjj.design.theme.BjjTheme
 import dev.justinsmith.bjj.design.theme.Spacing
 import dev.justinsmith.bjj.design.theme.Type
 import dev.justinsmith.bjj.design.theme.typeColor
-import dev.justinsmith.bjj.nav.LearnSection
 import dev.justinsmith.bjj.resources.Res
-import dev.justinsmith.bjj.resources.common_concepts
-import dev.justinsmith.bjj.resources.common_lessons
-import dev.justinsmith.bjj.resources.common_positions
 import dev.justinsmith.bjj.resources.learn_from_position
 import dev.justinsmith.bjj.resources.learn_leads_to
 import dev.justinsmith.bjj.resources.learn_leads_to_side
@@ -48,30 +40,11 @@ import dev.justinsmith.bjj.resources.learn_leads_to_tap
 import dev.justinsmith.bjj.resources.learn_links_answers
 import dev.justinsmith.bjj.resources.learn_links_defences
 import dev.justinsmith.bjj.resources.learn_links_follow_ups
+import dev.justinsmith.bjj.resources.learn_nothing_here
 import dev.justinsmith.bjj.resources.learn_search_label
 import dev.justinsmith.bjj.resources.learn_search_no_match
 import dev.justinsmith.bjj.resources.learn_search_placeholder
-import dev.justinsmith.bjj.resources.learn_starter_add
-import dev.justinsmith.bjj.resources.learn_starter_dismiss
-import dev.justinsmith.bjj.resources.learn_switch_blue_belt
-import org.jetbrains.compose.resources.PluralStringResource
-import org.jetbrains.compose.resources.StringResource
-import org.jetbrains.compose.resources.pluralStringResource
 import org.jetbrains.compose.resources.stringResource
-
-private val LearnSection.label: StringResource
-    get() = when (this) {
-        LearnSection.Concepts -> Res.string.common_concepts
-        LearnSection.Positions -> Res.string.common_positions
-        LearnSection.Lessons -> Res.string.common_lessons
-        LearnSection.BlueBelt -> Res.string.learn_switch_blue_belt
-    }
-
-/** The switch at the top of every page behind the Learn tab. Techniques are reached from positions. */
-@Composable
-fun LearnSwitch(section: LearnSection, onSelect: (LearnSection) -> Unit, modifier: Modifier = Modifier) {
-    Segmented(LearnSection.entries, section, onSelect, { stringResource(it.label) }, modifier.fillMaxWidth())
-}
 
 /**
  * One box that finds any concept, position or technique by its name or its text. What is typed stays here and
@@ -134,30 +107,6 @@ fun RowCard(modifier: Modifier = Modifier, content: @Composable () -> Unit) {
     Column(modifier.fillMaxWidth().woodblock().padding(horizontal = Spacing.s4, vertical = Spacing.s1)) { content() }
 }
 
-/**
- * Offers starter items the library does not have, such as ones added to the app after it was set up. [missing]
- * is the heading that counts them, which names their kind. Dismissing hides those items for good; one that goes
- * missing later is offered again.
- */
-@Composable
-fun StarterOffer(
-    missing: PluralStringResource,
-    names: List<String>,
-    onAdd: () -> Unit,
-    onDismiss: () -> Unit,
-    modifier: Modifier = Modifier,
-) {
-    if (names.isEmpty()) return
-    Card(modifier) {
-        BjjText(pluralStringResource(missing, names.size, names.size), style = Type.strong)
-        BjjText("${names.joinToString(", ")}.")
-        Row(horizontalArrangement = Arrangement.spacedBy(Spacing.s2)) {
-            Button(pluralStringResource(Res.plurals.learn_starter_add, names.size), onAdd, kind = ButtonKind.Primary)
-            Button(stringResource(Res.string.learn_starter_dismiss), onDismiss)
-        }
-    }
-}
-
 /** The other end of a technique, in words. */
 @Composable
 private fun OtherEnd.text(): String = when (this) {
@@ -212,5 +161,15 @@ fun TechniqueLinks(links: TechniqueLinksUi, onOpen: (String) -> Unit, modifier: 
         if (links.answers.isNotEmpty()) {
             Section(stringResource(Res.string.learn_links_answers)) { TransitionList(links.answers, onOpen) }
         }
+    }
+}
+
+/** A list of points, or a line saying there are none yet. */
+@Composable
+fun PointList(items: List<String>, modifier: Modifier = Modifier, numbered: Boolean = false) {
+    if (items.isEmpty()) {
+        BjjText(stringResource(Res.string.learn_nothing_here), modifier, color = BjjTheme.palette.muted)
+    } else {
+        Bullets(items, modifier, numbered)
     }
 }

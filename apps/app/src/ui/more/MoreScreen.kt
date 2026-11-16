@@ -31,6 +31,7 @@ import dev.justinsmith.bjj.nav.Backup
 import dev.justinsmith.bjj.nav.Editor
 import dev.justinsmith.bjj.nav.LearnSection
 import dev.justinsmith.bjj.nav.LearnTab
+import dev.justinsmith.bjj.nav.Nav
 import dev.justinsmith.bjj.nav.Videos
 import dev.justinsmith.bjj.resources.Res
 import dev.justinsmith.bjj.resources.common_blue_belt_test
@@ -48,7 +49,6 @@ import dev.justinsmith.bjj.resources.more_title
 import dev.justinsmith.bjj.resources.more_videos_detail
 import dev.justinsmith.bjj.resources.more_videos_empty
 import dev.justinsmith.bjj.ui.common.Loading
-import dev.justinsmith.bjj.ui.common.Nav
 import dev.justinsmith.bjj.ui.common.Page
 import dev.justinsmith.bjj.ui.common.RowCard
 import org.jetbrains.compose.resources.pluralStringResource

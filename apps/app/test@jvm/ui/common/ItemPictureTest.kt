@@ -1,6 +1,6 @@
 @file:OptIn(ExperimentalTestApi::class)
 
-package dev.justinsmith.bjj.ui
+package dev.justinsmith.bjj.ui.common
 
 import androidx.compose.ui.semantics.ProgressBarRangeInfo
 import androidx.compose.ui.test.ExperimentalTestApi
@@ -11,7 +11,6 @@ import dev.justinsmith.bjj.core.LinkedKind
 import dev.justinsmith.bjj.core.VideoBookmark
 import dev.justinsmith.bjj.design.theme.BjjTheme
 import dev.justinsmith.bjj.design.theme.Motion
-import dev.justinsmith.bjj.ui.common.VideoOnPaper
 import kotlin.test.Test
 
 private const val TITLE = "Video: Frames"

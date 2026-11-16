@@ -23,6 +23,7 @@ import dev.justinsmith.bjj.design.theme.Spacing
 import dev.justinsmith.bjj.design.theme.Type
 import dev.justinsmith.bjj.nav.LearnSection
 import dev.justinsmith.bjj.nav.LearnTab
+import dev.justinsmith.bjj.nav.Nav
 import dev.justinsmith.bjj.nav.ReviewTab
 import dev.justinsmith.bjj.nav.studyItemKey
 import dev.justinsmith.bjj.resources.Res
@@ -35,12 +36,9 @@ import dev.justinsmith.bjj.resources.learn_lesson_practice
 import dev.justinsmith.bjj.resources.learn_lesson_study
 import dev.justinsmith.bjj.resources.learn_lessons_about
 import dev.justinsmith.bjj.ui.common.Columns
-import dev.justinsmith.bjj.ui.common.LearnSwitch
 import dev.justinsmith.bjj.ui.common.Loading
-import dev.justinsmith.bjj.ui.common.Nav
 import dev.justinsmith.bjj.ui.common.Page
 import dev.justinsmith.bjj.ui.common.PageHead
-import dev.justinsmith.bjj.ui.common.ProgressLegend
 import org.jetbrains.compose.resources.pluralStringResource
 import org.jetbrains.compose.resources.stringResource
 import org.koin.compose.viewmodel.koinViewModel

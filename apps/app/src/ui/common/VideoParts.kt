@@ -45,7 +45,6 @@ import dev.justinsmith.bjj.design.components.ChoiceField
 import dev.justinsmith.bjj.design.components.ConfirmDialog
 import dev.justinsmith.bjj.design.components.LinkButton
 import dev.justinsmith.bjj.design.components.Notice
-import dev.justinsmith.bjj.design.components.SectionHead
 import dev.justinsmith.bjj.design.components.TextField
 import dev.justinsmith.bjj.design.components.block
 import dev.justinsmith.bjj.design.components.pressShrink
@@ -57,8 +56,6 @@ import dev.justinsmith.bjj.design.theme.Type
 import dev.justinsmith.bjj.resources.Res
 import dev.justinsmith.bjj.resources.common_cancel
 import dev.justinsmith.bjj.resources.common_delete
-import dev.justinsmith.bjj.resources.videos_add
-import dev.justinsmith.bjj.resources.videos_bookmarks
 import dev.justinsmith.bjj.resources.videos_delete_text
 import dev.justinsmith.bjj.resources.videos_delete_title
 import dev.justinsmith.bjj.resources.videos_error_link
@@ -72,7 +69,6 @@ import dev.justinsmith.bjj.resources.videos_form_note_hint
 import dev.justinsmith.bjj.resources.videos_form_save
 import dev.justinsmith.bjj.resources.videos_form_start
 import dev.justinsmith.bjj.resources.videos_form_title
-import dev.justinsmith.bjj.resources.videos_linked_empty
 import dev.justinsmith.bjj.resources.videos_play
 import org.jetbrains.compose.resources.StringResource
 import org.jetbrains.compose.resources.stringResource
@@ -279,20 +275,4 @@ private const val START_EXAMPLE = "1:35"
 private enum class VideoFormError(val message: StringResource) {
     Link(Res.string.videos_error_link),
     Time(Res.string.videos_error_time),
-}
-
-/** The bookmarks attached to one item, with a form to add another. */
-@Composable
-fun LinkedVideos(item: ItemRef, videos: List<VideoBookmark>, actions: VideoActions, modifier: Modifier = Modifier) {
-    var adding by rememberSaveable { mutableStateOf(false) }
-    Column(modifier.fillMaxWidth(), verticalArrangement = Arrangement.spacedBy(Spacing.s2)) {
-        SectionHead(stringResource(Res.string.videos_bookmarks)) {
-            if (!adding) Button(stringResource(Res.string.videos_add), { adding = true }, size = ButtonSize.Small)
-        }
-        if (adding) VideoForm(actions.add, onDone = { adding = false }, linkedTo = item)
-        if (videos.isEmpty() && !adding) {
-            BjjText(stringResource(Res.string.videos_linked_empty), color = BjjTheme.palette.muted)
-        }
-        for (video in videos) VideoRow(video, actions)
-    }
 }

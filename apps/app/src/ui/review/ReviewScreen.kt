@@ -26,6 +26,7 @@ import dev.justinsmith.bjj.design.theme.BjjTheme
 import dev.justinsmith.bjj.design.theme.Sizes
 import dev.justinsmith.bjj.design.theme.Spacing
 import dev.justinsmith.bjj.design.theme.Type
+import dev.justinsmith.bjj.nav.Nav
 import dev.justinsmith.bjj.nav.ReviewSession
 import dev.justinsmith.bjj.nav.ReviewTab
 import dev.justinsmith.bjj.resources.Res
@@ -51,7 +52,6 @@ import dev.justinsmith.bjj.resources.review_title
 import dev.justinsmith.bjj.resources.review_what_to_study
 import dev.justinsmith.bjj.ui.common.EmptyState
 import dev.justinsmith.bjj.ui.common.Loading
-import dev.justinsmith.bjj.ui.common.Nav
 import dev.justinsmith.bjj.ui.common.Page
 import org.jetbrains.compose.resources.StringResource
 import org.jetbrains.compose.resources.pluralStringResource

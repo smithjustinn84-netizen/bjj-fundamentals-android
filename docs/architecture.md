@@ -10,7 +10,7 @@ BJJ Fundamentals for Android is the web app (`../bjj`) again, in Kotlin. The web
 | `libs/core-testing` | The storage contract, `testCore()`, entity builders. | `core` |
 | `libs/storage-room` | `AppStorage` over Room. | `core`, Room |
 | `libs/design` | Theme, tokens, components, icons, drawings. | `core` |
-| `apps/app` | Composition root, navigation, every screen and its ViewModel. | `design`, `core`, `storage-room` |
+| `apps/app` | Composition root, navigation, every screen and its ViewModel. | `design`, `core`, `storage-room` (named only in `di/`), Navigation 3, lifecycle ViewModel, Koin |
 | `apps/androidApp` | Manifest, resources, `MainActivity`, `BjjApplication`. | `app` |
 | `tooling/*` | The ktlint and detekt build plugins. | |
 
@@ -66,6 +66,26 @@ A ViewModel takes only what it uses. The container (`di/AppKoin.kt`) offers each
 
 **Time.** What is due moves on without anything stored changing. A screen's state reads the clock when it is worked out: on every stored change, and again when a page is come back to after more than five seconds. A page left open across the moment a card comes due shows it once either happens.
 
+## Inside the app module
+
+```
+apps/app/src/
+  App.kt        the theme, the back stack, the bar; names every screen
+  di/           the container: the only other place that names every screen, and the only one that names the engine
+  bindings/     AppData (the one snapshot) and Clock
+  nav/          the keys (Routes.kt) and Nav, what a page is handed to move with
+  platform/     what the host supplies: Links, SystemBars
+  ui/
+    common/     shared by screens: Page, the row models, pictures, video rows, dates, window helpers
+    map/        the position map, a drawing with its own model
+    video/      the YouTube player
+    <screen>/   backup, editor, home, learn, log, more, review, shell, videos
+```
+
+A screen imports `ui/common`, `ui/map`, `ui/video` and itself, never another screen; the shared three never import a screen; `bindings/`, `nav/` and `platform/` import nothing from `ui/` or `di/`. `tools/check_layers.py` fails the build otherwise. This is the isolation a module per feature would give. Modules were not used for it because every screen reads the same snapshot, row models and string resources, so each would hang off one shared base module and gain nothing more.
+
+Each screen is two files named for it, `XScreen.kt` (`XRoute`, `XScreen`) and `XViewModel.kt` (`XUiState`, `xUiState`, `XViewModel`); parts only that package uses sit beside them (`learn/LearnParts.kt`, `home/HomeCards.kt`, `review/CardFace.kt`). Tests mirror the folders under `test@jvm/`.
+
 ## Navigation
 
 One back stack of `@Serializable` keys (`nav/Routes.kt`), shown by Navigation 3 in `App.kt`. Today is the root; another tab replaces whatever is above it. A review session is a pushed page, and the bar goes while it is on top. Pages move through the `Nav` they are handed.
@@ -74,7 +94,7 @@ The system's Back, the predictive back gesture included, is `NavDisplay`'s: it c
 
 ## What only Android can do
 
-Each is an `expect` in `apps/app/src` with its `actual` in `src@android` and a stand-in for tests in `src@jvm`:
+Each is an `expect` in `apps/app/src` with its `actual` in `src@android` and a stand-in for tests in `src@jvm`, except opening a link outside the app, which is an interface (`platform/Links`) the Android container binds:
 
 - `VideoPlayer`: YouTube's player in a WebView, the one thing that contacts another site. `ItemPicture` holds the player's place on plain paper until the page has arrived and the player says it is ready (`VideoOnPaper`).
 - `rememberOnline`: whether to show that player at all.

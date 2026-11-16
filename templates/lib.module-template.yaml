@@ -3,8 +3,8 @@
 settings:
   kotlin:
     allWarningsAsErrors: true
-    # No module-wide `optIns`: opt in per file (`@file:OptIn`). Since toolchain 0.13 a module's flags reach
-    # the Kotlin/Native cache build of every dependency, where an unresolved marker fails the iOS link.
+    # No module-wide `optIns`: opt in per file (`@file:OptIn`), so each use of an unstable API is visible
+    # where it is made.
 
 plugins:
   lint-plugin:

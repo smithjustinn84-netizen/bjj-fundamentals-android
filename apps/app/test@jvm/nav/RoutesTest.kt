@@ -2,8 +2,12 @@ package dev.justinsmith.bjj.nav
 
 import androidx.navigation3.runtime.NavBackStack
 import androidx.navigation3.runtime.NavKey
+import dev.justinsmith.bjj.core.CardKind
+import dev.justinsmith.bjj.core.StudyItem
 import kotlin.test.Test
 import kotlin.test.assertEquals
+import kotlin.test.assertFalse
+import kotlin.test.assertTrue
 
 /** How the one back stack moves: what Back, the bar and a page's links each do to it. */
 class RoutesTest {
@@ -51,5 +55,14 @@ class RoutesTest {
         assertEquals(listOf(TodayTab, LearnTab(), ConceptDetail("posture")), stack.toList())
         stack.back()
         assertEquals(listOf(TodayTab, LearnTab()), stack.toList())
+    }
+
+    @Test
+    fun `the bar keeps a tab lit on any page of it and under pages opened from it`() {
+        val stack = listOf(TodayTab, LearnTab(LearnSection.Lessons), ConceptDetail("base"))
+        assertTrue(stack.currentTab().sameDestination(LearnTab()))
+        assertFalse(stack.currentTab().sameDestination(ReviewTab()))
+        assertEquals(TodayTab, listOf(TodayTab).currentTab())
+        assertEquals(PositionDetail("mount"), studyItemKey(StudyItem(CardKind.Situation, "mount:bottom")))
     }
 }
