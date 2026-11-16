@@ -1,0 +1,134 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- The pages behind the Learn tab: concepts, positions, techniques, lessons and the blue belt test. -->
+<resources>
+    <!-- The switch at the top of every Learn page. The other three segments are common_*. -->
+    <string name="learn_switch_blue_belt">Blue belt</string>
+
+    <!-- The library search box. -->
+    <string name="learn_search_label">Search your library</string>
+    <string name="learn_search_placeholder">Find a concept, position or technique…</string>
+    <!-- %1$s is what the user typed. -->
+    <string name="learn_search_no_match">Nothing matches “%1$s”.</string>
+
+    <!-- Heading of the offer to add starter items the library lacks; a list of their names follows. -->
+    <plurals name="learn_starter_concepts_missing">
+        <item quantity="one">%1$d starter concept is not in your library:</item>
+        <item quantity="other">%1$d starter concepts are not in your library:</item>
+    </plurals>
+    <plurals name="learn_starter_techniques_missing">
+        <item quantity="one">%1$d starter technique is not in your library:</item>
+        <item quantity="other">%1$d starter techniques are not in your library:</item>
+    </plurals>
+    <!-- The button that adds the missing starter items; the quantity is how many there are. -->
+    <plurals name="learn_starter_add">
+        <item quantity="one">Add it</item>
+        <item quantity="other">Add them</item>
+    </plurals>
+    <string name="learn_starter_dismiss">Dismiss</string>
+
+    <!-- Under a technique's name in a list: the position it starts from. %1$s is the position's name. -->
+    <string name="learn_from_position">from %1$s</string>
+    <!-- Under a technique's name in a list: it ends the roll with a submission. -->
+    <string name="learn_leads_to_tap">→ tap</string>
+    <!-- Under a technique's name in a list: the position it leads to. -->
+    <string name="learn_leads_to">→ %1$s</string>
+    <!-- As learn_leads_to, with the side you end up on. %1$s is the position, %2$s the side, e.g. "on top". -->
+    <string name="learn_leads_to_side">→ %1$s, %2$s</string>
+
+    <!-- Headings on a technique's page for the techniques that answer it. -->
+    <string name="learn_links_follow_ups">If they stop it, switch to</string>
+    <string name="learn_links_defences">How it gets defended</string>
+    <string name="learn_links_answers">What it defends</string>
+
+    <string name="learn_no_techniques_from_here">No techniques from here yet.</string>
+    <!-- In place of an empty list of points. -->
+    <string name="learn_nothing_here">Nothing here yet.</string>
+    <!-- Button that opens the form for a new technique. -->
+    <string name="learn_add_technique">+ Technique</string>
+    <!-- Heading over a short drill, on a concept and on a technique. -->
+    <string name="learn_try_this_drill">Try this drill</string>
+
+    <!-- Blue belt test page. -->
+    <string name="learn_blue_belt_about">The techniques you will be asked to show. Every gym tests differently, so edit a technique to add it to this list or take it off.</string>
+    <string name="learn_blue_belt_empty_title">Nothing on the list yet</string>
+    <string name="learn_blue_belt_empty_text">Open a technique, choose Edit and tick “On the blue belt test” to add it here.</string>
+    <string name="learn_blue_belt_browse">Browse techniques</string>
+    <!-- %1$d techniques learned out of %2$d on the list. -->
+    <string name="learn_blue_belt_learned">%1$d of %2$d learned</string>
+    <string name="learn_blue_belt_study">Study techniques</string>
+    <!-- Heading of a group of techniques: %1$s is the type (e.g. "Escapes"), %2$d how many there are. -->
+    <string name="learn_blue_belt_group">%1$s · %2$d</string>
+
+    <!-- Concepts page. -->
+    <string name="learn_concepts_about">The big ideas that make every technique work. Review brings each one in beside the escapes that use it.</string>
+    <string name="learn_concepts_study">Study concepts</string>
+    <string name="learn_concepts_new">+ New concept</string>
+    <string name="learn_concepts_empty">No concepts yet.</string>
+
+    <!-- A concept's page. -->
+    <!-- The kind of item, above a concept's name and in "Concept not found". -->
+    <string name="learn_concept">Concept</string>
+    <string name="learn_concept_key_points">Key points</string>
+    <!-- Heading over the positions a concept is used in. -->
+    <string name="learn_concept_where_it_matters">Where it matters</string>
+    <!-- The "next" link on the last concept, which leads to the Positions page. -->
+    <string name="learn_concept_on_to_positions">On to positions</string>
+
+    <!-- Lessons page. -->
+    <!-- %1$d is how many lessons there are. -->
+    <string name="learn_lessons_about">%1$d class-sized lessons, in the order to take them: survive underneath first, then the guard, then the rest. Review brings new cards in this order too.</string>
+    <!-- Small heading above a lesson's title. %1$d is the lesson's number. -->
+    <string name="learn_lesson_number">Lesson %1$d</string>
+    <!-- As learn_lesson_number, for the lesson the student is working through. -->
+    <string name="learn_lesson_number_current">Lesson %1$d · you are here</string>
+    <string name="learn_lesson_empty">Nothing from this lesson is in your library.</string>
+    <!-- %1$d cards learned out of %2$d in the lesson; the quantity is %2$d. -->
+    <plurals name="learn_lesson_learned">
+        <item quantity="one">%1$d of %2$d card learned</item>
+        <item quantity="other">%1$d of %2$d cards learned</item>
+    </plurals>
+    <!-- %1$s is the lesson's own practice instructions, one or more sentences. -->
+    <string name="learn_lesson_practice">Practise with a partner, about 15 minutes. %1$s</string>
+    <string name="learn_lesson_study">Study this lesson</string>
+
+    <!-- Positions page. -->
+    <string name="learn_positions_about">Each position, and the techniques that move you between them.</string>
+    <!-- The switch between the two ways to look at the positions. -->
+    <string name="learn_positions_view_list">List</string>
+    <string name="learn_positions_view_map">Map</string>
+    <string name="learn_positions_new">+ Position</string>
+    <string name="learn_positions_empty_title">No positions yet</string>
+    <string name="learn_positions_empty_text">Add a position, then the techniques that connect it to others, and the map will draw itself.</string>
+    <string name="learn_positions_empty_add">Add a position</string>
+    <string name="learn_positions_orphans">Techniques without a starting position</string>
+    <!-- Under a position's name in the list: %1$d techniques learned out of the %2$d that start there. -->
+    <string name="learn_positions_techniques_learned">%1$d of %2$d techniques learned</string>
+
+    <!-- A position's page. -->
+    <!-- The kind of item, in "Position not found". -->
+    <string name="learn_position">Position</string>
+    <!-- Heading over the goals of the side picked above it. -->
+    <string name="learn_position_goals">What you want</string>
+    <!-- Heading over the techniques open to the side picked above it. -->
+    <string name="learn_position_options">What you can do</string>
+    <string name="learn_position_learned">%1$d of %2$d learned from this position</string>
+    <string name="learn_position_side_empty">Nothing for this side yet. Add a technique so you have an answer here.</string>
+    <string name="learn_position_concepts">Concepts to remember</string>
+    <!-- Heading over the techniques that end in this position. -->
+    <string name="learn_position_ways_in">Ways to get here</string>
+
+    <!-- A technique's page. -->
+    <!-- The kind of item, in "Technique not found". -->
+    <string name="learn_technique">Technique</string>
+    <!-- Read aloud for the arrow between the position a technique starts in and the one it ends in. -->
+    <string name="learn_technique_leads_to">leads to</string>
+    <!-- Where a submission ends, in place of a position: the partner taps. -->
+    <string name="learn_technique_tap">Tap</string>
+    <!-- %1$s is a side of the starting position, e.g. "Top" or "Guard player". -->
+    <string name="learn_technique_who">Who does it: %1$s</string>
+    <!-- %1$s as in learn_technique_who; %2$s is the side of the end position, e.g. "on top". -->
+    <string name="learn_technique_who_and_end">Who does it: %1$s · You end up: %2$s</string>
+    <string name="learn_technique_steps">Steps</string>
+    <string name="learn_technique_mistakes">Common mistakes</string>
+    <string name="learn_technique_submission_care">Apply submissions slowly in training and let go as soon as your partner taps.</string>
+</resources>

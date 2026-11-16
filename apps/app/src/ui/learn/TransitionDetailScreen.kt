@@ -1,6 +1,5 @@
 package dev.justinsmith.bjj.ui.learn
 
-import androidx.compose.foundation.clickable
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import dev.justinsmith.bjj.core.CardKind
@@ -39,6 +38,18 @@ import dev.justinsmith.bjj.nav.LearnSection
 import dev.justinsmith.bjj.nav.LearnTab
 import dev.justinsmith.bjj.nav.PositionDetail
 import dev.justinsmith.bjj.nav.TransitionDetail
+import dev.justinsmith.bjj.resources.Res
+import dev.justinsmith.bjj.resources.common_blue_belt_test
+import dev.justinsmith.bjj.resources.common_positions
+import dev.justinsmith.bjj.resources.learn_technique
+import dev.justinsmith.bjj.resources.learn_technique_leads_to
+import dev.justinsmith.bjj.resources.learn_technique_mistakes
+import dev.justinsmith.bjj.resources.learn_technique_steps
+import dev.justinsmith.bjj.resources.learn_technique_submission_care
+import dev.justinsmith.bjj.resources.learn_technique_tap
+import dev.justinsmith.bjj.resources.learn_technique_who
+import dev.justinsmith.bjj.resources.learn_technique_who_and_end
+import dev.justinsmith.bjj.resources.learn_try_this_drill
 import dev.justinsmith.bjj.ui.common.DetailHeader
 import dev.justinsmith.bjj.ui.common.ItemPicture
 import dev.justinsmith.bjj.ui.common.ItemRef
@@ -56,13 +67,18 @@ import dev.justinsmith.bjj.ui.common.WithSnapshot
 import dev.justinsmith.bjj.ui.common.label
 import dev.justinsmith.bjj.ui.common.progressOf
 import dev.justinsmith.bjj.ui.common.videoActions
+import org.jetbrains.compose.resources.stringResource
 
 @Composable
 fun TransitionDetailRoute(id: String, nav: Nav) {
     WithSnapshot { snapshot, viewModel ->
         val transition = snapshot.library.transitionById[id]
         if (transition == null) {
-            Missing("Technique", "Positions", { nav.selectTab(LearnTab(LearnSection.Positions)) })
+            Missing(
+                stringResource(Res.string.learn_technique),
+                stringResource(Res.string.common_positions),
+                { nav.selectTab(LearnTab(LearnSection.Positions)) },
+            )
         } else {
             TransitionDetailScreen(
                 transition = transition,
@@ -91,7 +107,7 @@ fun TransitionDetailScreen(
     val state = reviewOf(lib, CardKind.Transition, transition.id)
     Page(modifier, maxWidth = Sizes.readingMax) {
         DetailHeader(
-            backLabel = from?.name ?: "Positions",
+            backLabel = from?.name ?: stringResource(Res.string.common_positions),
             onBack = nav.back,
             onEdit = { nav.open(Editor(ItemKind.Transition, transition.id)) },
             title = transition.name,
@@ -99,9 +115,8 @@ fun TransitionDetailScreen(
                 Tag(transition.type.label, BjjTheme.palette.typeColor(transition.type))
                 if (isOnBlueBeltTest(transition)) {
                     Tag(
-                        "Blue belt test",
+                        stringResource(Res.string.common_blue_belt_test),
                         BjjTheme.palette.beltBlue,
-                        Modifier.clickable { nav.selectTab(LearnTab(LearnSection.BlueBelt)) },
                         onColor = BjjTheme.palette.onBelt,
                     )
                 }
@@ -127,17 +142,26 @@ private fun Ends(transition: Transition, lib: Library, nav: Nav) {
     val muted = BjjTheme.palette.muted
     Wrap {
         if (from != null) Chip(from.name, { nav.open(PositionDetail(from.id)) }) else BjjText("?", color = muted)
-        Icon(BjjIcons.Arrow, description = "leads to", tint = muted)
+        Icon(BjjIcons.Arrow, description = stringResource(Res.string.learn_technique_leads_to), tint = muted)
         when {
-            endsTheRoll(transition.type) -> BjjText("Tap", style = Type.strong)
+            endsTheRoll(transition.type) -> BjjText(
+                stringResource(Res.string.learn_technique_tap),
+                style = Type.strong,
+            )
+
             to != null -> Chip(to.name, { nav.open(PositionDetail(to.id)) })
+
             else -> BjjText("?", color = muted)
         }
     }
     if (from != null) {
-        val who = "Who does it: ${roleLabel(from.category, performerRole(lib, transition))}"
-        val ends = if (to != null && endSide != null) " · You end up: ${endSideLabel(to.category, endSide)}" else ""
-        BjjText(who + ends, style = Type.small, color = muted)
+        val who = roleLabel(from.category, performerRole(lib, transition))
+        val line = if (to != null && endSide != null) {
+            stringResource(Res.string.learn_technique_who_and_end, who, endSideLabel(to.category, endSide))
+        } else {
+            stringResource(Res.string.learn_technique_who, who)
+        }
+        BjjText(line, style = Type.small, color = muted)
     }
 }
 
@@ -152,17 +176,17 @@ private fun Body(
     val drill = techniqueDrill(transition)
     Card {
         ItemPicture(videos) { TransitionArtwork(transition, lib.positionById) }
-        Section("Steps") { PointList(transition.steps, numbered = true) }
+        Section(stringResource(Res.string.learn_technique_steps)) { PointList(transition.steps, numbered = true) }
         if (transition.commonMistakes.isNotEmpty()) {
             Divider()
-            Section("Common mistakes") { PointList(transition.commonMistakes) }
+            Section(stringResource(Res.string.learn_technique_mistakes)) { PointList(transition.commonMistakes) }
         }
         if (drill.isNotEmpty()) {
             Divider()
-            Section("Try this drill") { BjjText(drill) }
+            Section(stringResource(Res.string.learn_try_this_drill)) { BjjText(drill) }
         }
         if (endsTheRoll(transition.type)) {
-            SoftBlock("Apply submissions slowly in training and let go as soon as your partner taps.")
+            SoftBlock(stringResource(Res.string.learn_technique_submission_care))
         }
         TechniqueLinks(lib, transition.id, { nav.open(TransitionDetail(it)) })
         if (transition.notes.isNotBlank()) Divider()

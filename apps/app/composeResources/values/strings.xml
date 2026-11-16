@@ -1,0 +1,25 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Text more than one screen uses, and the shell's. Each screen's own text is in strings_<area>.xml. -->
+<resources>
+    <string name="app_name">BJJ Fundamentals</string>
+    <string name="tab_today">Today</string>
+    <string name="tab_learn">Learn</string>
+    <string name="tab_review">Review</string>
+    <string name="tab_log">Log</string>
+    <string name="tab_more">More</string>
+    <string name="common_cancel">Cancel</string>
+    <string name="common_delete">Delete</string>
+    <string name="common_edit">Edit</string>
+    <string name="common_done">Done</string>
+    <string name="common_concepts">Concepts</string>
+    <string name="common_positions">Positions</string>
+    <string name="common_lessons">Lessons</string>
+    <string name="common_videos">Videos</string>
+    <string name="common_blue_belt_test">Blue belt test</string>
+    <string name="common_training_log">Training log</string>
+    <!-- What a screen reader says for the Review tab when cards are waiting: the tab's name, then the count. -->
+    <plurals name="tab_cards_ready">
+        <item quantity="one">%1$s, %2$d card ready</item>
+        <item quantity="other">%1$s, %2$d cards ready</item>
+    </plurals>
+</resources>

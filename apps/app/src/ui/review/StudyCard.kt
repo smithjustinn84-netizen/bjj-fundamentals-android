@@ -31,6 +31,22 @@ import dev.justinsmith.bjj.design.graphics.hasPositionArtwork
 import dev.justinsmith.bjj.design.theme.BjjTheme
 import dev.justinsmith.bjj.design.theme.Spacing
 import dev.justinsmith.bjj.design.theme.Type
+import dev.justinsmith.bjj.resources.Res
+import dev.justinsmith.bjj.resources.review_card_concept
+import dev.justinsmith.bjj.resources.review_card_position
+import dev.justinsmith.bjj.resources.review_card_situation
+import dev.justinsmith.bjj.resources.review_card_technique_from
+import dev.justinsmith.bjj.resources.review_card_unknown_position
+import dev.justinsmith.bjj.resources.review_common_mistakes
+import dev.justinsmith.bjj.resources.review_drill
+import dev.justinsmith.bjj.resources.review_ends_in
+import dev.justinsmith.bjj.resources.review_question_concept
+import dev.justinsmith.bjj.resources.review_question_position
+import dev.justinsmith.bjj.resources.review_question_situation
+import dev.justinsmith.bjj.resources.review_question_technique
+import dev.justinsmith.bjj.resources.review_start_here
+import dev.justinsmith.bjj.resources.review_what_you_can_do
+import dev.justinsmith.bjj.resources.review_what_you_want
 import dev.justinsmith.bjj.ui.common.CARD_PICTURE_WIDTH
 import dev.justinsmith.bjj.ui.common.Direction
 import dev.justinsmith.bjj.ui.common.ItemPicture
@@ -38,27 +54,41 @@ import dev.justinsmith.bjj.ui.common.TechniqueLinks
 import dev.justinsmith.bjj.ui.common.TransitionArtwork
 import dev.justinsmith.bjj.ui.common.TransitionList
 import dev.justinsmith.bjj.ui.learn.PointList
+import org.jetbrains.compose.resources.stringResource
 
 /** The question side of a review card. */
 class CardPrompt(val eyebrow: String, val question: String)
 
 /** The question side of a review card, or null if the item no longer exists. */
+@Composable
 fun cardPrompt(item: StudyItem, lib: Library): CardPrompt? = when (item.kind) {
     CardKind.Concept -> lib.conceptById[item.id]?.let {
-        CardPrompt("Concept", "What is \"${it.name}\", and what are its key points?")
+        CardPrompt(
+            stringResource(Res.string.review_card_concept),
+            stringResource(Res.string.review_question_concept, it.name),
+        )
     }
 
     CardKind.Position -> lib.positionById[item.id]?.let {
-        CardPrompt("Position", "${it.name}: what are the goals for each person?")
+        CardPrompt(
+            stringResource(Res.string.review_card_position),
+            stringResource(Res.string.review_question_position, it.name),
+        )
     }
 
     CardKind.Transition -> lib.transitionById[item.id]?.let {
-        val from = lib.positionById[it.fromId]?.name ?: "unknown position"
-        CardPrompt("${it.type.label} · from $from", "How do you do the ${it.name}?")
+        val from = lib.positionById[it.fromId]?.name ?: stringResource(Res.string.review_card_unknown_position)
+        CardPrompt(
+            stringResource(Res.string.review_card_technique_from, it.type.label, from),
+            stringResource(Res.string.review_question_technique, it.name),
+        )
     }
 
     CardKind.Situation -> findSituation(lib, item.id)?.let {
-        CardPrompt("Situation", "${situationName(it)}: what are your options?")
+        CardPrompt(
+            stringResource(Res.string.review_card_situation),
+            stringResource(Res.string.review_question_situation, situationName(it)),
+        )
     }
 }
 
@@ -82,7 +112,7 @@ fun CardCue(item: StudyItem, lib: Library, modifier: Modifier = Modifier) {
     Column(modifier.fillMaxWidth(), verticalArrangement = Arrangement.spacedBy(Spacing.s1)) {
         CardPicture { PositionArtwork(from.id) }
         BjjText(
-            "You start here: ${from.name}.",
+            stringResource(Res.string.review_start_here, from.name),
             Modifier.fillMaxWidth(),
             style = Type.small,
             color = BjjTheme.palette.muted,
@@ -108,7 +138,7 @@ fun CardAnswer(
                 }
                 BjjText(concept.summary, style = Type.lead)
                 PointList(concept.keyPoints)
-                if (concept.drill.isNotEmpty()) SoftBlock("Drill: ${concept.drill}")
+                if (concept.drill.isNotEmpty()) SoftBlock(stringResource(Res.string.review_drill, concept.drill))
             }
 
             CardKind.Position -> lib.positionById[item.id]?.let { position ->
@@ -128,21 +158,21 @@ fun CardAnswer(
                 ItemPicture(linkedVideos(videos, ItemKind.Transition, transition.id), maxWidth = CARD_PICTURE_WIDTH) {
                     TransitionArtwork(transition, lib.positionById)
                 }
-                if (to != null) BjjText("Ends in: $to", style = Type.lead)
+                if (to != null) BjjText(stringResource(Res.string.review_ends_in, to), style = Type.lead)
                 PointList(transition.steps, numbered = true)
                 if (transition.commonMistakes.isNotEmpty()) {
-                    BjjText("Common mistakes", style = Type.h3)
+                    BjjText(stringResource(Res.string.review_common_mistakes), style = Type.h3)
                     PointList(transition.commonMistakes)
                 }
-                if (drill.isNotEmpty()) SoftBlock("Drill: $drill")
+                if (drill.isNotEmpty()) SoftBlock(stringResource(Res.string.review_drill, drill))
                 TechniqueLinks(lib, transition.id, onOpenTechnique)
             }
 
             CardKind.Situation -> findSituation(lib, item.id)?.let { situation ->
                 if (hasPositionArtwork(situation.position.id)) CardPicture { PositionArtwork(situation.position.id) }
-                BjjText("What you want", style = Type.h3)
+                BjjText(stringResource(Res.string.review_what_you_want), style = Type.h3)
                 PointList(roleGoals(situation.position, situation.role))
-                BjjText("What you can do", style = Type.h3)
+                BjjText(stringResource(Res.string.review_what_you_can_do), style = Type.h3)
                 TransitionList(situation.options, lib.positionById, Direction.Out, onOpenTechnique)
             }
         }

@@ -1,0 +1,91 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- The Today page. -->
+<resources>
+    <string name="today_title">Today</string>
+
+    <!-- The hero: the number of cards ready is drawn large beside this, so the number is not repeated here. -->
+    <plurals name="today_cards_ready">
+        <item quantity="one">card ready</item>
+        <item quantity="other">cards ready</item>
+    </plurals>
+    <!-- Under "cards ready": how the session splits. %1$d cards due, %2$d new cards. -->
+    <string name="today_review_split">%1$d due · %2$d new</string>
+    <!-- As today_review_split, then %3$d: how many of the new cards come from recently logged classes. -->
+    <string name="today_review_split_from_class">%1$d due · %2$d new, %3$d from your recent classes</string>
+    <string name="today_review_nothing_due">Nothing is due. Come back tomorrow, or browse something new.</string>
+    <!-- Shown before the student has studied any card. -->
+    <string name="today_review_first">Start with how to survive underneath: escapes come first.</string>
+    <string name="today_start_review">Start review</string>
+    <!-- The hero's button when no card is ready. -->
+    <string name="today_open_review">Open review</string>
+    <!-- The streak stamp: the number of days in a row is drawn large beside this, so it is not repeated here. -->
+    <plurals name="today_day_streak">
+        <item quantity="one">day streak</item>
+        <item quantity="other">day streak</item>
+    </plurals>
+
+    <!-- The study rank. %1$s is the belt ("White belt"), %2$d the stripes earned on it. -->
+    <plurals name="today_belt_stripes">
+        <item quantity="one">%1$s · %2$d stripe</item>
+        <item quantity="other">%1$s · %2$d stripes</item>
+    </plurals>
+    <!-- What a screen reader says for the drawing of the belt. %1$s is the belt, %2$d its stripes. -->
+    <plurals name="today_belt_description">
+        <item quantity="one">%1$s, %2$d stripe</item>
+        <item quantity="other">%1$s, %2$d stripes</item>
+    </plurals>
+    <!-- %1$d cards learned out of %2$d in the library. -->
+    <string name="today_learned">%1$d of %2$d learned</string>
+    <!-- As today_learned, then %3$d: the percentage still to learn for the next belt, %4$s ("blue belt"). -->
+    <string name="today_learned_to_next">%1$d of %2$d learned · %3$d% more for %4$s</string>
+    <string name="today_study_rank_note">A study rank, not a real one.</string>
+
+    <string name="today_drill_eyebrow">Drill for today</string>
+    <!-- Why today's drill was chosen. -->
+    <string name="today_drill_reason_stuck">A way out of where you got stuck in a recent class.</string>
+    <string name="today_drill_reason_slipping">This one keeps slipping in review.</string>
+    <string name="today_drill_reason_practised">You practised this in a recent class.</string>
+    <string name="today_drill_reason_next">The next technique you have not learned yet.</string>
+
+    <string name="today_log_prompt">Write up each class while it is fresh: what was taught, what worked in rolling, and one thing to work on next time.</string>
+    <string name="today_log_a_class">Log a class</string>
+    <string name="today_focus_eyebrow">Focus for your next class</string>
+    <!-- %1$s is a count of classes ("3 classes"), %2$s a length of time ("4 h 30 min"). -->
+    <string name="today_training_line">%1$s logged · %2$s on the mat</string>
+    <!-- Above the positions the student wrote down as trouble in recent classes. -->
+    <string name="today_stuck_note">Where you got stuck. Cards from here that you have not studied yet come first in review.</string>
+
+    <!-- Which foundation lesson the student is on: %1$d is its number, %2$d how many there are. -->
+    <string name="today_lesson_number">Lesson %1$d of %2$d</string>
+    <string name="today_all_lessons">All lessons</string>
+    <!-- %1$d cards learned out of the %2$d in the lesson. -->
+    <plurals name="today_lesson_cards_learned">
+        <item quantity="one">%1$d of %2$d card learned</item>
+        <item quantity="other">%1$d of %2$d cards learned</item>
+    </plurals>
+    <string name="today_study_lesson">Study this lesson</string>
+
+    <string name="today_path_title">Suggested path</string>
+    <!-- The link under a step of the path. %1$s is the name of a concept, position or technique. -->
+    <string name="today_path_next_up">Next up: %1$s</string>
+    <string name="today_path_survive_title">Survive first</string>
+    <string name="today_path_survive_body">Learn the way out of side control and mount before anything else. The lessons start there.</string>
+    <string name="today_path_concepts_title">Core concepts</string>
+    <string name="today_path_concepts_body">Posture, base, frames, and the shrimp show up everywhere. Each arrives with the escape that uses it.</string>
+    <string name="today_path_positions_title">The main positions</string>
+    <string name="today_path_positions_body">Know what each person wants in each one.</string>
+    <string name="today_path_attack_title">Then attack</string>
+    <string name="today_path_attack_body">Sweeps and passes improve your position; submissions come last.</string>
+    <string name="today_path_see_map">See the position map</string>
+    <string name="today_path_videos_title">Save the best explanations</string>
+    <string name="today_path_videos_body">Bookmark the exact moment in a YouTube video on any item, or on the Videos page.</string>
+
+    <string name="today_sticking_title">Sticking points</string>
+    <string name="today_sticking_note">These have slipped more than once in review. Reread the page or watch the video, then try one in your next class.</string>
+
+    <string name="today_concepts_title">Concepts to learn next</string>
+    <!-- A button to the full list of concepts. %1$d is how many there are. -->
+    <string name="today_concepts_all">All %1$d</string>
+    <string name="today_concepts_all_learned">Every concept is learned. Keep reviewing to stay sharp.</string>
+    <string name="today_concepts_none">No concepts yet.</string>
+</resources>

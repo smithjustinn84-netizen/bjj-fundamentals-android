@@ -21,9 +21,11 @@ import dev.justinsmith.bjj.nav.currentTab
 import dev.justinsmith.bjj.nav.sameDestination
 import dev.justinsmith.bjj.nav.studyItemKey
 import dev.justinsmith.bjj.platform.Links
+import dev.justinsmith.bjj.ui.backup.BackupMessage
 import dev.justinsmith.bjj.ui.backup.BackupViewModel
 import dev.justinsmith.bjj.ui.home.formatDay
 import dev.justinsmith.bjj.ui.home.todayLabel
+import dev.justinsmith.bjj.ui.log.LogError
 import dev.justinsmith.bjj.ui.log.LogViewModel
 import dev.justinsmith.bjj.ui.review.ReviewSessionViewModel
 import kotlinx.coroutines.CoroutineScope
@@ -101,7 +103,7 @@ class ViewModelsTest {
         assertEquals(1, t.storage.trainingLog.count())
         log.save(null, entry.copy(day = "yesterday")) { saved++ }
         assertEquals(1, saved)
-        assertTrue(log.state.value.error.isNotEmpty())
+        assertEquals(LogError.Save, log.state.value.error)
         assertFalse(log.state.value.saving)
     }
 
@@ -114,7 +116,7 @@ class ViewModelsTest {
             text = exported
         }
         backup.picked("{ not a backup")
-        assertEquals("${BackupProblem.NotJson.message} Nothing was changed.", backup.state.value.message)
+        assertEquals(BackupMessage.Rejected(BackupProblem.NotJson), backup.state.value.message)
         assertTrue(backup.state.value.isError)
 
         t.storage.concepts.clear()

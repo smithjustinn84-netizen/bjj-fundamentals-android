@@ -1,0 +1,21 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- The parts every page is built from: loading, a missing item, progress, the pager, pictures. -->
+<resources>
+    <string name="page_loading">Loading…</string>
+    <!-- Title in place of a page whose item is gone. %1$s is what it was: "Concept", "Position", "Technique". -->
+    <string name="page_not_found">%1$s not found</string>
+    <string name="page_not_found_about">It may have been deleted or replaced by an imported backup.</string>
+    <!-- How far a card has got in review. -->
+    <string name="page_progress_new">Not studied yet</string>
+    <string name="page_progress_learning">Learning</string>
+    <string name="page_progress_learned">Learned</string>
+    <!-- Heading over the user's own notes on an item. -->
+    <string name="page_my_notes">My notes</string>
+    <!-- The two links at the foot of a page about one item. -->
+    <string name="page_previous">← Previous</string>
+    <string name="page_next">Next →</string>
+    <!-- Caption under the drawing of a submission's end: the opponent taps out. -->
+    <string name="page_tap">Tap</string>
+    <!-- What a screen reader calls the video player. %1$s is the bookmark's title. -->
+    <string name="page_video">Video: %1$s</string>
+</resources>

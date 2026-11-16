@@ -11,11 +11,14 @@ import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 
+/** A write to the log that failed. */
+enum class LogError { Save, Remove }
+
 data class LogUiState(
     /** True while an entry is being stored: a second tap must not write a second entry. */
     val saving: Boolean = false,
-    /** What went wrong with the last save or delete, to say on the page; empty when nothing did. */
-    val error: String = "",
+    /** What went wrong with the last save or delete, to say on the page; null when nothing did. */
+    val error: LogError? = null,
 )
 
 /** Saves and deletes for the training log. */
@@ -26,15 +29,15 @@ class LogViewModel(private val core: Core) : ViewModel() {
     fun save(id: String?, input: TrainingEntryInput, onSaved: () -> Unit) {
         if (_state.value.saving) return
         _state.value = LogUiState(saving = true)
-        attempt("That did not save. Your entry is still in the form: try again.") {
+        attempt(LogError.Save) {
             core.trainingLog.save(id, input)
             onSaved()
         }
     }
 
-    fun remove(id: String) = attempt("That entry could not be deleted. Try again.") { core.trainingLog.remove(id) }
+    fun remove(id: String) = attempt(LogError.Remove) { core.trainingLog.remove(id) }
 
-    private fun attempt(failure: String, write: suspend () -> Unit) {
+    private fun attempt(failure: LogError, write: suspend () -> Unit) {
         viewModelScope.launch {
             try {
                 write()

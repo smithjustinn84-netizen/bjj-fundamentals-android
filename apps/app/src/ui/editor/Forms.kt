@@ -38,6 +38,28 @@ import dev.justinsmith.bjj.design.components.Segmented
 import dev.justinsmith.bjj.design.components.TextField
 import dev.justinsmith.bjj.design.theme.Spacing
 import dev.justinsmith.bjj.design.theme.Type
+import dev.justinsmith.bjj.resources.Res
+import dev.justinsmith.bjj.resources.editor_concept_key_points
+import dev.justinsmith.bjj.resources.editor_drill
+import dev.justinsmith.bjj.resources.editor_one_per_line
+import dev.justinsmith.bjj.resources.editor_position_bottom_goals
+import dev.justinsmith.bjj.resources.editor_position_category
+import dev.justinsmith.bjj.resources.editor_position_concepts
+import dev.justinsmith.bjj.resources.editor_position_top_goals
+import dev.justinsmith.bjj.resources.editor_technique_blue_belt
+import dev.justinsmith.bjj.resources.editor_technique_choose
+import dev.justinsmith.bjj.resources.editor_technique_drill_hint
+import dev.justinsmith.bjj.resources.editor_technique_end_side
+import dev.justinsmith.bjj.resources.editor_technique_from
+import dev.justinsmith.bjj.resources.editor_technique_mistakes
+import dev.justinsmith.bjj.resources.editor_technique_side_bottom
+import dev.justinsmith.bjj.resources.editor_technique_side_top
+import dev.justinsmith.bjj.resources.editor_technique_steps
+import dev.justinsmith.bjj.resources.editor_technique_steps_hint
+import dev.justinsmith.bjj.resources.editor_technique_to
+import dev.justinsmith.bjj.resources.editor_technique_type
+import dev.justinsmith.bjj.resources.editor_technique_who
+import org.jetbrains.compose.resources.stringResource
 
 // Each form keeps a working copy that starts from the stored item, once: later changes to the library cannot
 // overwrite what is being typed.
@@ -76,8 +98,14 @@ fun ConceptForm(context: FormContext, modifier: Modifier = Modifier) {
     ) {
         NameField(name, { name = it })
         SummaryField(summary, { summary = it })
-        TextField("Key points", keyPoints, { keyPoints = it }, hint = "One per line.", lines = LIST_LINES)
-        TextField("Drill", drill, { drill = it }, lines = 2)
+        TextField(
+            stringResource(Res.string.editor_concept_key_points),
+            keyPoints,
+            { keyPoints = it },
+            hint = stringResource(Res.string.editor_one_per_line),
+            lines = LIST_LINES,
+        )
+        TextField(stringResource(Res.string.editor_drill), drill, { drill = it }, lines = 2)
         OrderField(order, { order = it })
         NotesField(notes, { notes = it })
     }
@@ -116,14 +144,30 @@ fun PositionForm(context: FormContext, modifier: Modifier = Modifier) {
     ) {
         NameField(name, { name = it })
         SummaryField(summary, { summary = it })
-        ChoiceField("Category", PositionCategory.entries, category, { it.label }, { category = it })
-        TextField("Goals on top / attacking", topGoals, { topGoals = it }, hint = "One per line.", lines = GOAL_LINES)
-        TextField("Goals on bottom / defending", bottomGoals, {
-            bottomGoals = it
-        }, hint = "One per line.", lines = GOAL_LINES)
+        ChoiceField(
+            stringResource(Res.string.editor_position_category),
+            PositionCategory.entries,
+            category,
+            { it.label },
+            { category = it },
+        )
+        TextField(
+            stringResource(Res.string.editor_position_top_goals),
+            topGoals,
+            { topGoals = it },
+            hint = stringResource(Res.string.editor_one_per_line),
+            lines = GOAL_LINES,
+        )
+        TextField(
+            stringResource(Res.string.editor_position_bottom_goals),
+            bottomGoals,
+            { bottomGoals = it },
+            hint = stringResource(Res.string.editor_one_per_line),
+            lines = GOAL_LINES,
+        )
         if (lib.concepts.isNotEmpty()) {
             Column(Modifier.fillMaxWidth()) {
-                BjjText("Related concepts", style = Type.label)
+                BjjText(stringResource(Res.string.editor_position_concepts), style = Type.label)
                 for (concept in lib.concepts) {
                     CheckRow(
                         concept.name,
@@ -144,7 +188,7 @@ private fun SideField(
     label: String,
     value: PositionRole,
     onChange: (PositionRole) -> Unit,
-    name: (PositionRole) -> String,
+    name: @Composable (PositionRole) -> String,
 ) {
     Field(label) { Segmented(PositionRole.entries, value, onChange, { name(it) }, Modifier.fillMaxWidth()) }
 }
@@ -205,34 +249,72 @@ fun TransitionForm(context: FormContext, modifier: Modifier = Modifier) {
         modifier = modifier,
     ) {
         NameField(draft.name, { draft.name = it })
-        ChoiceField("Type", TransitionType.entries, draft.type, { it.label }, { draft.type = it })
+        ChoiceField(
+            stringResource(Res.string.editor_technique_type),
+            TransitionType.entries,
+            draft.type,
+            { it.label },
+            { draft.type = it },
+        )
         Column(verticalArrangement = Arrangement.spacedBy(Spacing.s3)) {
-            ChoiceField("From position", lib.positions, from, {
-                it.name
-            }, { draft.fromId = it.id }, placeholder = "Choose…")
+            val choose = stringResource(Res.string.editor_technique_choose)
+            ChoiceField(
+                stringResource(Res.string.editor_technique_from),
+                lib.positions,
+                from,
+                { it.name },
+                { draft.fromId = it.id },
+                placeholder = choose,
+            )
             if (!ends) {
-                ChoiceField("Ends in", lib.positions, to, { it.name }, { draft.toId = it.id }, placeholder = "Choose…")
+                ChoiceField(
+                    stringResource(Res.string.editor_technique_to),
+                    lib.positions,
+                    to,
+                    { it.name },
+                    { draft.toId = it.id },
+                    placeholder = choose,
+                )
             }
         }
         // Role names before a starting position is chosen are plain; after that they come from its kind.
-        SideField("Who does it", role, { draft.pickedRole = it }) { side -> roleName(from, side) }
-        if (endSide != null && to != null && !ends) {
-            SideField("You end up", endSide, { draft.pickedEnd = it }) { endSideLabel(to.category, it) }
+        SideField(stringResource(Res.string.editor_technique_who), role, { draft.pickedRole = it }) { side ->
+            roleName(from, side)
         }
-        TextField("Steps", draft.steps, { draft.steps = it }, hint = "One step per line, in order.", lines = STEP_LINES)
-        TextField("Common mistakes", draft.mistakes, {
-            draft.mistakes = it
-        }, hint = "One per line.", lines = MISTAKE_LINES)
-        TextField("Drill", draft.drill, {
-            draft.drill = it
-        }, hint = "A short solo or partner drill to practise it.", lines = 2)
-        CheckRow("On the blue belt test", draft.blueBelt, { draft.blueBelt = it })
+        if (endSide != null && to != null && !ends) {
+            SideField(stringResource(Res.string.editor_technique_end_side), endSide, { draft.pickedEnd = it }) {
+                endSideLabel(to.category, it)
+            }
+        }
+        TextField(
+            stringResource(Res.string.editor_technique_steps),
+            draft.steps,
+            { draft.steps = it },
+            hint = stringResource(Res.string.editor_technique_steps_hint),
+            lines = STEP_LINES,
+        )
+        TextField(
+            stringResource(Res.string.editor_technique_mistakes),
+            draft.mistakes,
+            { draft.mistakes = it },
+            hint = stringResource(Res.string.editor_one_per_line),
+            lines = MISTAKE_LINES,
+        )
+        TextField(
+            stringResource(Res.string.editor_drill),
+            draft.drill,
+            { draft.drill = it },
+            hint = stringResource(Res.string.editor_technique_drill_hint),
+            lines = 2,
+        )
+        CheckRow(stringResource(Res.string.editor_technique_blue_belt), draft.blueBelt, { draft.blueBelt = it })
         NotesField(draft.notes, { draft.notes = it })
     }
 }
 
+@Composable
 private fun roleName(from: Position?, side: PositionRole): String = when {
     from != null -> roleLabel(from.category, side)
-    side == PositionRole.Top -> "Top"
-    else -> "Bottom"
+    side == PositionRole.Top -> stringResource(Res.string.editor_technique_side_top)
+    else -> stringResource(Res.string.editor_technique_side_bottom)
 }

@@ -19,6 +19,16 @@ import dev.justinsmith.bjj.design.components.TextInput
 import dev.justinsmith.bjj.design.theme.BjjTheme
 import dev.justinsmith.bjj.design.theme.Sizes
 import dev.justinsmith.bjj.nav.itemKey
+import dev.justinsmith.bjj.resources.Res
+import dev.justinsmith.bjj.resources.tab_more
+import dev.justinsmith.bjj.resources.videos_about
+import dev.justinsmith.bjj.resources.videos_add_bookmark
+import dev.justinsmith.bjj.resources.videos_bookmarks
+import dev.justinsmith.bjj.resources.videos_no_matches
+import dev.justinsmith.bjj.resources.videos_none
+import dev.justinsmith.bjj.resources.videos_saved
+import dev.justinsmith.bjj.resources.videos_search
+import dev.justinsmith.bjj.resources.videos_search_placeholder
 import dev.justinsmith.bjj.ui.common.BackLink
 import dev.justinsmith.bjj.ui.common.Nav
 import dev.justinsmith.bjj.ui.common.Page
@@ -28,6 +38,7 @@ import dev.justinsmith.bjj.ui.common.VideoForm
 import dev.justinsmith.bjj.ui.common.VideoRow
 import dev.justinsmith.bjj.ui.common.WithSnapshot
 import dev.justinsmith.bjj.ui.common.videoActions
+import org.jetbrains.compose.resources.stringResource
 
 /** The search box only shows once there are enough bookmarks to need it. */
 private const val SEARCH_THRESHOLD = 4
@@ -56,25 +67,31 @@ fun VideosScreen(
         needle.isEmpty() || listOf(video.title, video.note, name.orEmpty()).any { needle in it.lowercase() }
     }
     Page(modifier, maxWidth = Sizes.readingMax) {
-        BackLink("More", nav.back)
+        BackLink(stringResource(Res.string.tab_more), nav.back)
         PageHead(
-            "Video bookmarks",
-            about = "Save YouTube links at the exact moment a detail is explained. Paste a link with ?t= and the " +
-                "start time fills in. Links open on YouTube.",
+            stringResource(Res.string.videos_bookmarks),
+            about = stringResource(Res.string.videos_about),
         )
         Card {
-            SectionHead("Saved (${all.size})") {
-                if (!adding) Button("+ Add bookmark", { adding = true }, size = ButtonSize.Small)
+            SectionHead(stringResource(Res.string.videos_saved, all.size)) {
+                if (!adding) {
+                    Button(stringResource(Res.string.videos_add_bookmark), { adding = true }, size = ButtonSize.Small)
+                }
             }
             // Behind a button so the saved list, not an empty form, is what the page opens on.
             if (adding) VideoForm(actions.add, onDone = { adding = false }, lib = lib)
             if (all.size >= SEARCH_THRESHOLD) {
-                TextInput(query, {
-                    query = it
-                }, "Search bookmarks", placeholder = "Search…", imeAction = ImeAction.Search)
+                TextInput(
+                    query,
+                    { query = it },
+                    stringResource(Res.string.videos_search),
+                    placeholder = stringResource(Res.string.videos_search_placeholder),
+                    imeAction = ImeAction.Search,
+                )
             }
             if (shown.isEmpty()) {
-                BjjText(if (all.isEmpty()) "No bookmarks yet." else "No matches.", color = BjjTheme.palette.muted)
+                val nothing = if (all.isEmpty()) Res.string.videos_none else Res.string.videos_no_matches
+                BjjText(stringResource(nothing), color = BjjTheme.palette.muted)
             }
             for ((video, name) in shown) {
                 val kind = video.linkedKind.itemKind

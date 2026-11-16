@@ -1,0 +1,57 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- The training log: the form for writing up a class, and the list of classes. -->
+<resources>
+    <string name="log_about">Write up each class while it is fresh. The one thing you pick to work on next time shows on Today.</string>
+    <!-- Heading over the list of logged classes. -->
+    <string name="log_classes">Classes</string>
+    <string name="log_empty_title">No classes logged yet</string>
+    <string name="log_empty_text">Your first entry will show here. A sentence or two is enough.</string>
+
+    <!-- Heading of the form while changing an entry. %1$s is the entry's day, like "Sat 14 Nov 2026". -->
+    <string name="log_form_edit">Edit %1$s</string>
+    <string name="log_form_new">Log a class</string>
+    <!-- Label of the field holding the date of the class. -->
+    <string name="log_day">Day</string>
+    <!-- Under the day field. %1$s is the typed day in words, %2$s is today as year-month-day, like 2026-11-14. -->
+    <string name="log_day_hint">%1$s. Write the day as year-month-day, like %2$s.</string>
+    <!-- Shown when Save is pressed with a day that is not a date. %1$s is today as year-month-day. -->
+    <string name="log_day_error">Write the day as year-month-day with a four-digit year, like %1$s.</string>
+    <string name="log_minutes">Minutes on the mat</string>
+    <!-- The choice that lets a class length be typed in, beside the preset lengths. -->
+    <string name="log_minutes_other">Other</string>
+    <string name="log_stuck">Where I got stuck</string>
+    <string name="log_stuck_about">Cards you have not studied yet for these, and for your techniques from them, come first in review.</string>
+    <!-- Link that unfolds every position, when none is offered up front. -->
+    <string name="log_stuck_choose">Choose positions</string>
+    <!-- Link that unfolds the rest of the positions, under the ones offered up front. -->
+    <string name="log_stuck_others">Other positions</string>
+    <string name="log_techniques">Techniques practised</string>
+    <!-- Link that unfolds every technique, when none is offered up front. -->
+    <string name="log_techniques_choose">Choose techniques</string>
+    <!-- Link that unfolds every technique, under the ones offered up front. -->
+    <string name="log_techniques_all">All techniques</string>
+    <string name="log_focus">One thing to work on next time</string>
+    <string name="log_focus_hint">Shown on Today until your next entry sets a new one.</string>
+    <!-- Link that unfolds the three written notes fields. -->
+    <string name="log_notes_closed">Notes: what was taught, what worked</string>
+    <string name="log_taught">What was taught</string>
+    <string name="log_worked">What worked in rolling</string>
+    <string name="log_struggled">Where I got stuck, in my own words</string>
+    <string name="log_save_changes">Save changes</string>
+    <string name="log_save_entry">Save entry</string>
+    <string name="log_error_save">That did not save. Your entry is still in the form: try again.</string>
+    <string name="log_error_remove">That entry could not be deleted. Try again.</string>
+
+    <!-- A logged class. %1$s is how long it ran, like "1 hr 30 min". -->
+    <string name="log_entry_mat_time">%1$s on the mat</string>
+    <!-- The four written notes of a logged class. %1$s is what the user wrote. -->
+    <string name="log_entry_taught">Taught: %1$s</string>
+    <string name="log_entry_worked">Worked: %1$s</string>
+    <string name="log_entry_struggled">Got stuck: %1$s</string>
+    <string name="log_entry_focus">Next time: %1$s</string>
+    <!-- Heading over the positions a logged class marks as stuck in. -->
+    <string name="log_entry_stuck_in">Stuck in:</string>
+    <string name="log_delete_title">Delete entry?</string>
+    <!-- %1$s is the entry's day, like "Sat 14 Nov 2026". -->
+    <string name="log_delete_text">Delete the entry for %1$s?</string>
+</resources>

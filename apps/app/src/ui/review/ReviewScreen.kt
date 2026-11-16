@@ -21,7 +21,6 @@ import dev.justinsmith.bjj.core.StudyQueue
 import dev.justinsmith.bjj.core.buildLessonQueue
 import dev.justinsmith.bjj.core.buildQueue
 import dev.justinsmith.bjj.core.findLesson
-import dev.justinsmith.bjj.core.plural
 import dev.justinsmith.bjj.core.services.Snapshot
 import dev.justinsmith.bjj.core.studyFirst
 import dev.justinsmith.bjj.design.components.BjjText
@@ -39,19 +38,43 @@ import dev.justinsmith.bjj.design.theme.Sizes
 import dev.justinsmith.bjj.design.theme.Spacing
 import dev.justinsmith.bjj.design.theme.Type
 import dev.justinsmith.bjj.nav.ReviewSession
+import dev.justinsmith.bjj.resources.Res
+import dev.justinsmith.bjj.resources.common_blue_belt_test
+import dev.justinsmith.bjj.resources.common_concepts
+import dev.justinsmith.bjj.resources.common_positions
+import dev.justinsmith.bjj.resources.review_cards_ready
+import dev.justinsmith.bjj.resources.review_deck_all
+import dev.justinsmith.bjj.resources.review_deck_situations
+import dev.justinsmith.bjj.resources.review_deck_techniques
+import dev.justinsmith.bjj.resources.review_empty_deck
+import dev.justinsmith.bjj.resources.review_empty_raise_slider
+import dev.justinsmith.bjj.resources.review_empty_title
+import dev.justinsmith.bjj.resources.review_from_class
+import dev.justinsmith.bjj.resources.review_how_to
+import dev.justinsmith.bjj.resources.review_lesson_chip
+import dev.justinsmith.bjj.resources.review_new_cards
+import dev.justinsmith.bjj.resources.review_new_cards_value
+import dev.justinsmith.bjj.resources.review_split
+import dev.justinsmith.bjj.resources.review_split_more
+import dev.justinsmith.bjj.resources.review_start_session
+import dev.justinsmith.bjj.resources.review_title
+import dev.justinsmith.bjj.resources.review_what_to_study
 import dev.justinsmith.bjj.ui.common.EmptyState
 import dev.justinsmith.bjj.ui.common.Nav
 import dev.justinsmith.bjj.ui.common.Page
 import dev.justinsmith.bjj.ui.common.WithSnapshot
+import org.jetbrains.compose.resources.StringResource
+import org.jetbrains.compose.resources.pluralStringResource
+import org.jetbrains.compose.resources.stringResource
 
-val Deck.label: String
+val Deck.label: StringResource
     get() = when (this) {
-        Deck.All -> "Everything"
-        Deck.Concept -> "Concepts"
-        Deck.Position -> "Positions"
-        Deck.Transition -> "Techniques"
-        Deck.Situation -> "Situations"
-        Deck.BlueBelt -> "Blue belt test"
+        Deck.All -> Res.string.review_deck_all
+        Deck.Concept -> Res.string.common_concepts
+        Deck.Position -> Res.string.common_positions
+        Deck.Transition -> Res.string.review_deck_techniques
+        Deck.Situation -> Res.string.review_deck_situations
+        Deck.BlueBelt -> Res.string.common_blue_belt_test
     }
 
 /** The deck a key names; anything unrecognised is everything. */
@@ -108,67 +131,69 @@ fun ReviewScreen(
     val muted = BjjTheme.palette.muted
     val lesson = findLesson(lessonId)
     Page(modifier, maxWidth = Sizes.readingMax) {
-        PageTitle("Review")
+        PageTitle(stringResource(Res.string.review_title))
         Card {
             if (preview.queue.isEmpty()) {
                 EmptyState(
                     icon = BjjIcons.Check,
-                    title = "Nothing to review right now",
-                    text = if (preview.fresh.isNotEmpty()) {
-                        "No cards are due. Raise the new-cards slider to learn something new."
-                    } else {
-                        "No cards are due in this deck. Come back later, or pick another deck."
-                    },
+                    title = stringResource(Res.string.review_empty_title),
+                    text = stringResource(
+                        if (preview.fresh.isNotEmpty()) {
+                            Res.string.review_empty_raise_slider
+                        } else {
+                            Res.string.review_empty_deck
+                        },
+                    ),
                 )
             } else {
                 val newCount = minOf(newLimit, preview.fresh.size)
                 val more = preview.fresh.size - newCount
                 Column(verticalArrangement = Arrangement.spacedBy(Spacing.s1)) {
-                    BjjText("${plural(preview.queue.size, "card")} ready", style = Type.display)
-                    BjjText(
-                        "${preview.due.size} due · $newCount new" + if (more > 0) " · $more more not started" else "",
-                        color = muted,
-                    )
+                    val ready = preview.queue.size
+                    BjjText(pluralStringResource(Res.plurals.review_cards_ready, ready, ready), style = Type.display)
+                    val split = if (more > 0) {
+                        stringResource(Res.string.review_split_more, preview.due.size, newCount, more)
+                    } else {
+                        stringResource(Res.string.review_split, preview.due.size, newCount)
+                    }
+                    BjjText(split, color = muted)
                     if (preview.fromClass > 0) {
-                        val line = if (preview.fromClass == 1) {
-                            "1 new card is from your recent classes, so it comes first."
-                        } else {
-                            "${preview.fromClass} of the new cards are from your recent classes, so they come first."
-                        }
+                        val fromClass = preview.fromClass
+                        val line = pluralStringResource(Res.plurals.review_from_class, fromClass, fromClass)
                         BjjText(line, style = Type.small, color = muted)
                     }
                 }
-                Button("Start session", onStart, Modifier.fillMaxWidth(), ButtonKind.Cta, ButtonSize.Large)
+                val start = stringResource(Res.string.review_start_session)
+                Button(start, onStart, Modifier.fillMaxWidth(), ButtonKind.Cta, ButtonSize.Large)
             }
             Divider()
-            BjjText("What to study", style = Type.label)
+            BjjText(stringResource(Res.string.review_what_to_study), style = Type.label)
             // One row at every width: on a phone it scrolls sideways instead of wrapping.
             Row(
                 Modifier.horizontalScroll(rememberScrollState()),
                 horizontalArrangement = Arrangement.spacedBy(Spacing.s2),
             ) {
                 if (lesson != null) {
+                    val number = FOUNDATION_LESSONS.indexOf(lesson) + 1
                     ToggleChip(
-                        "Lesson ${FOUNDATION_LESSONS.indexOf(
-                            lesson,
-                        ) + 1}: ${lesson.title}",
+                        stringResource(Res.string.review_lesson_chip, number, lesson.title),
                         checked = true,
                         onChange = {
                         },
                     )
                 }
                 for (option in Deck.entries) {
-                    ToggleChip(option.label, checked = lesson == null && deck == option, onChange = { onDeck(option) })
+                    ToggleChip(
+                        stringResource(option.label),
+                        checked = lesson == null && deck == option,
+                        onChange = { onDeck(option) },
+                    )
                 }
             }
-            BjjText("New cards this session: $newLimit", style = Type.label)
-            NumberSlider(newLimit, onNewLimit, min = 0, max = MAX_NEW_CARDS, label = "New cards this session")
+            BjjText(stringResource(Res.string.review_new_cards_value, newLimit), style = Type.label)
+            val slider = stringResource(Res.string.review_new_cards)
+            NumberSlider(newLimit, onNewLimit, min = 0, max = MAX_NEW_CARDS, label = slider)
         }
-        BjjText(
-            "Read the question, answer it in your head (or out loud), then reveal and rate how well you knew it. " +
-                "Cards you know well come back less often.",
-            style = Type.small,
-            color = muted,
-        )
+        BjjText(stringResource(Res.string.review_how_to), style = Type.small, color = muted)
     }
 }

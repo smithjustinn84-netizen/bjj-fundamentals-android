@@ -18,6 +18,8 @@ dependencies:
   - $compose.foundation: exported
   - $compose.ui
   - $compose.preview
+  # Screen text: `composeResources/values/*.xml`, read through the generated `Res.string.*`.
+  - $compose.components.resources
   - $libs.androidx.lifecycle.viewmodel: exported
   - $libs.androidx.lifecycle.viewmodel.compose: exported
   - $libs.androidx.lifecycle.runtime.compose
@@ -49,6 +51,8 @@ test-dependencies@jvm:
 settings:
   compose:
     enabled: true
+    resources:
+      packageName: dev.justinsmith.bjj.resources
   kotlin:
     # The navigation keys are @Serializable, for the saved back stack.
     serialization: json

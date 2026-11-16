@@ -1,0 +1,54 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- The backup page: export, import and starting over. -->
+<resources>
+    <string name="backup_title">Backup</string>
+    <string name="backup_about">Your data lives only in this app, on this device. Clearing the app's storage or removing the app loses it, so export a backup now and then.</string>
+    <string name="backup_export">Export</string>
+    <string name="backup_export_about">Save everything (concepts, positions, techniques, video bookmarks, your training log and review progress) as one file. The web version of the app reads the same file.</string>
+    <string name="backup_export_button">Export backup</string>
+    <string name="backup_import">Import</string>
+    <string name="backup_import_about">Restore from a backup file. This replaces everything currently stored.</string>
+    <string name="backup_import_button">Import backup…</string>
+    <!-- Heading over the count of rows in each table. -->
+    <string name="backup_stored">What's stored</string>
+    <string name="backup_start_over">Start over</string>
+    <string name="backup_reset_button">Reset review progress</string>
+    <string name="backup_erase_button">Erase everything</string>
+
+    <string name="backup_reset_title">Reset review progress?</string>
+    <string name="backup_reset_text">Reset all review progress? Your positions, techniques, concepts and videos are kept.</string>
+    <string name="backup_reset_confirm">Reset</string>
+    <string name="backup_erase_title">Erase everything?</string>
+    <string name="backup_erase_text">Erase EVERYTHING and start over with the starter content? Your notes, videos, edits and progress will be deleted. This cannot be undone.</string>
+    <string name="backup_erase_confirm">Erase</string>
+    <string name="backup_replace_title">Replace everything?</string>
+    <!-- %1$s is the day the backup was made, like "Sat 14 Nov 2026", or backup_unknown_date. %2$s is a list of
+         what the backup holds, one line per table. -->
+    <string name="backup_replace_text">Replace ALL current data with this backup from %1$s?\n\n%2$s\n\nThis cannot be undone. Export first if you want to keep what you have now.</string>
+    <!-- Stands in for the day in backup_replace_text when the file does not say when it was made. -->
+    <string name="backup_unknown_date">an unknown date</string>
+    <string name="backup_replace_confirm">Replace</string>
+
+    <!-- What just happened, said at the top of the page. -->
+    <string name="backup_saved">Backup saved. Keep it somewhere safe, like cloud storage or email to yourself.</string>
+    <string name="backup_restored">Backup restored.</string>
+    <string name="backup_progress_reset">Review progress reset.</string>
+    <string name="backup_erased">Everything erased. You are back to the starter content.</string>
+    <!-- A picked file was refused. %1$s is one of the backup_problem_ sentences below. -->
+    <string name="backup_rejected">%1$s Nothing was changed.</string>
+
+    <!-- What is wrong with a file offered as a backup. -->
+    <string name="backup_problem_not_json">The file is not valid JSON.</string>
+    <string name="backup_problem_not_an_object">The file is not a JSON object.</string>
+    <string name="backup_problem_not_ours">This file is not a BJJ Fundamentals backup.</string>
+    <string name="backup_problem_no_schema_version">The backup is missing its schema version.</string>
+    <!-- %1$s is the schema version the file names, usually a number. -->
+    <string name="backup_problem_newer">This backup was made by a newer version of the app (schema %1$s).</string>
+    <string name="backup_problem_no_data">The backup has no data section.</string>
+    <!-- In the next three, %1$s is a table's name as written in the file, like "videos"; it is not translated. -->
+    <string name="backup_problem_not_a_list">"%1$s" should be a list.</string>
+    <!-- %2$d is which entry of the table, counting from 1. -->
+    <string name="backup_problem_not_a_row">"%1$s" entry %2$d is not an object.</string>
+    <!-- %2$d is which entry of the table, counting from 1; %3$s is the field's name as written in the file. -->
+    <string name="backup_problem_bad_field">"%1$s" entry %2$d: "%3$s" is missing or invalid.</string>
+</resources>

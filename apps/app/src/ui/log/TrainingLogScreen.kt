@@ -54,12 +54,56 @@ import dev.justinsmith.bjj.design.theme.Spacing
 import dev.justinsmith.bjj.design.theme.Type
 import dev.justinsmith.bjj.nav.PositionDetail
 import dev.justinsmith.bjj.nav.TransitionDetail
+import dev.justinsmith.bjj.resources.Res
+import dev.justinsmith.bjj.resources.common_cancel
+import dev.justinsmith.bjj.resources.common_delete
+import dev.justinsmith.bjj.resources.common_edit
+import dev.justinsmith.bjj.resources.common_training_log
+import dev.justinsmith.bjj.resources.log_about
+import dev.justinsmith.bjj.resources.log_classes
+import dev.justinsmith.bjj.resources.log_day
+import dev.justinsmith.bjj.resources.log_day_error
+import dev.justinsmith.bjj.resources.log_day_hint
+import dev.justinsmith.bjj.resources.log_delete_text
+import dev.justinsmith.bjj.resources.log_delete_title
+import dev.justinsmith.bjj.resources.log_empty_text
+import dev.justinsmith.bjj.resources.log_empty_title
+import dev.justinsmith.bjj.resources.log_entry_focus
+import dev.justinsmith.bjj.resources.log_entry_mat_time
+import dev.justinsmith.bjj.resources.log_entry_struggled
+import dev.justinsmith.bjj.resources.log_entry_stuck_in
+import dev.justinsmith.bjj.resources.log_entry_taught
+import dev.justinsmith.bjj.resources.log_entry_worked
+import dev.justinsmith.bjj.resources.log_error_remove
+import dev.justinsmith.bjj.resources.log_error_save
+import dev.justinsmith.bjj.resources.log_focus
+import dev.justinsmith.bjj.resources.log_focus_hint
+import dev.justinsmith.bjj.resources.log_form_edit
+import dev.justinsmith.bjj.resources.log_form_new
+import dev.justinsmith.bjj.resources.log_minutes
+import dev.justinsmith.bjj.resources.log_minutes_other
+import dev.justinsmith.bjj.resources.log_notes_closed
+import dev.justinsmith.bjj.resources.log_save_changes
+import dev.justinsmith.bjj.resources.log_save_entry
+import dev.justinsmith.bjj.resources.log_struggled
+import dev.justinsmith.bjj.resources.log_stuck
+import dev.justinsmith.bjj.resources.log_stuck_about
+import dev.justinsmith.bjj.resources.log_stuck_choose
+import dev.justinsmith.bjj.resources.log_stuck_others
+import dev.justinsmith.bjj.resources.log_taught
+import dev.justinsmith.bjj.resources.log_techniques
+import dev.justinsmith.bjj.resources.log_techniques_all
+import dev.justinsmith.bjj.resources.log_techniques_choose
+import dev.justinsmith.bjj.resources.log_worked
 import dev.justinsmith.bjj.ui.common.EmptyState
 import dev.justinsmith.bjj.ui.common.Nav
 import dev.justinsmith.bjj.ui.common.Page
 import dev.justinsmith.bjj.ui.common.PageHead
+import dev.justinsmith.bjj.ui.common.SideBySide
 import dev.justinsmith.bjj.ui.common.WithSnapshot
 import dev.justinsmith.bjj.ui.home.formatDay
+import org.jetbrains.compose.resources.StringResource
+import org.jetbrains.compose.resources.stringResource
 import org.koin.compose.viewmodel.koinViewModel
 
 /** What a new entry starts with: most classes run about an hour. */
@@ -103,40 +147,54 @@ fun TrainingLogScreen(
     val summary = trainingSummary(entries)
     Page(modifier) {
         PageHead(
-            "Training log",
-            about = "Write up each class while it is fresh. The one thing you pick to work on next time shows on " +
-                "Today.",
+            stringResource(Res.string.common_training_log),
+            about = stringResource(Res.string.log_about),
         )
-        Card {
-            key(editing?.id, formRound) {
-                EntryForm(lib, entries, editing, today, state, onSave) {
-                    editingId = null
-                    formRound++
+        SideBySide(
+            first = {
+                Card {
+                    key(editing?.id, formRound) {
+                        EntryForm(lib, entries, editing, today, state, onSave) {
+                            editingId = null
+                            formRound++
+                        }
+                    }
                 }
-            }
-        }
-        Card {
-            SectionHead("Classes") {
-                if (summary.classes > 0) {
-                    val line = "${formatClassCount(summary.classes)} · ${formatMatTime(summary.minutes)}"
-                    BjjText(line, style = Type.small, color = BjjTheme.palette.muted)
+            },
+            second = {
+                Card {
+                    SectionHead(stringResource(Res.string.log_classes)) {
+                        if (summary.classes > 0) {
+                            val line = "${formatClassCount(summary.classes)} · ${formatMatTime(summary.minutes)}"
+                            BjjText(line, style = Type.small, color = BjjTheme.palette.muted)
+                        }
+                    }
+                    if (entries.isEmpty()) {
+                        EmptyState(
+                            BjjIcons.Log,
+                            stringResource(Res.string.log_empty_title),
+                            stringResource(Res.string.log_empty_text),
+                        )
+                    } else {
+                        entries.forEachIndexed { index, entry ->
+                            if (index > 0) Divider()
+                            EntryRow(lib, entry, nav, onEdit = {
+                                editingId = entry.id
+                            }, onRemove = { onRemove(entry.id) })
+                        }
+                    }
                 }
-            }
-            if (entries.isEmpty()) {
-                EmptyState(
-                    BjjIcons.Log,
-                    "No classes logged yet",
-                    "Your first entry will show here. A sentence or two is enough.",
-                )
-            } else {
-                entries.forEachIndexed { index, entry ->
-                    if (index > 0) Divider()
-                    EntryRow(lib, entry, nav, onEdit = { editingId = entry.id }, onRemove = { onRemove(entry.id) })
-                }
-            }
-        }
+            },
+        )
     }
 }
+
+/** What to say on the page when a write failed. */
+private val LogError.message: StringResource
+    get() = when (this) {
+        LogError.Save -> Res.string.log_error_save
+        LogError.Remove -> Res.string.log_error_remove
+    }
 
 /** A group of chips that stays folded away under a link until asked for. */
 @Composable
@@ -199,41 +257,45 @@ private fun ColumnScope.EntryForm(
     val muted = BjjTheme.palette.muted
     Row(horizontalArrangement = Arrangement.spacedBy(Spacing.s3), verticalAlignment = Alignment.Bottom) {
         BjjText(
-            if (entry !=
-                null
-            ) {
-                "Edit ${formatDay(entry.day)}"
+            if (entry != null) {
+                stringResource(Res.string.log_form_edit, formatDay(entry.day))
             } else {
-                "Log a class"
+                stringResource(Res.string.log_form_new)
             },
             Modifier.weight(1f),
             style = Type.h2,
         )
-        TextField("Day", draft.day, { draft.day = it }, Modifier.width(DAY_WIDTH), keyboardType = KeyboardType.Number)
+        TextField(
+            stringResource(Res.string.log_day),
+            draft.day,
+            { draft.day = it },
+            Modifier.width(DAY_WIDTH),
+            keyboardType = KeyboardType.Number,
+        )
     }
-    BjjText("${formatDay(draft.day)}. Write the day as year-month-day, like $today.", style = Type.small, color = muted)
+    BjjText(stringResource(Res.string.log_day_hint, formatDay(draft.day), today), style = Type.small, color = muted)
     MinutesField(draft)
     StuckField(lib, entries, draft)
     TechniquesField(lib, entries, draft)
     TextField(
-        "One thing to work on next time",
+        stringResource(Res.string.log_focus),
         draft.focus,
         { draft.focus = it },
-        hint = "Shown on Today until your next entry sets a new one.",
+        hint = stringResource(Res.string.log_focus_hint),
     )
     // The chips cover a quick entry; writing is there for the days there is more to say.
-    Folded("Notes: what was taught, what worked", startOpen = draft.hasNotes) {
+    Folded(stringResource(Res.string.log_notes_closed), startOpen = draft.hasNotes) {
         Column(verticalArrangement = Arrangement.spacedBy(Spacing.s3)) {
-            TextField("What was taught", draft.taught, { draft.taught = it }, lines = 2)
-            TextField("What worked in rolling", draft.worked, { draft.worked = it }, lines = 2)
-            TextField("Where I got stuck, in my own words", draft.struggled, { draft.struggled = it }, lines = 2)
+            TextField(stringResource(Res.string.log_taught), draft.taught, { draft.taught = it }, lines = 2)
+            TextField(stringResource(Res.string.log_worked), draft.worked, { draft.worked = it }, lines = 2)
+            TextField(stringResource(Res.string.log_struggled), draft.struggled, { draft.struggled = it }, lines = 2)
         }
     }
-    if (draft.dayError) Notice("Write the day as year-month-day with a four-digit year, like $today.", isError = true)
-    if (state.error.isNotEmpty()) Notice(state.error, isError = true)
+    if (draft.dayError) Notice(stringResource(Res.string.log_day_error, today), isError = true)
+    state.error?.let { Notice(stringResource(it.message), isError = true) }
     Row(horizontalArrangement = Arrangement.spacedBy(Spacing.s2)) {
         Button(
-            if (entry != null) "Save changes" else "Save entry",
+            stringResource(if (entry != null) Res.string.log_save_changes else Res.string.log_save_entry),
             {
                 draft.dayError = !isDayKey(draft.day.trim())
                 if (!draft.dayError) onSave(entry?.id, draft.input(), onDone)
@@ -242,13 +304,14 @@ private fun ColumnScope.EntryForm(
             ButtonKind.Primary,
             enabled = !state.saving,
         )
-        if (entry != null) Button("Cancel", onDone, Modifier.weight(1f))
+        if (entry != null) Button(stringResource(Res.string.common_cancel), onDone, Modifier.weight(1f))
     }
 }
 
 @Composable
 private fun ColumnScope.MinutesField(draft: EntryDraft) {
-    BjjText("Minutes on the mat", style = Type.label)
+    val label = stringResource(Res.string.log_minutes)
+    BjjText(label, style = Type.label)
     Wrap {
         for (preset in MINUTE_PRESETS) {
             ToggleChip("$preset", checked = !draft.otherMinutes && draft.minutes.toIntOrNull() == preset, onChange = {
@@ -256,10 +319,14 @@ private fun ColumnScope.MinutesField(draft: EntryDraft) {
                 draft.minutes = "$preset"
             })
         }
-        ToggleChip("Other", checked = draft.otherMinutes, onChange = { draft.otherMinutes = true })
+        ToggleChip(
+            stringResource(Res.string.log_minutes_other),
+            checked = draft.otherMinutes,
+            onChange = { draft.otherMinutes = true },
+        )
     }
     if (draft.otherMinutes) {
-        TextField("Minutes on the mat", draft.minutes, { draft.minutes = it }, keyboardType = KeyboardType.Number)
+        TextField(label, draft.minutes, { draft.minutes = it }, keyboardType = KeyboardType.Number)
     }
 }
 
@@ -272,9 +339,9 @@ private fun ColumnScope.StuckField(lib: Library, entries: List<TrainingEntry>, d
         quickPicks(draft.stuckIds, recentlyStuck(entries, RECENT_CLASS_COUNT)) { findSituation(lib, it) != null }
     }
     val (quick, others) = situations.partition { it.id in quickIds }
-    BjjText("Where I got stuck", style = Type.label)
+    BjjText(stringResource(Res.string.log_stuck), style = Type.label)
     BjjText(
-        "Cards you have not studied yet for these, and for your techniques from them, come first in review.",
+        stringResource(Res.string.log_stuck_about),
         style = Type.small,
         color = BjjTheme.palette.muted,
     )
@@ -282,7 +349,8 @@ private fun ColumnScope.StuckField(lib: Library, entries: List<TrainingEntry>, d
         Wrap { for (s in quick) ToggleChip(situationName(s), s.id in draft.stuckIds, { draft.toggleStuck(s.id, it) }) }
     }
     if (others.isNotEmpty()) {
-        Folded(if (quick.isEmpty()) "Choose positions" else "Other positions", startOpen = false) {
+        val more = if (quick.isEmpty()) Res.string.log_stuck_choose else Res.string.log_stuck_others
+        Folded(stringResource(more), startOpen = false) {
             Wrap {
                 for (s in others) ToggleChip(situationName(s), s.id in draft.stuckIds, { draft.toggleStuck(s.id, it) })
             }
@@ -299,7 +367,7 @@ private fun ColumnScope.TechniquesField(lib: Library, entries: List<TrainingEntr
     val quick = remember {
         quickPicks(draft.techniqueIds, recentlyPractised(entries, RECENT_CLASS_COUNT)) { it in lib.transitionById }
     }
-    BjjText("Techniques practised", style = Type.label)
+    BjjText(stringResource(Res.string.log_techniques), style = Type.label)
     if (quick.isNotEmpty()) {
         Wrap {
             for (id in quick) {
@@ -308,7 +376,8 @@ private fun ColumnScope.TechniquesField(lib: Library, entries: List<TrainingEntr
             }
         }
     }
-    Folded(if (quick.isEmpty()) "Choose techniques" else "All techniques", startOpen = false) {
+    val more = if (quick.isEmpty()) Res.string.log_techniques_choose else Res.string.log_techniques_all
+    Folded(stringResource(more), startOpen = false) {
         Column(verticalArrangement = Arrangement.spacedBy(Spacing.s2)) {
             for ((position, techniques) in groups) {
                 BjjText(position.name, style = Type.small, color = BjjTheme.palette.muted)
@@ -332,34 +401,38 @@ private fun EntryRow(lib: Library, entry: TrainingEntry, nav: Nav, onEdit: () ->
     val techniques = entry.techniqueIds.mapNotNull { lib.transitionById[it] }
     val stuck = stuckSituationIds(entry).mapNotNull { findSituation(lib, it) }
     val notes = listOf(
-        "Taught" to entry.taught,
-        "Worked" to entry.worked,
-        "Got stuck" to entry.struggled,
-        "Next time" to entry.focus,
+        Res.string.log_entry_taught to entry.taught,
+        Res.string.log_entry_worked to entry.worked,
+        Res.string.log_entry_struggled to entry.struggled,
+        Res.string.log_entry_focus to entry.focus,
     )
         .filter { it.second.isNotEmpty() }
     Column(Modifier.fillMaxWidth(), verticalArrangement = Arrangement.spacedBy(Spacing.s2)) {
         BjjText(formatDay(entry.day), style = Type.h3)
-        BjjText("${formatMatTime(entry.minutes)} on the mat", style = Type.small, color = BjjTheme.palette.muted)
-        for ((label, text) in notes) BjjText("$label: $text")
+        BjjText(
+            stringResource(Res.string.log_entry_mat_time, formatMatTime(entry.minutes)),
+            style = Type.small,
+            color = BjjTheme.palette.muted,
+        )
+        for ((line, text) in notes) BjjText(stringResource(line, text))
         if (stuck.isNotEmpty()) {
-            BjjText("Stuck in:", style = Type.strong)
+            BjjText(stringResource(Res.string.log_entry_stuck_in), style = Type.strong)
             Wrap { for (s in stuck) Chip(situationName(s), { nav.open(PositionDetail(s.position.id, s.role)) }) }
         }
         if (techniques.isNotEmpty()) {
             Wrap { for (t in techniques) Chip(t.name, { nav.open(TransitionDetail(t.id)) }) }
         }
         Row {
-            LinkButton("Edit", onEdit)
-            LinkButton("Delete", { confirming = true }, danger = true)
+            LinkButton(stringResource(Res.string.common_edit), onEdit)
+            LinkButton(stringResource(Res.string.common_delete), { confirming = true }, danger = true)
         }
     }
     if (confirming) {
         ConfirmDialog(
-            title = "Delete entry?",
-            text = "Delete the entry for ${formatDay(entry.day)}?",
-            confirm = "Delete",
-            cancel = "Cancel",
+            title = stringResource(Res.string.log_delete_title),
+            text = stringResource(Res.string.log_delete_text, formatDay(entry.day)),
+            confirm = stringResource(Res.string.common_delete),
+            cancel = stringResource(Res.string.common_cancel),
             onConfirm = {
                 confirming = false
                 onRemove()

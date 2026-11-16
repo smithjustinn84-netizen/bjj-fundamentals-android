@@ -1,6 +1,9 @@
 package dev.justinsmith.bjj.ui.review
 
 import androidx.compose.animation.AnimatedContent
+import androidx.compose.animation.EnterTransition
+import androidx.compose.animation.ExitTransition
+import androidx.compose.animation.core.Animatable
 import androidx.compose.animation.core.tween
 import androidx.compose.animation.fadeIn
 import androidx.compose.animation.fadeOut
@@ -38,6 +41,7 @@ import androidx.compose.ui.draw.drawBehind
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.geometry.Size
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.semantics.LiveRegionMode
 import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.semantics.contentDescription
@@ -55,7 +59,6 @@ import dev.justinsmith.bjj.core.cardName
 import dev.justinsmith.bjj.core.describeInterval
 import dev.justinsmith.bjj.core.label
 import dev.justinsmith.bjj.core.newReviewState
-import dev.justinsmith.bjj.core.plural
 import dev.justinsmith.bjj.core.reviewOf
 import dev.justinsmith.bjj.core.services.Snapshot
 import dev.justinsmith.bjj.core.services.studyStats
@@ -89,10 +92,28 @@ import dev.justinsmith.bjj.nav.ReviewSession
 import dev.justinsmith.bjj.nav.TodayTab
 import dev.justinsmith.bjj.nav.TransitionDetail
 import dev.justinsmith.bjj.nav.studyItemKey
+import dev.justinsmith.bjj.resources.Res
+import dev.justinsmith.bjj.resources.common_done
+import dev.justinsmith.bjj.resources.common_positions
+import dev.justinsmith.bjj.resources.review_answer_hint
+import dev.justinsmith.bjj.resources.review_complete_reviewed
+import dev.justinsmith.bjj.resources.review_complete_title
+import dev.justinsmith.bjj.resources.review_days_in_a_row
+import dev.justinsmith.bjj.resources.review_done_for_now
+import dev.justinsmith.bjj.resources.review_end_session
+import dev.justinsmith.bjj.resources.review_how_well
+import dev.justinsmith.bjj.resources.review_keep_going
+import dev.justinsmith.bjj.resources.review_more_ready
+import dev.justinsmith.bjj.resources.review_nothing_else_due
+import dev.justinsmith.bjj.resources.review_open_full_page
+import dev.justinsmith.bjj.resources.review_position
+import dev.justinsmith.bjj.resources.review_show_answer
 import dev.justinsmith.bjj.ui.common.Loading
 import dev.justinsmith.bjj.ui.common.Nav
 import dev.justinsmith.bjj.ui.common.Page
 import dev.justinsmith.bjj.ui.common.WithSnapshot
+import org.jetbrains.compose.resources.pluralStringResource
+import org.jetbrains.compose.resources.stringResource
 import org.koin.compose.viewmodel.koinViewModel
 
 @Composable
@@ -163,16 +184,18 @@ private fun ActiveSession(
             verticalAlignment = Alignment.CenterVertically,
         ) {
             val interactions = remember { MutableInteractionSource() }
+            val endSession = stringResource(Res.string.review_end_session)
             Box(
                 Modifier
                     .size(Sizes.tap)
                     .pressShrink(interactions)
                     .clickable(interactions, indication = null, role = Role.Button, onClick = onEnd)
-                    .semantics { contentDescription = "End session" },
+                    .semantics { contentDescription = endSession },
                 contentAlignment = Alignment.Center,
             ) { Icon(BjjIcons.Close, description = null) }
             ProgressBar(state.doneCount.toFloat() / total.coerceAtLeast(1), Modifier.weight(1f))
-            BjjText("${state.doneCount + 1} of $total", style = Type.small, color = p.muted)
+            val position = stringResource(Res.string.review_position, state.doneCount + 1, total)
+            BjjText(position, style = Type.small, color = p.muted)
         }
         Column(
             Modifier
@@ -185,23 +208,22 @@ private fun ActiveSession(
             val still = reducedMotion()
             // Keyed per card and per answer given, so each new card (or a repeated one) slides in afresh.
             AnimatedContent(
-                targetState = Triple(current, state.doneCount, state.revealed),
+                targetState = current to state.doneCount,
                 transitionSpec = {
                     if (still) {
-                        fadeIn(tween(0)) togetherWith fadeOut(tween(0))
-                    } else if (initialState.second != targetState.second) {
+                        EnterTransition.None togetherWith ExitTransition.None
+                    } else {
                         (
                             slideInHorizontally(tween(Motion.BASE)) {
                                 it / ENTER_FROM
                             } + fadeIn(tween(Motion.BASE))
                             ) togetherWith
                             (slideOutHorizontally(tween(Motion.BASE)) { -it / LEAVE_TO } + fadeOut(tween(Motion.BASE)))
-                    } else {
-                        fadeIn(tween(Motion.BASE)) togetherWith fadeOut(tween(Motion.FAST))
                     }
                 },
-            ) { (item, _, revealed) ->
-                FlashCard(item, revealed, lib, snapshot, onOpen)
+            ) { (item, _) ->
+                // The side showing is read live, so revealing the answer turns this card over, not a new one in.
+                FlashCard(item, revealed = state.revealed && item == current, lib, snapshot, onOpen, still)
             }
         }
         // Pinned to the bottom of the screen, under the thumb, however long the card is.
@@ -216,10 +238,24 @@ private fun FlashCard(
     lib: Library,
     snapshot: Snapshot,
     onOpen: (androidx.navigation3.runtime.NavKey) -> Unit,
+    still: Boolean,
     modifier: Modifier = Modifier,
 ) {
     val prompt = cardPrompt(item, lib) ?: return
-    Card(modifier) {
+    // Turning to the answer, the card swings in from edge-on, as if flipped over.
+    val turn = remember { Animatable(0f) }
+    LaunchedEffect(revealed) {
+        if (revealed && !still) {
+            turn.snapTo(FLIP_FROM)
+            turn.animateTo(0f, tween(Motion.SLOW))
+        }
+    }
+    Card(
+        modifier.graphicsLayer {
+            rotationY = turn.value
+            cameraDistance = FLIP_DISTANCE * density
+        },
+    ) {
         Eyebrow(prompt.eyebrow)
         BjjText(
             prompt.question,
@@ -240,12 +276,16 @@ private fun FlashCard(
                         LiveRegionMode.Polite
                 },
             )
-            LinkButton("Open full page", { onOpen(studyItemKey(item)) })
+            LinkButton(stringResource(Res.string.review_open_full_page), { onOpen(studyItemKey(item)) })
         } else {
             CardCue(item, lib)
         }
     }
 }
+
+// The card starts a quarter turn away, seen from far enough that it does not loom as it comes round.
+private const val FLIP_FROM = -90f
+private const val FLIP_DISTANCE = 16f
 
 private const val QUESTION_SCALE = 0.7f
 
@@ -267,7 +307,7 @@ private fun Dock(state: SessionUiState, card: ReviewState, now: Long, onReveal: 
             verticalArrangement = Arrangement.spacedBy(Spacing.s2),
         ) {
             if (state.revealed) {
-                BjjText("How well did you know it?", style = Type.small, color = p.muted)
+                BjjText(stringResource(Res.string.review_how_well), style = Type.small, color = p.muted)
                 Row(horizontalArrangement = Arrangement.spacedBy(Spacing.s2)) {
                     for (grade in Grade.entries) {
                         GradeButton(grade, describeInterval(card, grade, now), !state.saving, {
@@ -276,8 +316,9 @@ private fun Dock(state: SessionUiState, card: ReviewState, now: Long, onReveal: 
                     }
                 }
             } else {
-                BjjText("Answer in your head or out loud, then check.", style = Type.small, color = p.muted)
-                Button("Show answer", onReveal, Modifier.fillMaxWidth(), ButtonKind.Primary, ButtonSize.Large)
+                BjjText(stringResource(Res.string.review_answer_hint), style = Type.small, color = p.muted)
+                val show = stringResource(Res.string.review_show_answer)
+                Button(show, onReveal, Modifier.fillMaxWidth(), ButtonKind.Primary, ButtonSize.Large)
             }
         }
     }
@@ -367,8 +408,9 @@ private fun SessionComplete(
                     Icon(BjjIcons.Check, description = null, tint = p.onStatus, size = MARK_ICON)
                 }
             }
-            PageTitle("Session complete")
-            BjjText("You reviewed ${plural(doneCount, "card")}. Nice work.", style = Type.lead)
+            PageTitle(stringResource(Res.string.review_complete_title))
+            val reviewed = pluralStringResource(Res.plurals.review_complete_reviewed, doneCount, doneCount)
+            BjjText(reviewed, style = Type.lead)
             GradeBreakdown(tally)
             if (streakDays > 0) {
                 Row(
@@ -376,14 +418,15 @@ private fun SessionComplete(
                     verticalAlignment = Alignment.CenterVertically,
                 ) {
                     Icon(BjjIcons.Flame, description = null, tint = p.belt)
-                    BjjText("${plural(streakDays, "day")} in a row", style = Type.strong)
+                    val streak = pluralStringResource(Res.plurals.review_days_in_a_row, streakDays, streakDays)
+                    BjjText(streak, style = Type.strong)
                 }
             }
             BjjText(
                 if (moreWaiting > 0) {
-                    "${plural(moreWaiting, "more card")} ready if you want another round."
+                    pluralStringResource(Res.plurals.review_more_ready, moreWaiting, moreWaiting)
                 } else {
-                    "Nothing else is due. Come back tomorrow."
+                    stringResource(Res.string.review_nothing_else_due)
                 },
                 color = p.muted,
                 textAlign = TextAlign.Start,
@@ -391,11 +434,12 @@ private fun SessionComplete(
             Row(horizontalArrangement = Arrangement.spacedBy(Spacing.s2)) {
                 // Another round is offered only when one exists; otherwise the next step is to leave.
                 if (moreWaiting > 0) {
-                    Button("Keep going", onAgain, Modifier.weight(1f), ButtonKind.Primary)
-                    Button("Done for now", onDone, Modifier.weight(1f))
+                    val again = stringResource(Res.string.review_keep_going)
+                    Button(again, onAgain, Modifier.weight(1f), ButtonKind.Primary)
+                    Button(stringResource(Res.string.review_done_for_now), onDone, Modifier.weight(1f))
                 } else {
-                    Button("Done", onDone, Modifier.weight(1f), ButtonKind.Primary)
-                    Button("Positions", onPositions, Modifier.weight(1f))
+                    Button(stringResource(Res.string.common_done), onDone, Modifier.weight(1f), ButtonKind.Primary)
+                    Button(stringResource(Res.string.common_positions), onPositions, Modifier.weight(1f))
                 }
             }
         }

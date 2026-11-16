@@ -1,0 +1,72 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- The forms that create and edit a concept, a position or a technique. -->
+<resources>
+    <!-- The way out of "… not found", when the item being edited is gone. -->
+    <string name="editor_back">Back</string>
+
+    <!-- Page titles. -->
+    <string name="editor_edit_concept">Edit concept</string>
+    <string name="editor_edit_position">Edit position</string>
+    <string name="editor_edit_technique">Edit technique</string>
+    <string name="editor_new_concept">New concept</string>
+    <string name="editor_new_position">New position</string>
+    <string name="editor_new_technique">New technique</string>
+
+    <!-- The dialog that confirms a delete. -->
+    <string name="editor_delete_concept_title">Delete concept?</string>
+    <string name="editor_delete_position_title">Delete position?</string>
+    <string name="editor_delete_technique_title">Delete technique?</string>
+    <!-- %1$s is the item's name. -->
+    <string name="editor_delete_text">Delete "%1$s"?</string>
+    <!-- For a position: %1$s is its name, %2$d how many techniques start or end there and go with it. -->
+    <plurals name="editor_delete_text_cascade">
+        <item quantity="one">Delete "%1$s"? This also deletes %2$d technique connected to it.</item>
+        <item quantity="other">Delete "%1$s"? This also deletes %2$d techniques connected to it.</item>
+    </plurals>
+
+    <string name="editor_save">Save</string>
+
+    <!-- Fields every form has: the label, then the hint under the field. -->
+    <string name="editor_name">Name</string>
+    <string name="editor_summary">Summary</string>
+    <string name="editor_summary_hint">One plain-language sentence.</string>
+    <string name="editor_notes">My notes</string>
+    <string name="editor_notes_hint">Anything from class you want to remember.</string>
+    <string name="editor_order">Learning order</string>
+    <string name="editor_order_hint">Lower numbers come first in lists and reviews.</string>
+    <!-- Hint under a field that takes a list. -->
+    <string name="editor_one_per_line">One per line.</string>
+    <!-- A short exercise for practising a concept or a technique. -->
+    <string name="editor_drill">Drill</string>
+
+    <!-- Concept form. -->
+    <string name="editor_concept_key_points">Key points</string>
+
+    <!-- Position form. -->
+    <string name="editor_position_category">Category</string>
+    <string name="editor_position_top_goals">Goals on top / attacking</string>
+    <string name="editor_position_bottom_goals">Goals on bottom / defending</string>
+    <!-- Heading over a checklist of concepts. -->
+    <string name="editor_position_concepts">Related concepts</string>
+
+    <!-- Technique form. -->
+    <string name="editor_technique_type">Type</string>
+    <!-- The position a technique starts in. -->
+    <string name="editor_technique_from">From position</string>
+    <!-- The position a technique ends in. -->
+    <string name="editor_technique_to">Ends in</string>
+    <!-- Shown in a position picker before one is chosen. -->
+    <string name="editor_technique_choose">Choose…</string>
+    <!-- Which of the two people in the starting position does the technique. -->
+    <string name="editor_technique_who">Who does it</string>
+    <!-- Which side of the end position that person finishes on. -->
+    <string name="editor_technique_end_side">You end up</string>
+    <!-- The two sides of a position, before a starting position has been chosen. -->
+    <string name="editor_technique_side_top">Top</string>
+    <string name="editor_technique_side_bottom">Bottom</string>
+    <string name="editor_technique_steps">Steps</string>
+    <string name="editor_technique_steps_hint">One step per line, in order.</string>
+    <string name="editor_technique_mistakes">Common mistakes</string>
+    <string name="editor_technique_drill_hint">A short solo or partner drill to practise it.</string>
+    <string name="editor_technique_blue_belt">On the blue belt test</string>
+</resources>

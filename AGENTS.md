@@ -67,7 +67,7 @@ Where does new code go?
 - A page moves to another through the `Nav` it is handed, never the back stack itself.
 - Every destination is a `@Serializable` `NavKey` in `nav/Routes.kt`, registered in `navConfiguration` and given an `entry<…>` (both in `App.kt`). The bar has five tabs, the same on every window size.
 - No raw `dp`, `sp`, colour or duration in a screen: they come from `design/theme` (`Spacing`, `Radius`, `Sizes`, `TextSizes`, `Motion`, `BjjTheme.palette`).
-- Screen text is written in the screen, in English, as the web app's is; there are no string resources yet. Labels that core's own logic uses (search, card prompts) are in `core/Labels.kt`.
+- Screen text is in string resources: `apps/app/composeResources/values/`, one file per area (`strings.xml` for the shell and shared words, then `strings_<area>.xml` with names prefixed `<area>_`), read with `stringResource(Res.string.x)`. Counts are `<plurals>`, never core's `plural`. A ViewModel exposes an enum, a sealed type or a `StringResource`, and the screen resolves it. Write `'` and `"` plainly in the XML and a single `%` for a percent sign: this toolchain does not unescape `\'` or `%%`. Still in code: labels that core's own logic uses (search, card prompts, `core/Labels.kt`), core's formatters (`formatMatTime`, `describeInterval`) and the weekday and month names in `ui/home/TodayLabel.kt`.
 - Services set `id`, `createdAt`, `updatedAt`. Callers pass an `...Input` type without them. Multi-step writes go in one `storage.transaction`.
 - No magic numbers: name the constant and say what it means. Comments explain why, not what. No commented-out code.
 - Tests use `kotlin.test` with hand-written fakes and `testCore()`; no mocking library. Test names are backticked sentences without commas.
@@ -78,7 +78,7 @@ Where does new code go?
 - The theme is the user's choice (Light, Dark or Device) from the `settings` table, resolved by `resolveTheme` in core.
 - Drawings share one sheet of paper: they use only the art palette, which has one value for both themes; the dark theme dims it as a whole.
 - People in diagrams are `Figure`s posed by joint positions; a scene is poses and a draw order, not hand-drawn body shapes. Anything a drawing has to calculate is a pure function in core with a test; composables only draw the result.
-- Anything tapped is at least `Sizes.tap` tall. Layout changes at the widths in `Breakpoints` only.
+- Anything tapped is at least `Sizes.tap` tall. Layout changes at the widths in `Breakpoints` only: use `Columns` and `SideBySide` (`ui/common/Window.kt`) so a list or a pair of cards follows the window.
 - Motion respects the system's "remove animations" setting.
 
 ## Keeping in step with the web app
@@ -104,6 +104,6 @@ This repo uses [Jujutsu](https://jj-vcs.github.io/jj/) (`jj`) on a git backend, 
 2. New or changed logic in `core` or `storage-room` has a test that would fail without the change.
 3. UI changes were exercised on the emulator (`run-on-device`), including the empty and error states, as a phone and as a tablet, in light and dark.
 4. Nothing left behind: no unused code, dead branches, stray logs, or files that only existed for debugging.
-5. If you changed a rule or the structure, this file says so; if you added a difference from the web app, `docs/parity.md` says so.
+5. If you changed a rule or the structure, this file and `docs/architecture.md` say so; if you added a difference from the web app, `docs/parity.md` says so.
 
 If a rule here blocks something the user asked for, stop and say so instead of working around it.

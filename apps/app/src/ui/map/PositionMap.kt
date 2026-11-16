@@ -57,7 +57,6 @@ import dev.justinsmith.bjj.core.connections
 import dev.justinsmith.bjj.core.endsTheRoll
 import dev.justinsmith.bjj.core.label
 import dev.justinsmith.bjj.core.layoutPositionMap
-import dev.justinsmith.bjj.core.plural
 import dev.justinsmith.bjj.core.reviewOf
 import dev.justinsmith.bjj.design.components.BjjText
 import dev.justinsmith.bjj.design.components.Card
@@ -77,13 +76,22 @@ import dev.justinsmith.bjj.design.theme.Type
 import dev.justinsmith.bjj.design.theme.typeColor
 import dev.justinsmith.bjj.nav.PositionDetail
 import dev.justinsmith.bjj.nav.TransitionDetail
+import dev.justinsmith.bjj.resources.Res
+import dev.justinsmith.bjj.resources.map_description
+import dev.justinsmith.bjj.resources.map_from_here
+import dev.justinsmith.bjj.resources.map_no_techniques_from_here
+import dev.justinsmith.bjj.resources.map_select_prompt
+import dev.justinsmith.bjj.resources.map_submissions
+import dev.justinsmith.bjj.resources.map_ways_in
 import dev.justinsmith.bjj.ui.common.Direction
-import dev.justinsmith.bjj.ui.common.NO_TECHNIQUES_FROM_HERE
 import dev.justinsmith.bjj.ui.common.Nav
+import dev.justinsmith.bjj.ui.common.SideBySide
 import dev.justinsmith.bjj.ui.common.TransitionList
 import dev.justinsmith.bjj.ui.common.hasRail
 import dev.justinsmith.bjj.ui.common.progressOf
 import dev.justinsmith.bjj.ui.common.windowWidth
+import org.jetbrains.compose.resources.pluralStringResource
+import org.jetbrains.compose.resources.stringResource
 
 /** The map is hard to read on a phone, so Positions opens on the list there unless asked. */
 @Composable
@@ -111,23 +119,30 @@ fun PositionMap(lib: Library, nav: Nav, modifier: Modifier = Modifier) {
     }
     var selectedId by rememberSaveable { mutableStateOf<String?>(null) }
     val selected = selectedId?.let { lib.positionById[it] }
-    Column(modifier.fillMaxWidth(), verticalArrangement = Arrangement.spacedBy(Spacing.s4)) {
+    val sheet = @Composable {
         Card {
             MapSheet(lib, layout, orientation, selected?.id) { id -> selectedId = if (selectedId == id) null else id }
             Divider()
             Legend()
         }
+    }
+    val panel = @Composable {
         Card {
             if (selected != null) {
                 SelectedPosition(selected, lib, nav)
             } else {
-                BjjText(
-                    "Select a position to see the techniques that start and end there. Arrows show where each " +
-                        "technique takes you.",
-                    color = BjjTheme.palette.muted,
-                )
+                BjjText(stringResource(Res.string.map_select_prompt), color = BjjTheme.palette.muted)
             }
         }
+    }
+    // Across the page the map needs the whole width, so its details go underneath; down the page they sit beside it.
+    if (orientation == MapOrientation.Horizontal) {
+        Column(modifier.fillMaxWidth(), verticalArrangement = Arrangement.spacedBy(Spacing.s4)) {
+            sheet()
+            panel()
+        }
+    } else {
+        SideBySide(sheet, panel, modifier)
     }
 }
 
@@ -144,7 +159,8 @@ private fun MapSheet(
     val neighbours = layout.edges.filter(touches).flatMap { listOf(it.fromId, it.toId) }.toSet()
     val palette = BjjTheme.palette
     val flow = flowPhase()
-    BoxWithConstraints(Modifier.fillMaxWidth().semantics { contentDescription = MAP_DESCRIPTION }) {
+    val description = stringResource(Res.string.map_description)
+    BoxWithConstraints(Modifier.fillMaxWidth().semantics { contentDescription = description }) {
         // One of the map's own units, on this screen.
         val unit = maxWidth / layout.width.toFloat()
         Canvas(Modifier.fillMaxWidth().height(unit * layout.height.toFloat())) {
@@ -204,7 +220,6 @@ private fun Legend(modifier: Modifier = Modifier) {
     }
 }
 
-private const val MAP_DESCRIPTION = "Position map. Select a position to list its techniques."
 private val LANE_LABEL_HALF = 40.dp
 private val LEGEND_LINE = 22.dp
 private val LEGEND_WEIGHT = 3.dp
@@ -294,7 +309,7 @@ private fun MapNodeButton(
         }
         if (node.submissions > 0) {
             BjjText(
-                plural(node.submissions, "submission"),
+                pluralStringResource(Res.plurals.map_submissions, node.submissions, node.submissions),
                 style = Type.small.copy(fontSize = 10.5.sp, fontWeight = FontWeight.SemiBold),
                 color = p.typeSubmission,
                 maxLines = 1,
@@ -311,14 +326,18 @@ private fun SelectedPosition(position: Position, lib: Library, nav: Nav, modifie
         Eyebrow(position.category.label)
         LinkButton(position.name, { nav.open(PositionDetail(position.id)) })
         BjjText(position.summary, style = Type.small, color = BjjTheme.palette.muted)
-        Eyebrow("From here")
+        Eyebrow(stringResource(Res.string.map_from_here))
         if (outgoing.isNotEmpty()) {
             TransitionList(outgoing, lib.positionById, Direction.Out, open)
         } else {
-            BjjText(NO_TECHNIQUES_FROM_HERE, style = Type.small, color = BjjTheme.palette.muted)
+            BjjText(
+                stringResource(Res.string.map_no_techniques_from_here),
+                style = Type.small,
+                color = BjjTheme.palette.muted,
+            )
         }
         if (incoming.isNotEmpty()) {
-            Eyebrow("Ways to get here")
+            Eyebrow(stringResource(Res.string.map_ways_in))
             TransitionList(incoming, lib.positionById, Direction.In, open)
         }
     }

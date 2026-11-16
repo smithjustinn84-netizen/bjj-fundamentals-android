@@ -55,6 +55,28 @@ import dev.justinsmith.bjj.design.theme.Radius
 import dev.justinsmith.bjj.design.theme.Sizes
 import dev.justinsmith.bjj.design.theme.Spacing
 import dev.justinsmith.bjj.design.theme.Type
+import dev.justinsmith.bjj.resources.Res
+import dev.justinsmith.bjj.resources.common_cancel
+import dev.justinsmith.bjj.resources.common_delete
+import dev.justinsmith.bjj.resources.videos_add
+import dev.justinsmith.bjj.resources.videos_bookmarks
+import dev.justinsmith.bjj.resources.videos_delete_text
+import dev.justinsmith.bjj.resources.videos_delete_title
+import dev.justinsmith.bjj.resources.videos_error_link
+import dev.justinsmith.bjj.resources.videos_error_time
+import dev.justinsmith.bjj.resources.videos_form_about
+import dev.justinsmith.bjj.resources.videos_form_link
+import dev.justinsmith.bjj.resources.videos_form_link_hint
+import dev.justinsmith.bjj.resources.videos_form_not_linked
+import dev.justinsmith.bjj.resources.videos_form_note
+import dev.justinsmith.bjj.resources.videos_form_note_hint
+import dev.justinsmith.bjj.resources.videos_form_save
+import dev.justinsmith.bjj.resources.videos_form_start
+import dev.justinsmith.bjj.resources.videos_form_title
+import dev.justinsmith.bjj.resources.videos_linked_empty
+import dev.justinsmith.bjj.resources.videos_play
+import org.jetbrains.compose.resources.StringResource
+import org.jetbrains.compose.resources.stringResource
 
 /** What a page needs to list, open, add and delete video bookmarks. */
 class VideoActions(val open: (String) -> Unit, val add: (VideoInput) -> Unit, val remove: (String) -> Unit)
@@ -76,6 +98,7 @@ fun VideoRow(
     var confirming by remember { mutableStateOf(false) }
     val interactions = remember { MutableInteractionSource() }
     val p = BjjTheme.palette
+    val play = stringResource(Res.string.videos_play, video.title)
     Column(
         modifier
             .fillMaxWidth()
@@ -92,7 +115,7 @@ fun VideoRow(
                         actions.open(watchUrl(video.youtubeId, video.startSeconds))
                     }
                     .defaultMinSize(minHeight = Sizes.tap)
-                    .semantics { contentDescription = "Play ${video.title} on YouTube" },
+                    .semantics { contentDescription = play },
                 horizontalArrangement = Arrangement.spacedBy(Spacing.s2),
                 verticalAlignment = Alignment.CenterVertically,
             ) {
@@ -100,7 +123,12 @@ fun VideoRow(
                 BjjText(video.title, Modifier.weight(1f, fill = false), style = Type.strong)
                 BjjText("· ${formatTime(video.startSeconds)}", color = p.muted)
             }
-            Button("Delete", { confirming = true }, kind = ButtonKind.Danger, size = ButtonSize.Small)
+            Button(
+                stringResource(Res.string.common_delete),
+                { confirming = true },
+                kind = ButtonKind.Danger,
+                size = ButtonSize.Small,
+            )
         }
         if (video.note.isNotEmpty()) BjjText(video.note, style = Type.small, color = p.muted)
         val kind = video.linkedKind.itemKind
@@ -113,10 +141,10 @@ fun VideoRow(
     }
     if (confirming) {
         ConfirmDialog(
-            title = "Delete bookmark?",
-            text = "Delete the bookmark \"${video.title}\"?",
-            confirm = "Delete",
-            cancel = "Cancel",
+            title = stringResource(Res.string.videos_delete_title),
+            text = stringResource(Res.string.videos_delete_text, video.title),
+            confirm = stringResource(Res.string.common_delete),
+            cancel = stringResource(Res.string.common_cancel),
             onConfirm = {
                 confirming = false
                 actions.remove(video.id)
@@ -144,15 +172,15 @@ fun VideoForm(
     var time by rememberSaveable { mutableStateOf("") }
     var note by rememberSaveable { mutableStateOf("") }
     var picked by remember { mutableStateOf<ItemRef?>(null) }
-    var error by rememberSaveable { mutableStateOf("") }
+    var error by rememberSaveable { mutableStateOf<VideoFormError?>(null) }
 
     fun save() {
         val youtubeId = parseYouTubeId(url)
         val startSeconds = if (time.isBlank()) 0 else parseTime(time)
         when {
-            youtubeId == null -> error = "That does not look like a YouTube link."
+            youtubeId == null -> error = VideoFormError.Link
 
-            startSeconds == null -> error = "Use a time like 1:30, 90, or 1m30s."
+            startSeconds == null -> error = VideoFormError.Time
 
             else -> {
                 val link = linkedTo ?: picked
@@ -171,7 +199,7 @@ fun VideoForm(
                 time = ""
                 note = ""
                 picked = null
-                error = ""
+                error = null
                 onDone()
             }
         }
@@ -179,7 +207,7 @@ fun VideoForm(
 
     Column(modifier.fillMaxWidth(), verticalArrangement = Arrangement.spacedBy(Spacing.s3)) {
         TextField(
-            "YouTube link",
+            stringResource(Res.string.videos_form_link),
             url,
             {
                 url = it
@@ -187,12 +215,18 @@ fun VideoForm(
                 val start = parseYouTubeStart(it)
                 if (start != null && time.isEmpty()) time = formatTime(start)
             },
-            hint = "For example https://youtu.be/…?t=95",
+            hint = stringResource(Res.string.videos_form_link_hint),
             keyboardType = KeyboardType.Uri,
         )
         Row(horizontalArrangement = Arrangement.spacedBy(Spacing.s3)) {
-            TextField("Title", title, { title = it }, Modifier.weight(1f))
-            TextField("Start at", time, { time = it }, Modifier.width(START_WIDTH), hint = "1:35")
+            TextField(stringResource(Res.string.videos_form_title), title, { title = it }, Modifier.weight(1f))
+            TextField(
+                stringResource(Res.string.videos_form_start),
+                time,
+                { time = it },
+                Modifier.width(START_WIDTH),
+                hint = START_EXAMPLE,
+            )
         }
         if (linkedTo == null && lib != null) {
             val options: List<ItemRef?> = listOf(null) + ItemKind.entries.flatMap { kind ->
@@ -203,44 +237,56 @@ fun VideoForm(
                 }.map { ItemRef(kind, it) }
             }
             ChoiceField(
-                label = "About",
+                label = stringResource(Res.string.videos_form_about),
                 options = options,
                 selected = picked,
                 optionLabel = { ref ->
-                    if (ref ==
-                        null
-                    ) {
-                        "— Not linked —"
+                    if (ref == null) {
+                        stringResource(Res.string.videos_form_not_linked)
                     } else {
                         "${ref.kind.groupLabel}: ${itemName(lib, ref.kind, ref.id).orEmpty()}"
                     }
                 },
                 onSelect = { picked = it },
-                placeholder = "— Not linked —",
+                placeholder = stringResource(Res.string.videos_form_not_linked),
             )
         }
-        TextField("Note", note, { note = it }, hint = "What to watch for")
-        if (error.isNotEmpty()) Notice(error, isError = true)
+        TextField(
+            stringResource(Res.string.videos_form_note),
+            note,
+            { note = it },
+            hint = stringResource(Res.string.videos_form_note_hint),
+        )
+        error?.let { Notice(stringResource(it.message), isError = true) }
         Row(horizontalArrangement = Arrangement.spacedBy(Spacing.s2)) {
-            Button("Save bookmark", ::save, kind = ButtonKind.Primary)
-            if (showCancel) Button("Cancel", onDone)
+            Button(stringResource(Res.string.videos_form_save), ::save, kind = ButtonKind.Primary)
+            if (showCancel) Button(stringResource(Res.string.common_cancel), onDone)
         }
     }
 }
 
 private val START_WIDTH = 112.dp
 
+/** A start time as the field wants it typed: digits only, so the same in every language. */
+private const val START_EXAMPLE = "1:35"
+
+/** What is wrong with what was typed into the bookmark form. */
+private enum class VideoFormError(val message: StringResource) {
+    Link(Res.string.videos_error_link),
+    Time(Res.string.videos_error_time),
+}
+
 /** The bookmarks attached to one item, with a form to add another. */
 @Composable
 fun LinkedVideos(item: ItemRef, videos: List<VideoBookmark>, actions: VideoActions, modifier: Modifier = Modifier) {
     var adding by rememberSaveable { mutableStateOf(false) }
     Column(modifier.fillMaxWidth(), verticalArrangement = Arrangement.spacedBy(Spacing.s2)) {
-        SectionHead("Video bookmarks") {
-            if (!adding) Button("+ Add", { adding = true }, size = ButtonSize.Small)
+        SectionHead(stringResource(Res.string.videos_bookmarks)) {
+            if (!adding) Button(stringResource(Res.string.videos_add), { adding = true }, size = ButtonSize.Small)
         }
         if (adding) VideoForm(actions.add, onDone = { adding = false }, linkedTo = item)
         if (videos.isEmpty() && !adding) {
-            BjjText("Save a YouTube link at the exact moment that explains this well.", color = BjjTheme.palette.muted)
+            BjjText(stringResource(Res.string.videos_linked_empty), color = BjjTheme.palette.muted)
         }
         for (video in videos) VideoRow(video, actions)
     }

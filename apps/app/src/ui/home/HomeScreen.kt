@@ -50,7 +50,6 @@ import dev.justinsmith.bjj.core.lessonOrder
 import dev.justinsmith.bjj.core.lessonProgress
 import dev.justinsmith.bjj.core.lessonTechniques
 import dev.justinsmith.bjj.core.pickDrill
-import dev.justinsmith.bjj.core.plural
 import dev.justinsmith.bjj.core.progressSummary
 import dev.justinsmith.bjj.core.recentlyStuck
 import dev.justinsmith.bjj.core.reviewOf
@@ -96,22 +95,75 @@ import dev.justinsmith.bjj.nav.TransitionDetail
 import dev.justinsmith.bjj.nav.Videos
 import dev.justinsmith.bjj.nav.itemKey
 import dev.justinsmith.bjj.nav.studyItemKey
+import dev.justinsmith.bjj.resources.Res
+import dev.justinsmith.bjj.resources.common_done
+import dev.justinsmith.bjj.resources.common_training_log
+import dev.justinsmith.bjj.resources.common_videos
+import dev.justinsmith.bjj.resources.today_all_lessons
+import dev.justinsmith.bjj.resources.today_belt_stripes
+import dev.justinsmith.bjj.resources.today_cards_ready
+import dev.justinsmith.bjj.resources.today_concepts_all
+import dev.justinsmith.bjj.resources.today_concepts_all_learned
+import dev.justinsmith.bjj.resources.today_concepts_none
+import dev.justinsmith.bjj.resources.today_concepts_title
+import dev.justinsmith.bjj.resources.today_day_streak
+import dev.justinsmith.bjj.resources.today_drill_eyebrow
+import dev.justinsmith.bjj.resources.today_drill_reason_next
+import dev.justinsmith.bjj.resources.today_drill_reason_practised
+import dev.justinsmith.bjj.resources.today_drill_reason_slipping
+import dev.justinsmith.bjj.resources.today_drill_reason_stuck
+import dev.justinsmith.bjj.resources.today_focus_eyebrow
+import dev.justinsmith.bjj.resources.today_learned
+import dev.justinsmith.bjj.resources.today_learned_to_next
+import dev.justinsmith.bjj.resources.today_lesson_cards_learned
+import dev.justinsmith.bjj.resources.today_lesson_number
+import dev.justinsmith.bjj.resources.today_log_a_class
+import dev.justinsmith.bjj.resources.today_log_prompt
+import dev.justinsmith.bjj.resources.today_open_review
+import dev.justinsmith.bjj.resources.today_path_attack_body
+import dev.justinsmith.bjj.resources.today_path_attack_title
+import dev.justinsmith.bjj.resources.today_path_concepts_body
+import dev.justinsmith.bjj.resources.today_path_concepts_title
+import dev.justinsmith.bjj.resources.today_path_next_up
+import dev.justinsmith.bjj.resources.today_path_positions_body
+import dev.justinsmith.bjj.resources.today_path_positions_title
+import dev.justinsmith.bjj.resources.today_path_see_map
+import dev.justinsmith.bjj.resources.today_path_survive_body
+import dev.justinsmith.bjj.resources.today_path_survive_title
+import dev.justinsmith.bjj.resources.today_path_title
+import dev.justinsmith.bjj.resources.today_path_videos_body
+import dev.justinsmith.bjj.resources.today_path_videos_title
+import dev.justinsmith.bjj.resources.today_review_first
+import dev.justinsmith.bjj.resources.today_review_nothing_due
+import dev.justinsmith.bjj.resources.today_review_split
+import dev.justinsmith.bjj.resources.today_review_split_from_class
+import dev.justinsmith.bjj.resources.today_start_review
+import dev.justinsmith.bjj.resources.today_sticking_note
+import dev.justinsmith.bjj.resources.today_sticking_title
+import dev.justinsmith.bjj.resources.today_stuck_note
+import dev.justinsmith.bjj.resources.today_study_lesson
+import dev.justinsmith.bjj.resources.today_study_rank_note
+import dev.justinsmith.bjj.resources.today_title
+import dev.justinsmith.bjj.resources.today_training_line
 import dev.justinsmith.bjj.ui.common.LibrarySearch
 import dev.justinsmith.bjj.ui.common.Nav
 import dev.justinsmith.bjj.ui.common.Page
 import dev.justinsmith.bjj.ui.common.WithSnapshot
 import dev.justinsmith.bjj.ui.common.progressOf
+import org.jetbrains.compose.resources.StringResource
+import org.jetbrains.compose.resources.pluralStringResource
+import org.jetbrains.compose.resources.stringResource
 
 /** Today shows only the next few concepts; the Concepts page has them all. */
 private const val HOME_CONCEPT_LIMIT = 6
 
 /** Why today's drill was chosen, said to the student. */
-private val DrillReason.text: String
+private val DrillReason.text: StringResource
     get() = when (this) {
-        DrillReason.Stuck -> "A way out of where you got stuck in a recent class."
-        DrillReason.Slipping -> "This one keeps slipping in review."
-        DrillReason.Practised -> "You practised this in a recent class."
-        DrillReason.Next -> "The next technique you have not learned yet."
+        DrillReason.Stuck -> Res.string.today_drill_reason_stuck
+        DrillReason.Slipping -> Res.string.today_drill_reason_slipping
+        DrillReason.Practised -> Res.string.today_drill_reason_practised
+        DrillReason.Next -> Res.string.today_drill_reason_next
     }
 
 @Composable
@@ -148,20 +200,35 @@ fun HomeScreen(
         Hero(dateLabel, streakDays, preview, progress.started, onReview = { nav.selectTab(ReviewTab()) })
         Column(verticalArrangement = Arrangement.spacedBy(Spacing.s1)) {
             BeltBand(rank.belt, rank.stripes)
-            val stripes = if (rank.nextBelt != null) " · ${plural(rank.stripes, "stripe")}" else ""
-            BjjText(rank.belt.label + stripes, style = Type.strong)
-            val toNext = rank.nextBelt?.let {
-                " · ${rank.percentToNextBelt}% more for ${it.label.lowercase()}"
-            }.orEmpty()
-            BjjText("${progress.learned} of ${progress.total} learned$toNext", color = BjjTheme.palette.muted)
-            BjjText("A study rank, not a real one.", style = Type.small, color = BjjTheme.palette.muted)
+            val nextBelt = rank.nextBelt
+            // A black belt has no next belt to count stripes or a percentage towards.
+            val belt = if (nextBelt != null) {
+                pluralStringResource(Res.plurals.today_belt_stripes, rank.stripes, rank.belt.label, rank.stripes)
+            } else {
+                rank.belt.label
+            }
+            BjjText(belt, style = Type.strong)
+            val learned = if (nextBelt != null) {
+                stringResource(
+                    Res.string.today_learned_to_next,
+                    progress.learned,
+                    progress.total,
+                    rank.percentToNextBelt,
+                    nextBelt.label.lowercase(),
+                )
+            } else {
+                stringResource(Res.string.today_learned, progress.learned, progress.total)
+            }
+            BjjText(learned, color = BjjTheme.palette.muted)
+            val note = stringResource(Res.string.today_study_rank_note)
+            BjjText(note, style = Type.small, color = BjjTheme.palette.muted)
         }
         DrillCard(lib, snapshot, nav)
         TrainingCard(snapshot, nav)
         LibrarySearch(lib, { kind, id -> nav.open(itemKey(kind, id)) })
         LessonCard(lib, nav)
         Card {
-            BjjText("Suggested path", style = Type.h2)
+            BjjText(stringResource(Res.string.today_path_title), style = Type.h2)
             PathSteps(pathSteps(snapshot, nav))
         }
         StickingCard(lib, nav)
@@ -170,14 +237,16 @@ fun HomeScreen(
 }
 
 /** What the review block says under its number: how the session splits, or what to do when nothing is ready. */
+@Composable
 private fun reviewLine(preview: StudyQueue, started: Int): String {
-    val newCount = preview.queue.size - preview.due.size
-    val split = "${preview.due.size} due · $newCount new"
+    val due = preview.due.size
+    val newCount = preview.queue.size - due
+    val fromClass = preview.fromClass
     return when {
-        preview.queue.isEmpty() -> "Nothing is due. Come back tomorrow, or browse something new."
-        started == 0 -> "Start with how to survive underneath: escapes come first."
-        preview.fromClass > 0 -> "$split, ${preview.fromClass} from your recent classes"
-        else -> split
+        preview.queue.isEmpty() -> stringResource(Res.string.today_review_nothing_due)
+        started == 0 -> stringResource(Res.string.today_review_first)
+        fromClass > 0 -> stringResource(Res.string.today_review_split_from_class, due, newCount, fromClass)
+        else -> stringResource(Res.string.today_review_split, due, newCount)
     }
 }
 
@@ -199,7 +268,7 @@ private fun Hero(dateLabel: String, streakDays: Int, preview: StudyQueue, starte
             Row(Modifier.fillMaxWidth(), verticalAlignment = Alignment.Top) {
                 Column(Modifier.weight(1f)) {
                     Eyebrow(dateLabel, color = p.fillSoft)
-                    PageTitle("Today")
+                    PageTitle(stringResource(Res.string.today_title))
                 }
                 if (streakDays > 0) StreakStamp(streakDays)
             }
@@ -210,12 +279,12 @@ private fun Hero(dateLabel: String, streakDays: Int, preview: StudyQueue, starte
             ) {
                 BjjText("${countUp(ready)}", style = Type.count)
                 Column {
-                    BjjText(if (ready == 1) "card ready" else "cards ready", style = Type.strong)
+                    BjjText(pluralStringResource(Res.plurals.today_cards_ready, ready), style = Type.strong)
                     BjjText(reviewLine(preview, started), style = Type.small, color = p.fillSoft)
                 }
             }
             Button(
-                if (ready > 0) "Start review" else "Open review",
+                stringResource(if (ready > 0) Res.string.today_start_review else Res.string.today_open_review),
                 onReview,
                 Modifier.fillMaxWidth(),
                 kind = ButtonKind.Cta,
@@ -254,7 +323,11 @@ private fun StreakStamp(days: Int, modifier: Modifier = Modifier) {
         verticalAlignment = Alignment.CenterVertically,
     ) {
         BjjText("$days", style = Type.h2, color = p.onBelt)
-        BjjText("day streak", style = Type.small.copy(fontWeight = FontWeight.Bold), color = p.onBelt)
+        BjjText(
+            pluralStringResource(Res.plurals.today_day_streak, days),
+            style = Type.small.copy(fontWeight = FontWeight.Bold),
+            color = p.onBelt,
+        )
     }
 }
 
@@ -279,9 +352,9 @@ private fun DrillCard(lib: Library, snapshot: Snapshot, nav: Nav, modifier: Modi
             PositionArtwork(drill.technique.fromId, Modifier.width(Sizes.thumb))
         }
         Column(Modifier.weight(1f), verticalArrangement = Arrangement.spacedBy(2.dp)) {
-            Eyebrow("Drill for today")
+            Eyebrow(stringResource(Res.string.today_drill_eyebrow))
             BjjText(drill.technique.name, style = Type.strong)
-            BjjText(drill.reason.text, style = Type.small, color = BjjTheme.palette.muted)
+            BjjText(stringResource(drill.reason.text), style = Type.small, color = BjjTheme.palette.muted)
             BjjText(drill.drill, style = Type.small)
         }
         Icon(BjjIcons.Chevron, description = null, tint = BjjTheme.palette.muted)
@@ -295,25 +368,22 @@ private fun TrainingCard(snapshot: Snapshot, nav: Nav, modifier: Modifier = Modi
     val muted = BjjTheme.palette.muted
     Card(modifier) {
         if (training.classes == 0) {
-            Eyebrow("Training log")
-            BjjText(
-                "Write up each class while it is fresh: what was taught, what worked in rolling, and one thing to " +
-                    "work on next time.",
-                color = muted,
-            )
-            Button("Log a class", { nav.selectTab(LogTab) })
+            Eyebrow(stringResource(Res.string.common_training_log))
+            BjjText(stringResource(Res.string.today_log_prompt), color = muted)
+            Button(stringResource(Res.string.today_log_a_class), { nav.selectTab(LogTab) })
         } else {
-            Eyebrow(if (training.focus.isNotEmpty()) "Focus for your next class" else "Training log")
-            if (training.focus.isNotEmpty()) BjjText(training.focus, style = Type.h2)
-            val line = "${formatClassCount(training.classes)} logged · ${formatMatTime(training.minutes)} on the mat"
+            val hasFocus = training.focus.isNotEmpty()
+            Eyebrow(stringResource(if (hasFocus) Res.string.today_focus_eyebrow else Res.string.common_training_log))
+            if (hasFocus) BjjText(training.focus, style = Type.h2)
+            val line = stringResource(
+                Res.string.today_training_line,
+                formatClassCount(training.classes),
+                formatMatTime(training.minutes),
+            )
             BjjText(line, style = Type.small, color = muted)
             val stuck = recentlyStuck(snapshot.trainingLog, RECENT_CLASS_COUNT).mapNotNull { findSituation(lib, it) }
             if (stuck.isNotEmpty()) {
-                BjjText(
-                    "Where you got stuck. Cards from here that you have not studied yet come first in review.",
-                    style = Type.small,
-                    color = muted,
-                )
+                BjjText(stringResource(Res.string.today_stuck_note), style = Type.small, color = muted)
                 Wrap {
                     for (situation in stuck) {
                         Chip(situationName(situation), {
@@ -331,13 +401,24 @@ private fun LessonCard(lib: Library, nav: Nav, modifier: Modifier = Modifier) {
     val lesson = currentLesson(lib) ?: return
     val progress = lessonProgress(lib, lesson)
     Card(modifier) {
-        Eyebrow("Lesson ${FOUNDATION_LESSONS.indexOf(lesson) + 1} of ${FOUNDATION_LESSONS.size}")
+        val number = FOUNDATION_LESSONS.indexOf(lesson) + 1
+        Eyebrow(stringResource(Res.string.today_lesson_number, number, FOUNDATION_LESSONS.size))
         SectionHead(lesson.title) {
-            Button("All lessons", { nav.selectTab(LearnTab(LearnSection.Lessons)) }, size = ButtonSize.Small)
+            Button(
+                stringResource(Res.string.today_all_lessons),
+                { nav.selectTab(LearnTab(LearnSection.Lessons)) },
+                size = ButtonSize.Small,
+            )
         }
         BjjText(lesson.summary, color = BjjTheme.palette.muted)
-        BjjText("${progress.learned} of ${plural(progress.total, "card")} learned", style = Type.small)
-        Button("Study this lesson", { nav.selectTab(ReviewTab(Deck.All.key, lesson.id)) })
+        val learned = pluralStringResource(
+            Res.plurals.today_lesson_cards_learned,
+            progress.total,
+            progress.learned,
+            progress.total,
+        )
+        BjjText(learned, style = Type.small)
+        Button(stringResource(Res.string.today_study_lesson), { nav.selectTab(ReviewTab(Deck.All.key, lesson.id)) })
     }
 }
 
@@ -346,12 +427,8 @@ private fun StickingCard(lib: Library, nav: Nav, modifier: Modifier = Modifier) 
     val sticking = stickingPoints(lib, STICKING_POINT_LIMIT)
     if (sticking.isEmpty()) return
     Card(modifier) {
-        BjjText("Sticking points", style = Type.h2)
-        BjjText(
-            "These have slipped more than once in review. Reread the page or watch the video, then try one in your " +
-                "next class.",
-            color = BjjTheme.palette.muted,
-        )
+        BjjText(stringResource(Res.string.today_sticking_title), style = Type.h2)
+        BjjText(stringResource(Res.string.today_sticking_note), color = BjjTheme.palette.muted)
         Wrap {
             for (item in sticking) {
                 Chip(cardName(lib, item).orEmpty(), { nav.open(studyItemKey(item)) }) {
@@ -366,15 +443,20 @@ private fun StickingCard(lib: Library, nav: Nav, modifier: Modifier = Modifier) 
 private fun ConceptsCard(lib: Library, nav: Nav, modifier: Modifier = Modifier) {
     val next = conceptsToLearn(lib, HOME_CONCEPT_LIMIT)
     Card(modifier) {
-        SectionHead("Concepts to learn next") {
-            Button("All ${lib.concepts.size}", {
-                nav.selectTab(LearnTab(LearnSection.Concepts))
-            }, size = ButtonSize.Small)
+        SectionHead(stringResource(Res.string.today_concepts_title)) {
+            Button(
+                stringResource(Res.string.today_concepts_all, lib.concepts.size),
+                { nav.selectTab(LearnTab(LearnSection.Concepts)) },
+                size = ButtonSize.Small,
+            )
         }
         if (next.isEmpty()) {
-            val learned = "Every concept is learned. Keep reviewing to stay sharp."
-            val text = if (lib.concepts.isEmpty()) "No concepts yet." else learned
-            BjjText(text, color = BjjTheme.palette.muted)
+            val text = if (lib.concepts.isEmpty()) {
+                Res.string.today_concepts_none
+            } else {
+                Res.string.today_concepts_all_learned
+            }
+            BjjText(stringResource(text), color = BjjTheme.palette.muted)
         } else {
             Wrap {
                 for (concept in next) {
@@ -395,6 +477,11 @@ private class PathStep(
     val link: Pair<String, () -> Unit>? = null,
 )
 
+/** The link under a step of the path that has something left to learn: the name of what comes next. */
+@Composable
+private fun nextUp(name: String): String = stringResource(Res.string.today_path_next_up, name)
+
+@Composable
 private fun pathSteps(snapshot: Snapshot, nav: Nav): List<PathStep> {
     val lib = snapshot.library
     val unstudied = { kind: CardKind, id: String -> cardId(kind, id) !in lib.reviews }
@@ -407,36 +494,38 @@ private fun pathSteps(snapshot: Snapshot, nav: Nav): List<PathStep> {
     val nextAttack = notStarted.firstOrNull { !isEscape(it.type) }
     return listOf(
         PathStep(
-            "Survive first",
+            stringResource(Res.string.today_path_survive_title),
             done = lib.transitions.any { isEscape(it.type) } && nextEscape == null,
-            body = "Learn the way out of side control and mount before anything else. The lessons start there.",
-            link = nextEscape?.let { "Next up: ${it.name}" to { nav.open(TransitionDetail(it.id)) } },
+            body = stringResource(Res.string.today_path_survive_body),
+            link = nextEscape?.let { nextUp(it.name) to { nav.open(TransitionDetail(it.id)) } },
         ),
         PathStep(
-            "Core concepts",
+            stringResource(Res.string.today_path_concepts_title),
             done = lib.concepts.isNotEmpty() && nextConcept == null,
-            body = "Posture, base, frames, and the shrimp show up everywhere. Each arrives with the escape that " +
-                "uses it.",
-            link = nextConcept?.let { "Next up: ${it.name}" to { nav.open(ConceptDetail(it.id)) } },
+            body = stringResource(Res.string.today_path_concepts_body),
+            link = nextConcept?.let { nextUp(it.name) to { nav.open(ConceptDetail(it.id)) } },
         ),
         PathStep(
-            "The main positions",
+            stringResource(Res.string.today_path_positions_title),
             done = lib.positions.isNotEmpty() && nextPosition == null,
-            body = "Know what each person wants in each one.",
-            link = nextPosition?.let { "Next up: ${it.name}" to { nav.open(PositionDetail(it.id)) } },
+            body = stringResource(Res.string.today_path_positions_body),
+            link = nextPosition?.let { nextUp(it.name) to { nav.open(PositionDetail(it.id)) } },
         ),
         PathStep(
-            "Then attack",
+            stringResource(Res.string.today_path_attack_title),
             done = lib.transitions.any { !isEscape(it.type) } && nextAttack == null,
-            body = "Sweeps and passes improve your position; submissions come last.",
-            link = nextAttack?.let { "Next up: ${it.name}" to { nav.open(TransitionDetail(it.id)) } }
-                ?: ("See the position map" to { nav.selectTab(LearnTab(LearnSection.Positions)) }),
+            body = stringResource(Res.string.today_path_attack_body),
+            link = nextAttack?.let { nextUp(it.name) to { nav.open(TransitionDetail(it.id)) } }
+                ?: (
+                    stringResource(Res.string.today_path_see_map) to
+                        { nav.selectTab(LearnTab(LearnSection.Positions)) }
+                    ),
         ),
         PathStep(
-            "Save the best explanations",
+            stringResource(Res.string.today_path_videos_title),
             done = snapshot.videos.isNotEmpty(),
-            body = "Bookmark the exact moment in a YouTube video on any item, or on the Videos page.",
-            link = "Videos" to { nav.open(Videos) },
+            body = stringResource(Res.string.today_path_videos_body),
+            link = stringResource(Res.string.common_videos) to { nav.open(Videos) },
         ),
     )
 }
@@ -462,7 +551,8 @@ private fun PathSteps(steps: List<PathStep>, modifier: Modifier = Modifier) {
                     contentAlignment = Alignment.Center,
                 ) {
                     if (step.done) {
-                        Icon(BjjIcons.Check, description = "Done", tint = p.onStatus, size = Sizes.iconSmall)
+                        val done = stringResource(Res.string.common_done)
+                        Icon(BjjIcons.Check, description = done, tint = p.onStatus, size = Sizes.iconSmall)
                     } else {
                         BjjText(
                             "${index + 1}",

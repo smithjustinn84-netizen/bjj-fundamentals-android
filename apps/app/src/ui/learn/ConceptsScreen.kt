@@ -1,7 +1,6 @@
 package dev.justinsmith.bjj.ui.learn
 
 import androidx.compose.foundation.layout.Arrangement
-import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.runtime.Composable
@@ -39,6 +38,20 @@ import dev.justinsmith.bjj.nav.LearnTab
 import dev.justinsmith.bjj.nav.PositionDetail
 import dev.justinsmith.bjj.nav.ReviewTab
 import dev.justinsmith.bjj.nav.itemKey
+import dev.justinsmith.bjj.resources.Res
+import dev.justinsmith.bjj.resources.common_concepts
+import dev.justinsmith.bjj.resources.learn_concept
+import dev.justinsmith.bjj.resources.learn_concept_key_points
+import dev.justinsmith.bjj.resources.learn_concept_on_to_positions
+import dev.justinsmith.bjj.resources.learn_concept_where_it_matters
+import dev.justinsmith.bjj.resources.learn_concepts_about
+import dev.justinsmith.bjj.resources.learn_concepts_empty
+import dev.justinsmith.bjj.resources.learn_concepts_new
+import dev.justinsmith.bjj.resources.learn_concepts_study
+import dev.justinsmith.bjj.resources.learn_nothing_here
+import dev.justinsmith.bjj.resources.learn_starter_concepts_missing
+import dev.justinsmith.bjj.resources.learn_try_this_drill
+import dev.justinsmith.bjj.ui.common.Columns
 import dev.justinsmith.bjj.ui.common.DetailHeader
 import dev.justinsmith.bjj.ui.common.ItemPicture
 import dev.justinsmith.bjj.ui.common.ItemRef
@@ -59,6 +72,7 @@ import dev.justinsmith.bjj.ui.common.WithSnapshot
 import dev.justinsmith.bjj.ui.common.label
 import dev.justinsmith.bjj.ui.common.progressOf
 import dev.justinsmith.bjj.ui.common.videoActions
+import org.jetbrains.compose.resources.stringResource
 
 @Composable
 fun ConceptsRoute(nav: Nav) {
@@ -86,34 +100,38 @@ fun ConceptsScreen(
     Page(modifier) {
         LearnSwitch(LearnSection.Concepts, { nav.selectTab(LearnTab(it)) })
         PageHead(
-            "Concepts",
-            about = "The big ideas that make every technique work. Review brings each one in beside the escapes " +
-                "that use it.",
+            stringResource(Res.string.common_concepts),
+            about = stringResource(Res.string.learn_concepts_about),
         )
         Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(Spacing.s2)) {
             if (lib.concepts.isNotEmpty()) {
-                Button("Study concepts", {
-                    nav.selectTab(ReviewTab(Deck.Concept.key))
-                }, Modifier.weight(1f), ButtonKind.Primary)
+                Button(
+                    stringResource(Res.string.learn_concepts_study),
+                    { nav.selectTab(ReviewTab(Deck.Concept.key)) },
+                    Modifier.weight(1f),
+                    ButtonKind.Primary,
+                )
             }
-            Button("+ New concept", { nav.open(Editor(ItemKind.Concept)) }, Modifier.weight(1f))
+            Button(
+                stringResource(Res.string.learn_concepts_new),
+                { nav.open(Editor(ItemKind.Concept)) },
+                Modifier.weight(1f),
+            )
         }
         LibrarySearch(lib, { kind, id -> nav.open(itemKey(kind, id)) })
-        StarterOffer("concept", missing, onAddStarter, onDismissStarter)
+        StarterOffer(Res.plurals.learn_starter_concepts_missing, missing, onAddStarter, onDismissStarter)
         if (lib.concepts.isEmpty()) {
-            BjjText("No concepts yet.", color = BjjTheme.palette.muted)
+            BjjText(stringResource(Res.string.learn_concepts_empty), color = BjjTheme.palette.muted)
         } else {
             ProgressLegend()
-            Column(verticalArrangement = Arrangement.spacedBy(Spacing.s2)) {
-                for (concept in lib.concepts) {
-                    Tile(
-                        name = concept.name,
-                        onClick = { nav.open(ConceptDetail(concept.id)) },
-                        detail = concept.summary,
-                        picture = if (hasConceptArtwork(concept.id)) ({ ConceptArtwork(concept.id) }) else null,
-                    ) {
-                        ProgressDot(progressOf(reviewOf(lib, CardKind.Concept, concept.id)))
-                    }
+            Columns(lib.concepts) { concept ->
+                Tile(
+                    name = concept.name,
+                    onClick = { nav.open(ConceptDetail(concept.id)) },
+                    detail = concept.summary,
+                    picture = if (hasConceptArtwork(concept.id)) ({ ConceptArtwork(concept.id) }) else null,
+                ) {
+                    ProgressDot(progressOf(reviewOf(lib, CardKind.Concept, concept.id)))
                 }
             }
         }
@@ -125,7 +143,11 @@ fun ConceptDetailRoute(id: String, nav: Nav) {
     WithSnapshot { snapshot, viewModel ->
         val concept = snapshot.library.conceptById[id]
         if (concept == null) {
-            Missing("Concept", "Concepts", { nav.selectTab(LearnTab(LearnSection.Concepts)) })
+            Missing(
+                stringResource(Res.string.learn_concept),
+                stringResource(Res.string.common_concepts),
+                { nav.selectTab(LearnTab(LearnSection.Concepts)) },
+            )
         } else {
             ConceptDetailScreen(
                 concept = concept,
@@ -152,28 +174,29 @@ fun ConceptDetailScreen(
     val previous = lib.concepts.getOrNull(index - 1)
     val next = lib.concepts.getOrNull(index + 1)
     val state = reviewOf(lib, CardKind.Concept, concept.id)
+    val onToPositions = stringResource(Res.string.learn_concept_on_to_positions)
     Page(modifier, maxWidth = Sizes.readingMax) {
         DetailHeader(
-            backLabel = "Concepts",
+            backLabel = stringResource(Res.string.common_concepts),
             onBack = nav.back,
             onEdit = { nav.open(Editor(ItemKind.Concept, concept.id)) },
             title = concept.name,
             eyebrow = {
-                Eyebrow("Concept")
+                Eyebrow(stringResource(Res.string.learn_concept))
                 StatusPill(progressOf(state).label, progressOf(state))
             },
             lead = concept.summary,
         )
         Card {
             ItemPicture(videos) { if (hasConceptArtwork(concept.id)) ConceptArtwork(concept.id) }
-            Section("Key points") { PointList(concept.keyPoints) }
+            Section(stringResource(Res.string.learn_concept_key_points)) { PointList(concept.keyPoints) }
             if (concept.drill.isNotEmpty()) {
                 Divider()
-                Section("Try this drill") { BjjText(concept.drill) }
+                Section(stringResource(Res.string.learn_try_this_drill)) { BjjText(concept.drill) }
             }
             if (usedIn.isNotEmpty()) {
                 Divider()
-                Section("Where it matters") {
+                Section(stringResource(Res.string.learn_concept_where_it_matters)) {
                     Wrap { for (position in usedIn) Chip(position.name, { nav.open(PositionDetail(position.id)) }) }
                 }
             }
@@ -185,7 +208,7 @@ fun ConceptDetailScreen(
         Pager(
             previous = previous?.let { PagerTarget(it.name) { nav.replace(ConceptDetail(it.id)) } },
             next = next?.let { PagerTarget(it.name) { nav.replace(ConceptDetail(it.id)) } }
-                ?: PagerTarget("On to positions") { nav.selectTab(LearnTab(LearnSection.Positions)) },
+                ?: PagerTarget(onToPositions) { nav.selectTab(LearnTab(LearnSection.Positions)) },
         )
     }
 }
@@ -194,7 +217,7 @@ fun ConceptDetailScreen(
 @Composable
 fun PointList(items: List<String>, modifier: Modifier = Modifier, numbered: Boolean = false) {
     if (items.isEmpty()) {
-        BjjText("Nothing here yet.", modifier, color = BjjTheme.palette.muted)
+        BjjText(stringResource(Res.string.learn_nothing_here), modifier, color = BjjTheme.palette.muted)
     } else {
         Bullets(items, modifier, numbered)
     }

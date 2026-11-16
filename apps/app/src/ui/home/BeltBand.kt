@@ -15,11 +15,13 @@ import androidx.compose.ui.unit.dp
 import dev.justinsmith.bjj.core.BeltRank
 import dev.justinsmith.bjj.core.MAX_STRIPES
 import dev.justinsmith.bjj.core.label
-import dev.justinsmith.bjj.core.plural
 import dev.justinsmith.bjj.design.components.block
 import dev.justinsmith.bjj.design.theme.BjjPalette
 import dev.justinsmith.bjj.design.theme.BjjTheme
 import dev.justinsmith.bjj.design.theme.Radius
+import dev.justinsmith.bjj.resources.Res
+import dev.justinsmith.bjj.resources.today_belt_description
+import org.jetbrains.compose.resources.pluralStringResource
 
 fun BjjPalette.beltColor(rank: BeltRank): Color = when (rank) {
     BeltRank.White -> beltWhite
@@ -36,7 +38,7 @@ fun BjjPalette.beltColor(rank: BeltRank): Color = when (rank) {
 @Composable
 fun BeltBand(rank: BeltRank, stripes: Int, modifier: Modifier = Modifier) {
     val p = BjjTheme.palette
-    val description = "${rank.label}, ${plural(stripes, "stripe")}"
+    val description = pluralStringResource(Res.plurals.today_belt_description, stripes, rank.label, stripes)
     Box(
         modifier.fillMaxWidth().height(BAND_HEIGHT).semantics { contentDescription = description }.drawBehind {
             block(p.beltColor(rank), p.beltOutline, Radius.sm)

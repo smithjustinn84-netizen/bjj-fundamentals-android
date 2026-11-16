@@ -44,6 +44,18 @@ import dev.justinsmith.bjj.design.theme.Sizes
 import dev.justinsmith.bjj.design.theme.Spacing
 import dev.justinsmith.bjj.design.theme.Type
 import dev.justinsmith.bjj.nav.Tab
+import dev.justinsmith.bjj.resources.Res
+import dev.justinsmith.bjj.resources.common_edit
+import dev.justinsmith.bjj.resources.page_loading
+import dev.justinsmith.bjj.resources.page_my_notes
+import dev.justinsmith.bjj.resources.page_next
+import dev.justinsmith.bjj.resources.page_not_found
+import dev.justinsmith.bjj.resources.page_not_found_about
+import dev.justinsmith.bjj.resources.page_previous
+import dev.justinsmith.bjj.resources.page_progress_learned
+import dev.justinsmith.bjj.resources.page_progress_learning
+import dev.justinsmith.bjj.resources.page_progress_new
+import org.jetbrains.compose.resources.stringResource
 
 /** How a page moves to another: what the app's one back stack offers a screen. */
 class Nav(
@@ -89,7 +101,7 @@ fun PageHead(title: String, modifier: Modifier = Modifier, about: String = "") {
 /** While the first read of the library is on its way. */
 @Composable
 fun Loading(modifier: Modifier = Modifier) {
-    Page(modifier) { BjjText("Loading…", color = BjjTheme.palette.muted) }
+    Page(modifier) { BjjText(stringResource(Res.string.page_loading), color = BjjTheme.palette.muted) }
 }
 
 /** In place of a page whose item is gone. */
@@ -97,8 +109,8 @@ fun Loading(modifier: Modifier = Modifier) {
 fun Missing(what: String, backLabel: String, onBack: () -> Unit, modifier: Modifier = Modifier) {
     Page(modifier, maxWidth = Sizes.readingMax) {
         Card {
-            PageTitle("$what not found")
-            BjjText("It may have been deleted or replaced by an imported backup.", color = BjjTheme.palette.muted)
+            PageTitle(stringResource(Res.string.page_not_found, what))
+            BjjText(stringResource(Res.string.page_not_found_about), color = BjjTheme.palette.muted)
             BackLink(backLabel, onBack)
         }
     }
@@ -139,7 +151,7 @@ fun DetailHeader(
     Column(modifier.fillMaxWidth(), verticalArrangement = Arrangement.spacedBy(Spacing.s2)) {
         Row(Modifier.fillMaxWidth(), verticalAlignment = Alignment.CenterVertically) {
             BackLink(backLabel, onBack, Modifier.weight(1f))
-            Button("Edit", onEdit, size = ButtonSize.Small)
+            Button(stringResource(Res.string.common_edit), onEdit, size = ButtonSize.Small)
         }
         Row(
             horizontalArrangement = Arrangement.spacedBy(Spacing.s2),
@@ -158,12 +170,15 @@ fun progressOf(state: ReviewState?): Progress = when {
     else -> Progress.Learning
 }
 
+/** How far a card has got, in words. */
 val Progress.label: String
-    get() = when (this) {
-        Progress.New -> "Not studied yet"
-        Progress.Learning -> "Learning"
-        Progress.Learned -> "Learned"
-    }
+    @Composable get() = stringResource(
+        when (this) {
+            Progress.New -> Res.string.page_progress_new
+            Progress.Learning -> Res.string.page_progress_learning
+            Progress.Learned -> Res.string.page_progress_learned
+        },
+    )
 
 /** What the three progress dots mean, shown once above a list that uses them. */
 @Composable
@@ -185,7 +200,7 @@ fun ProgressLegend(modifier: Modifier = Modifier) {
 @Composable
 fun NotesBlock(notes: String, modifier: Modifier = Modifier) {
     if (notes.isBlank()) return
-    Section("My notes", modifier) { SoftBlock(notes) }
+    Section(stringResource(Res.string.page_my_notes), modifier) { SoftBlock(notes) }
 }
 
 /** A name and where it leads, for the two links at the foot of a page. */
@@ -196,7 +211,13 @@ class PagerTarget(val label: String, val onClick: () -> Unit)
 fun Pager(previous: PagerTarget?, next: PagerTarget?, modifier: Modifier = Modifier) {
     if (previous == null && next == null) return
     Column(modifier.fillMaxWidth(), verticalArrangement = Arrangement.spacedBy(Spacing.s2)) {
-        if (previous != null) PagerLink("← Previous", previous.label, previous.onClick, Modifier.fillMaxWidth())
-        if (next != null) PagerLink("Next →", next.label, next.onClick, Modifier.fillMaxWidth(), alignEnd = true)
+        if (previous != null) {
+            val label = stringResource(Res.string.page_previous)
+            PagerLink(label, previous.label, previous.onClick, Modifier.fillMaxWidth())
+        }
+        if (next != null) {
+            val label = stringResource(Res.string.page_next)
+            PagerLink(label, next.label, next.onClick, Modifier.fillMaxWidth(), alignEnd = true)
+        }
     }
 }

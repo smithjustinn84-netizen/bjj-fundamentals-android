@@ -43,19 +43,40 @@ import dev.justinsmith.bjj.design.theme.Spacing
 import dev.justinsmith.bjj.design.theme.Type
 import dev.justinsmith.bjj.design.theme.typeColor
 import dev.justinsmith.bjj.nav.LearnSection
+import dev.justinsmith.bjj.resources.Res
+import dev.justinsmith.bjj.resources.common_concepts
+import dev.justinsmith.bjj.resources.common_lessons
+import dev.justinsmith.bjj.resources.common_positions
+import dev.justinsmith.bjj.resources.learn_from_position
+import dev.justinsmith.bjj.resources.learn_leads_to
+import dev.justinsmith.bjj.resources.learn_leads_to_side
+import dev.justinsmith.bjj.resources.learn_leads_to_tap
+import dev.justinsmith.bjj.resources.learn_links_answers
+import dev.justinsmith.bjj.resources.learn_links_defences
+import dev.justinsmith.bjj.resources.learn_links_follow_ups
+import dev.justinsmith.bjj.resources.learn_search_label
+import dev.justinsmith.bjj.resources.learn_search_no_match
+import dev.justinsmith.bjj.resources.learn_search_placeholder
+import dev.justinsmith.bjj.resources.learn_starter_add
+import dev.justinsmith.bjj.resources.learn_starter_dismiss
+import dev.justinsmith.bjj.resources.learn_switch_blue_belt
+import org.jetbrains.compose.resources.PluralStringResource
+import org.jetbrains.compose.resources.StringResource
+import org.jetbrains.compose.resources.pluralStringResource
+import org.jetbrains.compose.resources.stringResource
 
-private val LearnSection.label: String
+private val LearnSection.label: StringResource
     get() = when (this) {
-        LearnSection.Concepts -> "Concepts"
-        LearnSection.Positions -> "Positions"
-        LearnSection.Lessons -> "Lessons"
-        LearnSection.BlueBelt -> "Blue belt"
+        LearnSection.Concepts -> Res.string.common_concepts
+        LearnSection.Positions -> Res.string.common_positions
+        LearnSection.Lessons -> Res.string.common_lessons
+        LearnSection.BlueBelt -> Res.string.learn_switch_blue_belt
     }
 
 /** The switch at the top of every page behind the Learn tab. Techniques are reached from positions. */
 @Composable
 fun LearnSwitch(section: LearnSection, onSelect: (LearnSection) -> Unit, modifier: Modifier = Modifier) {
-    Segmented(LearnSection.entries, section, onSelect, { it.label }, modifier.fillMaxWidth())
+    Segmented(LearnSection.entries, section, onSelect, { stringResource(it.label) }, modifier.fillMaxWidth())
 }
 
 /** One box that finds any concept, position or technique by its name or its text. */
@@ -68,20 +89,20 @@ fun LibrarySearch(lib: Library, onOpen: (ItemKind, String) -> Unit, modifier: Mo
         TextInput(
             value = query,
             onValueChange = { query = it },
-            label = "Search your library",
+            label = stringResource(Res.string.learn_search_label),
             modifier = Modifier.woodblock(
                 fill = BjjTheme.palette.surface,
                 outline = BjjTheme.palette.borderControl,
                 radius = dev.justinsmith.bjj.design.theme.Radius.md,
             ),
-            placeholder = "Find a concept, position or technique…",
+            placeholder = stringResource(Res.string.learn_search_placeholder),
             imeAction = ImeAction.Search,
             onSurface = true,
         )
         if (searching && hits.isEmpty()) {
             // Said aloud as it changes, so a screen reader hears that nothing matched.
             BjjText(
-                "Nothing matches “${query.trim()}”.",
+                stringResource(Res.string.learn_search_no_match, query.trim()),
                 Modifier.semantics { liveRegion = LiveRegionMode.Polite },
                 color = BjjTheme.palette.muted,
             )
@@ -107,28 +128,25 @@ fun RowCard(modifier: Modifier = Modifier, content: @Composable () -> Unit) {
 }
 
 /**
- * Offers starter items the library does not have, such as ones added to the app after it was set up.
- * Dismissing hides those items for good; one that goes missing later is offered again.
+ * Offers starter items the library does not have, such as ones added to the app after it was set up. [missing]
+ * is the heading that counts them, which names their kind. Dismissing hides those items for good; one that goes
+ * missing later is offered again.
  */
 @Composable
 fun StarterOffer(
-    noun: String,
+    missing: PluralStringResource,
     names: List<String>,
     onAdd: () -> Unit,
     onDismiss: () -> Unit,
     modifier: Modifier = Modifier,
 ) {
     if (names.isEmpty()) return
-    val one = names.size == 1
     Card(modifier) {
-        BjjText(
-            "${names.size} starter ${if (one) "$noun is" else "${noun}s are"} not in your library:",
-            style = Type.strong,
-        )
+        BjjText(pluralStringResource(missing, names.size, names.size), style = Type.strong)
         BjjText("${names.joinToString(", ")}.")
         Row(horizontalArrangement = Arrangement.spacedBy(Spacing.s2)) {
-            Button(if (one) "Add it" else "Add them", onAdd, kind = ButtonKind.Primary)
-            Button("Dismiss", onDismiss)
+            Button(pluralStringResource(Res.plurals.learn_starter_add, names.size), onAdd, kind = ButtonKind.Primary)
+            Button(stringResource(Res.string.learn_starter_dismiss), onDismiss)
         }
     }
 }
@@ -136,12 +154,20 @@ fun StarterOffer(
 /** Which end of a technique a row names: where it leads, or where it comes from. */
 enum class Direction { Out, In }
 
+@Composable
 private fun otherEnd(technique: Transition, positionById: Map<String, Position>, direction: Direction): String {
-    if (direction == Direction.In) return positionById[technique.fromId]?.let { "from ${it.name}" }.orEmpty()
-    if (endsTheRoll(technique.type)) return "→ tap"
+    if (direction == Direction.In) {
+        val from = positionById[technique.fromId] ?: return ""
+        return stringResource(Res.string.learn_from_position, from.name)
+    }
+    if (endsTheRoll(technique.type)) return stringResource(Res.string.learn_leads_to_tap)
     val to = positionById[technique.toId] ?: return ""
     val side = endRole(positionById, technique)
-    return if (side != null) "→ ${to.name}, ${endSideLabel(to.category, side)}" else "→ ${to.name}"
+    return if (side != null) {
+        stringResource(Res.string.learn_leads_to_side, to.name, endSideLabel(to.category, side))
+    } else {
+        stringResource(Res.string.learn_leads_to, to.name)
+    }
 }
 
 /** Techniques as a list of links, each with its type and other end. */
@@ -178,7 +204,7 @@ fun TechniqueLinks(lib: Library, id: String, onOpen: (String) -> Unit, modifier:
     if (links.isEmpty) return
     Column(modifier.fillMaxWidth(), verticalArrangement = Arrangement.spacedBy(Spacing.s4)) {
         if (links.followUps.isNotEmpty()) {
-            Section("If they stop it, switch to") {
+            Section(stringResource(Res.string.learn_links_follow_ups)) {
                 links.followUps.forEachIndexed { index, followUp ->
                     if (index > 0) Divider()
                     RowLink(followUp.technique.name, { onOpen(followUp.technique.id) }, BjjIcons.Chevron) {
@@ -188,12 +214,14 @@ fun TechniqueLinks(lib: Library, id: String, onOpen: (String) -> Unit, modifier:
             }
         }
         if (links.defences.isNotEmpty()) {
-            Section("How it gets defended") { TransitionList(links.defences, lib.positionById, Direction.In, onOpen) }
+            Section(stringResource(Res.string.learn_links_defences)) {
+                TransitionList(links.defences, lib.positionById, Direction.In, onOpen)
+            }
         }
         if (links.answers.isNotEmpty()) {
-            Section("What it defends") { TransitionList(links.answers, lib.positionById, Direction.In, onOpen) }
+            Section(stringResource(Res.string.learn_links_answers)) {
+                TransitionList(links.answers, lib.positionById, Direction.In, onOpen)
+            }
         }
     }
 }
-
-const val NO_TECHNIQUES_FROM_HERE = "No techniques from here yet."

@@ -28,6 +28,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.draw.drawBehind
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.semantics.clearAndSetSemantics
@@ -35,11 +36,11 @@ import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
-import dev.justinsmith.bjj.core.plural
 import dev.justinsmith.bjj.design.components.BjjText
 import dev.justinsmith.bjj.design.components.Icon
 import dev.justinsmith.bjj.design.components.block
 import dev.justinsmith.bjj.design.components.pressShrink
+import dev.justinsmith.bjj.design.graphics.BrandMark
 import dev.justinsmith.bjj.design.icons.BjjIcons
 import dev.justinsmith.bjj.design.theme.BjjTheme
 import dev.justinsmith.bjj.design.theme.Radius
@@ -54,14 +55,25 @@ import dev.justinsmith.bjj.nav.TABS
 import dev.justinsmith.bjj.nav.Tab
 import dev.justinsmith.bjj.nav.TodayTab
 import dev.justinsmith.bjj.nav.sameDestination
+import dev.justinsmith.bjj.resources.Res
+import dev.justinsmith.bjj.resources.app_name
+import dev.justinsmith.bjj.resources.tab_cards_ready
+import dev.justinsmith.bjj.resources.tab_learn
+import dev.justinsmith.bjj.resources.tab_log
+import dev.justinsmith.bjj.resources.tab_more
+import dev.justinsmith.bjj.resources.tab_review
+import dev.justinsmith.bjj.resources.tab_today
+import org.jetbrains.compose.resources.StringResource
+import org.jetbrains.compose.resources.pluralStringResource
+import org.jetbrains.compose.resources.stringResource
 
-private val Tab.label: String
+private val Tab.label: StringResource
     get() = when (this) {
-        TodayTab -> "Today"
-        is LearnTab -> "Learn"
-        is ReviewTab -> "Review"
-        LogTab -> "Log"
-        MoreTab -> "More"
+        TodayTab -> Res.string.tab_today
+        is LearnTab -> Res.string.tab_learn
+        is ReviewTab -> Res.string.tab_review
+        LogTab -> Res.string.tab_log
+        MoreTab -> Res.string.tab_more
     }
 
 private val Tab.icon: ImageVector
@@ -92,30 +104,86 @@ fun TabBar(current: Tab, dueCount: Int, onSelect: (Tab) -> Unit, modifier: Modif
     }
 }
 
-/** The five tabs down the left of a wider window, with the ink line beside them. */
+/**
+ * The five tabs down the left of a wider window, with the ink line beside them. Where there is room ([wide]) the
+ * brand sits on top and each tab's label beside its icon.
+ */
 @Composable
-fun TabRail(current: Tab, dueCount: Int, onSelect: (Tab) -> Unit, modifier: Modifier = Modifier) {
+fun TabRail(current: Tab, dueCount: Int, wide: Boolean, onSelect: (Tab) -> Unit, modifier: Modifier = Modifier) {
     Row(modifier.fillMaxHeight().background(BjjTheme.palette.surface)) {
         Column(
             Modifier
-                .width(Sizes.rail)
+                .width(if (wide) Sizes.railWide else Sizes.rail)
                 .fillMaxHeight()
                 .windowInsetsPadding(WindowInsets.safeDrawing.only(WindowInsetsSides.Bottom))
                 .padding(vertical = Spacing.s4)
                 .selectableGroup(),
             verticalArrangement = Arrangement.spacedBy(Spacing.s2),
         ) {
+            if (wide) {
+                Row(
+                    Modifier.padding(horizontal = Spacing.s4).padding(bottom = Spacing.s3),
+                    horizontalArrangement = Arrangement.spacedBy(Spacing.s2),
+                    verticalAlignment = Alignment.CenterVertically,
+                ) {
+                    BrandMark()
+                    BjjText(stringResource(Res.string.app_name), style = Type.strong, maxLines = 1)
+                }
+            }
             for (tab in TABS) {
-                TabItem(
-                    tab,
-                    tab.sameDestination(current),
-                    dueCount,
-                    onSelect,
-                    Modifier.fillMaxWidth().height(Sizes.tabBar),
-                )
+                val selected = tab.sameDestination(current)
+                if (wide) {
+                    WideTabItem(tab, selected, dueCount, onSelect)
+                } else {
+                    TabItem(tab, selected, dueCount, onSelect, Modifier.fillMaxWidth().height(Sizes.tabBar))
+                }
             }
         }
         Box(Modifier.width(Sizes.line).fillMaxHeight().background(BjjTheme.palette.outline))
+    }
+}
+
+/** A tab on the wide rail: its icon, its label beside it, and the count of cards ready at the far end. */
+@Composable
+private fun WideTabItem(
+    tab: Tab,
+    selected: Boolean,
+    dueCount: Int,
+    onSelect: (Tab) -> Unit,
+    modifier: Modifier = Modifier,
+) {
+    val p = BjjTheme.palette
+    val interactions = remember { MutableInteractionSource() }
+    val due = if (tab is ReviewTab) dueCount else 0
+    val color = if (selected) p.text else p.muted
+    val label = stringResource(tab.label)
+    val ready = pluralStringResource(Res.plurals.tab_cards_ready, due, label, due)
+    Row(
+        modifier
+            .fillMaxWidth()
+            .height(Sizes.tap)
+            .pressShrink(interactions)
+            .selectable(selected, interactions, indication = null, role = Role.Tab, onClick = { onSelect(tab) })
+            .semantics { if (due > 0) contentDescription = ready },
+        horizontalArrangement = Arrangement.spacedBy(Spacing.s3),
+        verticalAlignment = Alignment.CenterVertically,
+    ) {
+        // The belt strip hangs from the rail's edge beside the tab you are on.
+        Box(
+            Modifier
+                .size(STRIP_HEIGHT, STRIP_LENGTH)
+                .clip(RoundedCornerShape(topEnd = Radius.sm, bottomEnd = Radius.sm))
+                .background(if (selected) p.belt else Color.Transparent),
+        )
+        Icon(tab.icon, description = null, tint = color, size = TAB_ICON)
+        BjjText(
+            label,
+            Modifier.weight(1f),
+            style = Type.strong.copy(fontWeight = if (selected) FontWeight.ExtraBold else FontWeight.SemiBold),
+            color = color,
+            maxLines = 1,
+        )
+        if (due > 0) DueBadge(due, Modifier.padding(end = Spacing.s4))
     }
 }
 
@@ -131,11 +199,13 @@ private fun TabItem(
     val interactions = remember { MutableInteractionSource() }
     val due = if (tab is ReviewTab) dueCount else 0
     val color = if (selected) p.text else p.muted
+    val label = stringResource(tab.label)
+    val ready = pluralStringResource(Res.plurals.tab_cards_ready, due, label, due)
     Box(
         modifier
             .pressShrink(interactions)
             .selectable(selected, interactions, indication = null, role = Role.Tab, onClick = { onSelect(tab) })
-            .semantics { if (due > 0) contentDescription = "${tab.label}, ${plural(due, "card")} ready" },
+            .semantics { if (due > 0) contentDescription = ready },
         contentAlignment = Alignment.Center,
     ) {
         // The belt strip that hangs from the bar's edge over the tab you are on.
@@ -154,7 +224,7 @@ private fun TabItem(
                 if (due > 0) DueBadge(due, Modifier.align(Alignment.TopEnd).offset(x = BADGE_OUT, y = -BADGE_UP))
             }
             BjjText(
-                tab.label,
+                label,
                 style = Type.eyebrow.copy(
                     letterSpacing = Type.small.letterSpacing,
                     fontWeight = if (selected) FontWeight.ExtraBold else FontWeight.SemiBold,
@@ -168,6 +238,7 @@ private fun TabItem(
 
 private val STRIP_WIDTH = 40.dp
 private val STRIP_HEIGHT = 5.dp
+private val STRIP_LENGTH = 28.dp
 private val TAB_ICON = 24.dp
 private val BADGE_OUT = 12.dp
 private val BADGE_UP = 4.dp

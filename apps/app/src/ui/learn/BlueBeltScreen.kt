@@ -39,6 +39,19 @@ import dev.justinsmith.bjj.nav.LearnSection
 import dev.justinsmith.bjj.nav.LearnTab
 import dev.justinsmith.bjj.nav.ReviewTab
 import dev.justinsmith.bjj.nav.TransitionDetail
+import dev.justinsmith.bjj.resources.Res
+import dev.justinsmith.bjj.resources.common_blue_belt_test
+import dev.justinsmith.bjj.resources.learn_add_technique
+import dev.justinsmith.bjj.resources.learn_blue_belt_about
+import dev.justinsmith.bjj.resources.learn_blue_belt_browse
+import dev.justinsmith.bjj.resources.learn_blue_belt_empty_text
+import dev.justinsmith.bjj.resources.learn_blue_belt_empty_title
+import dev.justinsmith.bjj.resources.learn_blue_belt_group
+import dev.justinsmith.bjj.resources.learn_blue_belt_learned
+import dev.justinsmith.bjj.resources.learn_blue_belt_study
+import dev.justinsmith.bjj.resources.learn_from_position
+import dev.justinsmith.bjj.resources.learn_starter_techniques_missing
+import dev.justinsmith.bjj.ui.common.Columns
 import dev.justinsmith.bjj.ui.common.EmptyState
 import dev.justinsmith.bjj.ui.common.LearnSwitch
 import dev.justinsmith.bjj.ui.common.Nav
@@ -48,6 +61,7 @@ import dev.justinsmith.bjj.ui.common.RowCard
 import dev.justinsmith.bjj.ui.common.StarterOffer
 import dev.justinsmith.bjj.ui.common.WithSnapshot
 import dev.justinsmith.bjj.ui.common.progressOf
+import org.jetbrains.compose.resources.stringResource
 
 @Composable
 fun BlueBeltRoute(nav: Nav) {
@@ -76,25 +90,27 @@ fun BlueBeltScreen(
     Page(modifier) {
         LearnSwitch(LearnSection.BlueBelt, { nav.selectTab(LearnTab(it)) })
         Row(horizontalArrangement = Arrangement.spacedBy(Spacing.s3), verticalAlignment = Alignment.CenterVertically) {
-            PageTitle("Blue belt test", Modifier.weight(1f))
-            Button("+ Technique", { nav.open(Editor(ItemKind.Transition)) }, size = ButtonSize.Small)
+            PageTitle(stringResource(Res.string.common_blue_belt_test), Modifier.weight(1f))
+            Button(
+                stringResource(Res.string.learn_add_technique),
+                { nav.open(Editor(ItemKind.Transition)) },
+                size = ButtonSize.Small,
+            )
         }
-        BjjText(
-            "The techniques you will be asked to show. Every gym tests differently, so edit a technique to add it " +
-                "to this list or take it off.",
-            color = BjjTheme.palette.muted,
-        )
-        StarterOffer("technique", missing, onAddStarter, onDismissStarter)
+        BjjText(stringResource(Res.string.learn_blue_belt_about), color = BjjTheme.palette.muted)
+        StarterOffer(Res.plurals.learn_starter_techniques_missing, missing, onAddStarter, onDismissStarter)
         if (list.total == 0) {
             Card {
                 EmptyState(
                     icon = BjjIcons.Belt,
-                    title = "Nothing on the list yet",
-                    text = "Open a technique, choose Edit and tick “On the blue belt test” to add it here.",
+                    title = stringResource(Res.string.learn_blue_belt_empty_title),
+                    text = stringResource(Res.string.learn_blue_belt_empty_text),
                 ) {
-                    Button("Browse techniques", {
-                        nav.selectTab(LearnTab(LearnSection.Positions))
-                    }, kind = ButtonKind.Primary)
+                    Button(
+                        stringResource(Res.string.learn_blue_belt_browse),
+                        { nav.selectTab(LearnTab(LearnSection.Positions)) },
+                        kind = ButtonKind.Primary,
+                    )
                 }
             }
         } else {
@@ -111,11 +127,19 @@ private fun Summary(list: BeltTestList, onStudy: () -> Unit, modifier: Modifier 
         Row(horizontalArrangement = Arrangement.spacedBy(Spacing.s4), verticalAlignment = Alignment.CenterVertically) {
             BeltGraphic(BeltRank.Blue, stripes = 0, Modifier.width(BELT_WIDTH))
             Column(Modifier.weight(1f), verticalArrangement = Arrangement.spacedBy(Spacing.s1)) {
-                BjjText("${list.learned} of ${list.total} learned", style = Type.strong)
+                BjjText(
+                    stringResource(Res.string.learn_blue_belt_learned, list.learned, list.total),
+                    style = Type.strong,
+                )
                 ProgressBar(list.learned.toFloat() / list.total)
             }
         }
-        Button("Study techniques", onStudy, Modifier.fillMaxWidth(), kind = ButtonKind.Primary)
+        Button(
+            stringResource(Res.string.learn_blue_belt_study),
+            onStudy,
+            Modifier.fillMaxWidth(),
+            kind = ButtonKind.Primary,
+        )
     }
 }
 
@@ -123,9 +147,9 @@ private val BELT_WIDTH = 96.dp
 
 @Composable
 private fun Groups(lib: Library, list: BeltTestList, nav: Nav, modifier: Modifier = Modifier) {
-    Column(modifier.fillMaxWidth(), verticalArrangement = Arrangement.spacedBy(Spacing.s2)) {
-        for (group in list.groups) {
-            GroupTitle("${group.type.groupLabel} · ${group.techniques.size}")
+    Columns(list.groups, modifier, spacing = Spacing.s4) { group ->
+        Column(verticalArrangement = Arrangement.spacedBy(Spacing.s2)) {
+            GroupTitle(stringResource(Res.string.learn_blue_belt_group, group.type.groupLabel, group.techniques.size))
             RowCard {
                 group.techniques.forEachIndexed { index, technique ->
                     if (index > 0) Divider()
@@ -136,10 +160,12 @@ private fun Groups(lib: Library, list: BeltTestList, nav: Nav, modifier: Modifie
                         BjjIcons.Chevron,
                         leading = { ProgressDot(progressOf(reviewOf(lib, CardKind.Transition, technique.id))) },
                     ) {
-                        if (from !=
-                            null
-                        ) {
-                            BjjText("from ${from.name}", style = Type.small, color = BjjTheme.palette.muted)
+                        if (from != null) {
+                            BjjText(
+                                stringResource(Res.string.learn_from_position, from.name),
+                                style = Type.small,
+                                color = BjjTheme.palette.muted,
+                            )
                         }
                     }
                 }

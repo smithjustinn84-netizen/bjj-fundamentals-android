@@ -9,9 +9,9 @@ The web app (`../bjj`) is the reference. This app matches it except where listed
 - Controls are at least 48dp tall whatever the pointer. The web app shrinks them for a mouse.
 
 - The position map responds to a tap, not to a pointer resting on a box, and its arrows do not draw themselves in when the page opens.
-- The Positions page shows its details under the map at every width, where the web app puts them beside it from 700px.
 - A review session is a page of its own, so Back leaves it. There are no keyboard shortcuts for revealing and grading.
-- Wide windows keep the phone's single column inside each page for now; only the navigation and the map change.
+- From 840dp, lists run in two columns, the log's form sits beside its classes, and the map sits beside its details. Today and the pages about one item keep a single column.
+- Pages rise into place and a review card turns over to its answer; lists do not arrive one row at a time.
 
 ## Forms
 
@@ -22,7 +22,7 @@ The web app (`../bjj`) is the reference. This app matches it except where listed
 
 ## Text
 
-- Screen text is in the code, in English, as in the web app. Other apps by the same author keep theirs in string resources; moving it there is a follow-up.
+- Screen text is in string resources (`apps/app/composeResources/values/`), in English only. Labels and formatters that live in core, and the weekday and month names, are still in code.
 - Dates are written in English ("Sat 14 Nov 2026") whatever the device's language.
 
 ## Data

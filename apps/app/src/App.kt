@@ -1,5 +1,13 @@
 package dev.justinsmith.bjj
 
+import androidx.compose.animation.ContentTransform
+import androidx.compose.animation.EnterTransition
+import androidx.compose.animation.ExitTransition
+import androidx.compose.animation.core.tween
+import androidx.compose.animation.fadeIn
+import androidx.compose.animation.fadeOut
+import androidx.compose.animation.slideInVertically
+import androidx.compose.animation.togetherWith
 import androidx.compose.foundation.background
 import androidx.compose.foundation.isSystemInDarkTheme
 import androidx.compose.foundation.layout.Box
@@ -28,7 +36,9 @@ import dev.justinsmith.bjj.core.Theme
 import dev.justinsmith.bjj.core.ThemeChoice
 import dev.justinsmith.bjj.core.resolveTheme
 import dev.justinsmith.bjj.core.services.studyStats
+import dev.justinsmith.bjj.design.reducedMotion
 import dev.justinsmith.bjj.design.theme.BjjTheme
+import dev.justinsmith.bjj.design.theme.Motion
 import dev.justinsmith.bjj.nav.Backup
 import dev.justinsmith.bjj.nav.ConceptDetail
 import dev.justinsmith.bjj.nav.Editor
@@ -52,6 +62,7 @@ import dev.justinsmith.bjj.ui.backup.BackupRoute
 import dev.justinsmith.bjj.ui.common.AppViewModel
 import dev.justinsmith.bjj.ui.common.Nav
 import dev.justinsmith.bjj.ui.common.hasRail
+import dev.justinsmith.bjj.ui.common.hasWideRail
 import dev.justinsmith.bjj.ui.editor.EditorRoute
 import dev.justinsmith.bjj.ui.home.HomeRoute
 import dev.justinsmith.bjj.ui.learn.BlueBeltRoute
@@ -120,7 +131,7 @@ fun App(modifier: Modifier = Modifier) {
         Box(modifier.fillMaxSize().background(BjjTheme.palette.bg).windowInsetsPadding(insets)) {
             if (rail) {
                 Row(Modifier.fillMaxSize()) {
-                    if (showBar) TabRail(current, dueCount, nav.selectTab)
+                    if (showBar) TabRail(current, dueCount, hasWideRail(), nav.selectTab)
                     Pages(backStack, nav, Modifier.weight(1f))
                 }
             } else {
@@ -135,6 +146,7 @@ fun App(modifier: Modifier = Modifier) {
 
 @Composable
 private fun Pages(backStack: NavBackStack<NavKey>, nav: Nav, modifier: Modifier = Modifier) {
+    val still = reducedMotion()
     NavDisplay(
         backStack = backStack,
         onBack = { backStack.back() },
@@ -145,6 +157,9 @@ private fun Pages(backStack: NavBackStack<NavKey>, nav: Nav, modifier: Modifier 
             rememberViewModelStoreNavEntryDecorator(),
         ),
         modifier = modifier,
+        transitionSpec = { pageEnter(still) },
+        popTransitionSpec = { pageEnter(still) },
+        predictivePopTransitionSpec = { pageEnter(still) },
         entryProvider = remember(nav) {
             entryProvider {
                 entry<TodayTab> { HomeRoute(nav) }
@@ -170,3 +185,18 @@ private fun Pages(backStack: NavBackStack<NavKey>, nav: Nav, modifier: Modifier 
         },
     )
 }
+
+/**
+ * A page rises a little into place as it fades in, and the one it replaces just goes; nothing moves when
+ * animations are off.
+ */
+private fun pageEnter(still: Boolean): ContentTransform =
+    if (still) {
+        EnterTransition.None togetherWith ExitTransition.None
+    } else {
+        (fadeIn(tween(Motion.BASE)) + slideInVertically(tween(Motion.BASE)) { it / RISE_FROM }) togetherWith
+            fadeOut(tween(Motion.FAST))
+    }
+
+/** A page starts this fraction of its height below where it lands. */
+private const val RISE_FROM = 40

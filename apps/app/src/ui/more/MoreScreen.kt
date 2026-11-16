@@ -12,7 +12,6 @@ import androidx.compose.ui.unit.dp
 import dev.justinsmith.bjj.core.ItemKind
 import dev.justinsmith.bjj.core.ThemeChoice
 import dev.justinsmith.bjj.core.label
-import dev.justinsmith.bjj.core.plural
 import dev.justinsmith.bjj.design.components.BjjText
 import dev.justinsmith.bjj.design.components.Divider
 import dev.justinsmith.bjj.design.components.GroupTitle
@@ -31,10 +30,27 @@ import dev.justinsmith.bjj.nav.Editor
 import dev.justinsmith.bjj.nav.LearnSection
 import dev.justinsmith.bjj.nav.LearnTab
 import dev.justinsmith.bjj.nav.Videos
+import dev.justinsmith.bjj.resources.Res
+import dev.justinsmith.bjj.resources.common_blue_belt_test
+import dev.justinsmith.bjj.resources.common_videos
+import dev.justinsmith.bjj.resources.more_backup
+import dev.justinsmith.bjj.resources.more_backup_detail
+import dev.justinsmith.bjj.resources.more_blue_belt_detail
+import dev.justinsmith.bjj.resources.more_group_add
+import dev.justinsmith.bjj.resources.more_group_appearance
+import dev.justinsmith.bjj.resources.more_group_data
+import dev.justinsmith.bjj.resources.more_group_library
+import dev.justinsmith.bjj.resources.more_new_item
+import dev.justinsmith.bjj.resources.more_stored_note
+import dev.justinsmith.bjj.resources.more_title
+import dev.justinsmith.bjj.resources.more_videos_detail
+import dev.justinsmith.bjj.resources.more_videos_empty
 import dev.justinsmith.bjj.ui.common.Nav
 import dev.justinsmith.bjj.ui.common.Page
 import dev.justinsmith.bjj.ui.common.RowCard
 import dev.justinsmith.bjj.ui.common.WithSnapshot
+import org.jetbrains.compose.resources.pluralStringResource
+import org.jetbrains.compose.resources.stringResource
 
 @Composable
 fun MoreRoute(nav: Nav) {
@@ -77,44 +93,48 @@ fun MoreScreen(
     modifier: Modifier = Modifier,
 ) {
     Page(modifier, maxWidth = Sizes.readingMax) {
-        PageTitle("More")
-        GroupTitle("Your library")
+        PageTitle(stringResource(Res.string.more_title))
+        GroupTitle(stringResource(Res.string.more_group_library))
         RowCard {
             MoreRow(
                 BjjIcons.Video,
-                "Videos",
+                stringResource(Res.string.common_videos),
                 { nav.open(Videos) },
                 if (videoCount > 0) {
-                    "${plural(videoCount, "bookmark")} at the moment a detail is explained"
+                    pluralStringResource(Res.plurals.more_videos_detail, videoCount, videoCount)
                 } else {
-                    "Bookmark the moment a detail is explained"
+                    stringResource(Res.string.more_videos_empty)
                 },
             )
             Divider()
             MoreRow(
                 BjjIcons.Belt,
-                "Blue belt test",
+                stringResource(Res.string.common_blue_belt_test),
                 { nav.selectTab(LearnTab(LearnSection.BlueBelt)) },
-                "The techniques you will be asked to show",
+                stringResource(Res.string.more_blue_belt_detail),
             )
         }
-        GroupTitle("Add your own")
+        GroupTitle(stringResource(Res.string.more_group_add))
         RowCard {
             ItemKind.entries.forEachIndexed { index, kind ->
                 if (index > 0) Divider()
-                MoreRow(BjjIcons.Plus, "New ${kind.label.lowercase()}", { nav.open(Editor(kind)) })
+                val title = stringResource(Res.string.more_new_item, kind.label.lowercase())
+                MoreRow(BjjIcons.Plus, title, { nav.open(Editor(kind)) })
             }
         }
-        GroupTitle("Appearance")
+        GroupTitle(stringResource(Res.string.more_group_appearance))
         Segmented(ThemeChoice.entries, theme, onTheme, { it.label }, Modifier.fillMaxWidth())
-        GroupTitle("Your data")
+        GroupTitle(stringResource(Res.string.more_group_data))
         RowCard {
-            MoreRow(BjjIcons.Backup, "Backup and restore", {
-                nav.open(Backup)
-            }, "Export everything as a file, or bring one back")
+            MoreRow(
+                BjjIcons.Backup,
+                stringResource(Res.string.more_backup),
+                { nav.open(Backup) },
+                stringResource(Res.string.more_backup_detail),
+            )
         }
         BjjText(
-            "Everything is stored on this device only. Export a backup now and then.",
+            stringResource(Res.string.more_stored_note),
             style = Type.small,
             color = BjjTheme.palette.muted,
         )

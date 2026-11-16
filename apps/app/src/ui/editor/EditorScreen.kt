@@ -27,7 +27,6 @@ import dev.justinsmith.bjj.core.Library
 import dev.justinsmith.bjj.core.connections
 import dev.justinsmith.bjj.core.itemName
 import dev.justinsmith.bjj.core.label
-import dev.justinsmith.bjj.core.plural
 import dev.justinsmith.bjj.design.components.Button
 import dev.justinsmith.bjj.design.components.ButtonKind
 import dev.justinsmith.bjj.design.components.Card
@@ -40,10 +39,36 @@ import dev.justinsmith.bjj.design.theme.Spacing
 import dev.justinsmith.bjj.nav.Editor
 import dev.justinsmith.bjj.nav.itemKey
 import dev.justinsmith.bjj.nav.listKey
+import dev.justinsmith.bjj.resources.Res
+import dev.justinsmith.bjj.resources.common_cancel
+import dev.justinsmith.bjj.resources.common_delete
+import dev.justinsmith.bjj.resources.editor_back
+import dev.justinsmith.bjj.resources.editor_delete_concept_title
+import dev.justinsmith.bjj.resources.editor_delete_position_title
+import dev.justinsmith.bjj.resources.editor_delete_technique_title
+import dev.justinsmith.bjj.resources.editor_delete_text
+import dev.justinsmith.bjj.resources.editor_delete_text_cascade
+import dev.justinsmith.bjj.resources.editor_edit_concept
+import dev.justinsmith.bjj.resources.editor_edit_position
+import dev.justinsmith.bjj.resources.editor_edit_technique
+import dev.justinsmith.bjj.resources.editor_name
+import dev.justinsmith.bjj.resources.editor_new_concept
+import dev.justinsmith.bjj.resources.editor_new_position
+import dev.justinsmith.bjj.resources.editor_new_technique
+import dev.justinsmith.bjj.resources.editor_notes
+import dev.justinsmith.bjj.resources.editor_notes_hint
+import dev.justinsmith.bjj.resources.editor_order
+import dev.justinsmith.bjj.resources.editor_order_hint
+import dev.justinsmith.bjj.resources.editor_save
+import dev.justinsmith.bjj.resources.editor_summary
+import dev.justinsmith.bjj.resources.editor_summary_hint
 import dev.justinsmith.bjj.ui.common.BackLink
 import dev.justinsmith.bjj.ui.common.Missing
 import dev.justinsmith.bjj.ui.common.Nav
 import dev.justinsmith.bjj.ui.common.WithSnapshot
+import org.jetbrains.compose.resources.StringResource
+import org.jetbrains.compose.resources.pluralStringResource
+import org.jetbrains.compose.resources.stringResource
 import org.koin.compose.viewmodel.koinViewModel
 
 /** List fields are edited as one entry per line. */
@@ -54,16 +79,36 @@ fun fromLines(list: List<String>): String = list.joinToString("\n")
 /** The order value that places a new item at the end of a list. */
 fun nextOrder(orders: List<Int>): Int = (orders.maxOrNull() ?: 0).coerceAtLeast(0) + 1
 
-/** What else goes when this item is deleted, so the confirmation can say so. */
-fun cascadeWarning(lib: Library, kind: ItemKind, id: String): String = when (kind) {
+/** How many techniques go when this item is deleted, so the confirmation can say so. */
+fun cascadeCount(lib: Library, kind: ItemKind, id: String): Int = when (kind) {
     ItemKind.Position -> {
         val (outgoing, incoming) = connections(lib, id)
-        val count = outgoing.size + incoming.size
-        if (count > 0) " This also deletes ${plural(count, "technique")} connected to it." else ""
+        outgoing.size + incoming.size
     }
 
-    ItemKind.Concept, ItemKind.Transition -> ""
+    ItemKind.Concept, ItemKind.Transition -> 0
 }
+
+private val ItemKind.editTitle: StringResource
+    get() = when (this) {
+        ItemKind.Concept -> Res.string.editor_edit_concept
+        ItemKind.Position -> Res.string.editor_edit_position
+        ItemKind.Transition -> Res.string.editor_edit_technique
+    }
+
+private val ItemKind.newTitle: StringResource
+    get() = when (this) {
+        ItemKind.Concept -> Res.string.editor_new_concept
+        ItemKind.Position -> Res.string.editor_new_position
+        ItemKind.Transition -> Res.string.editor_new_technique
+    }
+
+private val ItemKind.deleteTitle: StringResource
+    get() = when (this) {
+        ItemKind.Concept -> Res.string.editor_delete_concept_title
+        ItemKind.Position -> Res.string.editor_delete_position_title
+        ItemKind.Transition -> Res.string.editor_delete_technique_title
+    }
 
 /** What every item form is given. A new kind of item only needs a form that takes these. */
 class FormContext(
@@ -91,7 +136,7 @@ fun EditorRoute(key: Editor, nav: Nav, modifier: Modifier = Modifier) {
         // Once saved or deleted the page is on its way out: do not flash "not found" as the item changes under it.
         var leaving by remember { mutableStateOf(false) }
         if (key.id != null && existingName == null && !leaving) {
-            Missing(kind.label, "Back", nav.back)
+            Missing(kind.label, stringResource(Res.string.editor_back), nav.back)
             return@WithSnapshot
         }
         val context = FormContext(
@@ -112,8 +157,8 @@ fun EditorRoute(key: Editor, nav: Nav, modifier: Modifier = Modifier) {
                 Modifier.widthIn(max = Sizes.readingMax).fillMaxSize().padding(horizontal = Spacing.pageGutter),
                 verticalArrangement = Arrangement.spacedBy(Spacing.s2),
             ) {
-                BackLink("Cancel", nav.back)
-                PageTitle(if (key.id != null) "Edit ${kind.label.lowercase()}" else "New ${kind.label.lowercase()}")
+                BackLink(stringResource(Res.string.common_cancel), nav.back)
+                PageTitle(stringResource(if (key.id != null) kind.editTitle else kind.newTitle))
                 // Started afresh for each item, so a form begins from that item's values.
                 androidx.compose.runtime.key(kind, key.id) {
                     when (kind) {
@@ -126,11 +171,17 @@ fun EditorRoute(key: Editor, nav: Nav, modifier: Modifier = Modifier) {
         }
         val id = key.id
         if (confirming && id != null) {
+            val name = existingName.orEmpty()
+            val cascade = cascadeCount(lib, kind, id)
             ConfirmDialog(
-                title = "Delete ${kind.label.lowercase()}?",
-                text = "Delete \"${existingName.orEmpty()}\"?${cascadeWarning(lib, kind, id)}",
-                confirm = "Delete",
-                cancel = "Cancel",
+                title = stringResource(kind.deleteTitle),
+                text = if (cascade > 0) {
+                    pluralStringResource(Res.plurals.editor_delete_text_cascade, cascade, name, cascade)
+                } else {
+                    stringResource(Res.string.editor_delete_text, name)
+                },
+                confirm = stringResource(Res.string.common_delete),
+                cancel = stringResource(Res.string.common_cancel),
                 onConfirm = {
                     confirming = false
                     leaving = true
@@ -163,31 +214,44 @@ fun FormShell(
             Modifier.fillMaxWidth().padding(vertical = Spacing.s2),
             horizontalArrangement = Arrangement.spacedBy(Spacing.s2),
         ) {
-            Button("Save", onSave, Modifier.weight(1f), ButtonKind.Primary, enabled = canSave)
-            Button("Cancel", context.onCancel, Modifier.weight(1f))
-            context.onDelete?.let { Button("Delete", it, kind = ButtonKind.Danger) }
+            Button(
+                stringResource(Res.string.editor_save),
+                onSave,
+                Modifier.weight(1f),
+                ButtonKind.Primary,
+                enabled = canSave,
+            )
+            Button(stringResource(Res.string.common_cancel), context.onCancel, Modifier.weight(1f))
+            context.onDelete?.let { Button(stringResource(Res.string.common_delete), it, kind = ButtonKind.Danger) }
         }
     }
 }
 
 @Composable
 fun NameField(value: String, onChange: (String) -> Unit, modifier: Modifier = Modifier) {
-    TextField("Name", value, onChange, modifier)
+    TextField(stringResource(Res.string.editor_name), value, onChange, modifier)
 }
 
 @Composable
 fun SummaryField(value: String, onChange: (String) -> Unit, modifier: Modifier = Modifier) {
-    TextField("Summary", value, onChange, modifier, hint = "One plain-language sentence.", lines = 2)
+    TextField(
+        stringResource(Res.string.editor_summary),
+        value,
+        onChange,
+        modifier,
+        hint = stringResource(Res.string.editor_summary_hint),
+        lines = 2,
+    )
 }
 
 @Composable
 fun NotesField(value: String, onChange: (String) -> Unit, modifier: Modifier = Modifier) {
     TextField(
-        "My notes",
+        stringResource(Res.string.editor_notes),
         value,
         onChange,
         modifier,
-        hint = "Anything from class you want to remember.",
+        hint = stringResource(Res.string.editor_notes_hint),
         lines = NOTES_LINES,
     )
 }
@@ -198,11 +262,11 @@ private const val NOTES_LINES = 4
 @Composable
 fun OrderField(value: String, onChange: (String) -> Unit, modifier: Modifier = Modifier) {
     TextField(
-        "Learning order",
+        stringResource(Res.string.editor_order),
         value,
         onChange,
         modifier,
-        hint = "Lower numbers come first in lists and reviews.",
+        hint = stringResource(Res.string.editor_order_hint),
         keyboardType = KeyboardType.Number,
     )
 }

@@ -13,7 +13,6 @@ import dev.justinsmith.bjj.core.cardName
 import dev.justinsmith.bjj.core.currentLesson
 import dev.justinsmith.bjj.core.lessonCards
 import dev.justinsmith.bjj.core.lessonProgress
-import dev.justinsmith.bjj.core.plural
 import dev.justinsmith.bjj.core.reviewOf
 import dev.justinsmith.bjj.design.components.BjjText
 import dev.justinsmith.bjj.design.components.Button
@@ -32,6 +31,16 @@ import dev.justinsmith.bjj.nav.LearnSection
 import dev.justinsmith.bjj.nav.LearnTab
 import dev.justinsmith.bjj.nav.ReviewTab
 import dev.justinsmith.bjj.nav.studyItemKey
+import dev.justinsmith.bjj.resources.Res
+import dev.justinsmith.bjj.resources.common_lessons
+import dev.justinsmith.bjj.resources.learn_lesson_empty
+import dev.justinsmith.bjj.resources.learn_lesson_learned
+import dev.justinsmith.bjj.resources.learn_lesson_number
+import dev.justinsmith.bjj.resources.learn_lesson_number_current
+import dev.justinsmith.bjj.resources.learn_lesson_practice
+import dev.justinsmith.bjj.resources.learn_lesson_study
+import dev.justinsmith.bjj.resources.learn_lessons_about
+import dev.justinsmith.bjj.ui.common.Columns
 import dev.justinsmith.bjj.ui.common.LearnSwitch
 import dev.justinsmith.bjj.ui.common.Nav
 import dev.justinsmith.bjj.ui.common.Page
@@ -39,6 +48,8 @@ import dev.justinsmith.bjj.ui.common.PageHead
 import dev.justinsmith.bjj.ui.common.ProgressLegend
 import dev.justinsmith.bjj.ui.common.WithSnapshot
 import dev.justinsmith.bjj.ui.common.progressOf
+import org.jetbrains.compose.resources.pluralStringResource
+import org.jetbrains.compose.resources.stringResource
 
 @Composable
 fun LessonsRoute(nav: Nav) {
@@ -51,12 +62,11 @@ fun LessonsScreen(lib: Library, nav: Nav, modifier: Modifier = Modifier) {
     Page(modifier) {
         LearnSwitch(LearnSection.Lessons, { nav.selectTab(LearnTab(it)) })
         PageHead(
-            "Lessons",
-            about = "${FOUNDATION_LESSONS.size} class-sized lessons, in the order to take them: survive underneath " +
-                "first, then the guard, then the rest. Review brings new cards in this order too.",
+            stringResource(Res.string.common_lessons),
+            about = stringResource(Res.string.learn_lessons_about, FOUNDATION_LESSONS.size),
         )
         ProgressLegend()
-        FOUNDATION_LESSONS.forEachIndexed { index, lesson ->
+        Columns(FOUNDATION_LESSONS.withIndex().toList(), spacing = Spacing.s4) { (index, lesson) ->
             LessonCard(lib, lesson, number = index + 1, current = lesson == current, nav = nav)
         }
     }
@@ -73,17 +83,26 @@ private fun LessonCard(
 ) {
     val cards = lessonCards(lib, lesson)
     val progress = lessonProgress(lib, lesson)
+    val heading = if (current) Res.string.learn_lesson_number_current else Res.string.learn_lesson_number
     Card(modifier) {
         Column(verticalArrangement = Arrangement.spacedBy(Spacing.s1)) {
-            Eyebrow("Lesson $number" + if (current) " · you are here" else "")
+            Eyebrow(stringResource(heading, number))
             BjjText(lesson.title, style = Type.h2)
             BjjText(lesson.summary, color = BjjTheme.palette.muted)
         }
         if (cards.isEmpty()) {
-            BjjText("Nothing from this lesson is in your library.", color = BjjTheme.palette.muted)
+            BjjText(stringResource(Res.string.learn_lesson_empty), color = BjjTheme.palette.muted)
         } else {
             Column(verticalArrangement = Arrangement.spacedBy(Spacing.s1)) {
-                BjjText("${progress.learned} of ${plural(progress.total, "card")} learned", style = Type.small)
+                BjjText(
+                    pluralStringResource(
+                        Res.plurals.learn_lesson_learned,
+                        progress.total,
+                        progress.learned,
+                        progress.total,
+                    ),
+                    style = Type.small,
+                )
                 ProgressBar(progress.learned.toFloat() / progress.total)
             }
             Wrap {
@@ -93,9 +112,9 @@ private fun LessonCard(
                     }
                 }
             }
-            SoftBlock("Practise with a partner, about 15 minutes. ${lesson.practice}")
+            SoftBlock(stringResource(Res.string.learn_lesson_practice, lesson.practice))
             Button(
-                "Study this lesson",
+                stringResource(Res.string.learn_lesson_study),
                 { nav.selectTab(ReviewTab(Deck.All.key, lesson.id)) },
                 Modifier.fillMaxWidth(),
                 kind = if (current) ButtonKind.Primary else ButtonKind.Plain,

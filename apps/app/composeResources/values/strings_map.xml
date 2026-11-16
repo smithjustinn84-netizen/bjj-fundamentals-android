@@ -1,0 +1,18 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- The map of positions, joined by an arrow for each technique. -->
+<resources>
+    <!-- What a screen reader says for the map as a whole. -->
+    <string name="map_description">Position map. Select a position to list its techniques.</string>
+    <!-- Beside the map until a position is selected. -->
+    <string name="map_select_prompt">Select a position to see the techniques that start and end there. Arrows show where each technique takes you.</string>
+    <!-- Inside a position's box: how many submissions start there. -->
+    <plurals name="map_submissions">
+        <item quantity="one">%1$d submission</item>
+        <item quantity="other">%1$d submissions</item>
+    </plurals>
+    <!-- Heading over the techniques that start at the selected position. -->
+    <string name="map_from_here">From here</string>
+    <string name="map_no_techniques_from_here">No techniques from here yet.</string>
+    <!-- Heading over the techniques that end at the selected position. -->
+    <string name="map_ways_in">Ways to get here</string>
+</resources>

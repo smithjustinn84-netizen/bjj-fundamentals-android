@@ -32,8 +32,12 @@ import dev.justinsmith.bjj.design.theme.BjjTheme
 import dev.justinsmith.bjj.design.theme.Spacing
 import dev.justinsmith.bjj.design.theme.Type
 import dev.justinsmith.bjj.design.theme.typeColor
+import dev.justinsmith.bjj.resources.Res
+import dev.justinsmith.bjj.resources.page_tap
+import dev.justinsmith.bjj.resources.page_video
 import dev.justinsmith.bjj.ui.video.VideoPlayer
 import dev.justinsmith.bjj.ui.video.rememberOnline
+import org.jetbrains.compose.resources.stringResource
 
 /** The widest a picture at the top of a page gets, and the narrower one on a review card. */
 val PICTURE_WIDTH = 576.dp
@@ -69,7 +73,7 @@ fun TransitionArtwork(transition: Transition, positionById: Map<String, Position
         TransitionArrow(BjjTheme.palette.typeColor(transition.type), Modifier.width(ARROW_WIDTH))
         Column(Modifier.weight(1f), verticalArrangement = Arrangement.spacedBy(Spacing.s1)) {
             if (to != null) PositionArtwork(to.id) else TapArtwork()
-            Caption(to?.name ?: "Tap")
+            Caption(to?.name ?: stringResource(Res.string.page_tap))
         }
     }
 }
@@ -108,7 +112,8 @@ fun ItemPicture(
                 var chosenId by rememberSaveable { mutableStateOf<String?>(null) }
                 // Falls back to the first when nothing is chosen yet or the chosen bookmark has been deleted.
                 val playing = videos.firstOrNull { it.id == chosenId } ?: videos.first()
-                VideoPlayer(playing.youtubeId, playing.startSeconds, "Video: ${playing.title}")
+                val title = stringResource(Res.string.page_video, playing.title)
+                VideoPlayer(playing.youtubeId, playing.startSeconds, title)
                 if (videos.size > 1) {
                     Wrap {
                         for (video in videos) {

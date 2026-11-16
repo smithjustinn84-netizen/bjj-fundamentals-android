@@ -1,0 +1,90 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- The Review page, a review session and its cards. -->
+<resources>
+    <string name="review_title">Review</string>
+
+    <!-- The decks a session can be drawn from. Concepts, Positions and the blue belt test use the shared names. -->
+    <string name="review_deck_all">Everything</string>
+    <string name="review_deck_techniques">Techniques</string>
+    <string name="review_deck_situations">Situations</string>
+
+    <string name="review_empty_title">Nothing to review right now</string>
+    <string name="review_empty_raise_slider">No cards are due. Raise the new-cards slider to learn something new.</string>
+    <string name="review_empty_deck">No cards are due in this deck. Come back later, or pick another deck.</string>
+    <plurals name="review_cards_ready">
+        <item quantity="one">%1$d card ready</item>
+        <item quantity="other">%1$d cards ready</item>
+    </plurals>
+    <!-- How the session splits. %1$d cards due, %2$d new cards. -->
+    <string name="review_split">%1$d due · %2$d new</string>
+    <!-- As review_split, then %3$d: new cards left out of this session by the new-cards limit. -->
+    <string name="review_split_more">%1$d due · %2$d new · %3$d more not started</string>
+    <!-- %1$d is how many of the session's new cards come from recently logged classes. -->
+    <plurals name="review_from_class">
+        <item quantity="one">%1$d new card is from your recent classes, so it comes first.</item>
+        <item quantity="other">%1$d of the new cards are from your recent classes, so they come first.</item>
+    </plurals>
+    <string name="review_start_session">Start session</string>
+    <string name="review_what_to_study">What to study</string>
+    <!-- A chip for the lesson being studied. %1$d is the lesson's number, %2$s its title. -->
+    <string name="review_lesson_chip">Lesson %1$d: %2$s</string>
+    <!-- Above the slider. %1$d is the number chosen. -->
+    <string name="review_new_cards_value">New cards this session: %1$d</string>
+    <!-- What a screen reader calls the slider. -->
+    <string name="review_new_cards">New cards this session</string>
+    <string name="review_how_to">Read the question, answer it in your head (or out loud), then reveal and rate how well you knew it. Cards you know well come back less often.</string>
+
+    <!-- What a screen reader says for the close button of a session. -->
+    <string name="review_end_session">End session</string>
+    <!-- Where the session stands: card %1$d of %2$d. -->
+    <string name="review_position">%1$d of %2$d</string>
+    <string name="review_open_full_page">Open full page</string>
+    <string name="review_how_well">How well did you know it?</string>
+    <string name="review_answer_hint">Answer in your head or out loud, then check.</string>
+    <string name="review_show_answer">Show answer</string>
+
+    <string name="review_complete_title">Session complete</string>
+    <plurals name="review_complete_reviewed">
+        <item quantity="one">You reviewed %1$d card. Nice work.</item>
+        <item quantity="other">You reviewed %1$d cards. Nice work.</item>
+    </plurals>
+    <!-- The streak: days in a row with a review. -->
+    <plurals name="review_days_in_a_row">
+        <item quantity="one">%1$d day in a row</item>
+        <item quantity="other">%1$d days in a row</item>
+    </plurals>
+    <plurals name="review_more_ready">
+        <item quantity="one">%1$d more card ready if you want another round.</item>
+        <item quantity="other">%1$d more cards ready if you want another round.</item>
+    </plurals>
+    <string name="review_nothing_else_due">Nothing else is due. Come back tomorrow.</string>
+    <string name="review_keep_going">Keep going</string>
+    <string name="review_done_for_now">Done for now</string>
+
+    <!-- The question side of a card: a small heading saying what kind of card it is, then the question. -->
+    <string name="review_card_concept">Concept</string>
+    <string name="review_card_position">Position</string>
+    <string name="review_card_situation">Situation</string>
+    <!-- The heading of a technique's card. %1$s is its type ("Escape"), %2$s the position it starts from. -->
+    <string name="review_card_technique_from">%1$s · from %2$s</string>
+    <!-- Stands in for a position's name when the position no longer exists. -->
+    <string name="review_card_unknown_position">unknown position</string>
+    <!-- %1$s is the concept's name. -->
+    <string name="review_question_concept">What is "%1$s", and what are its key points?</string>
+    <!-- %1$s is the position's name. -->
+    <string name="review_question_position">%1$s: what are the goals for each person?</string>
+    <!-- %1$s is the technique's name. -->
+    <string name="review_question_technique">How do you do the %1$s?</string>
+    <!-- %1$s is one side of a position, such as "Bottom of mount". -->
+    <string name="review_question_situation">%1$s: what are your options?</string>
+    <!-- Under the picture on a technique's question side. %1$s is the position's name. -->
+    <string name="review_start_here">You start here: %1$s.</string>
+
+    <!-- The answer side of a card. %1$s is the drill, a sentence of its own. -->
+    <string name="review_drill">Drill: %1$s</string>
+    <!-- %1$s is the name of the position a technique ends in. -->
+    <string name="review_ends_in">Ends in: %1$s</string>
+    <string name="review_common_mistakes">Common mistakes</string>
+    <string name="review_what_you_want">What you want</string>
+    <string name="review_what_you_can_do">What you can do</string>
+</resources>

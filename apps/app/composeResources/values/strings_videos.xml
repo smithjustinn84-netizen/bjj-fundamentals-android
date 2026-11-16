@@ -1,0 +1,41 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Video bookmarks: the page that lists them all, and the rows and form other pages share. -->
+<resources>
+    <!-- The page's title, and the heading over an item's own bookmarks. -->
+    <string name="videos_bookmarks">Video bookmarks</string>
+    <string name="videos_about">Save YouTube links at the exact moment a detail is explained. Paste a link with ?t= and the start time fills in. Links open on YouTube.</string>
+    <!-- Heading over the list. %1$d is how many bookmarks there are. -->
+    <string name="videos_saved">Saved (%1$d)</string>
+    <string name="videos_add_bookmark">+ Add bookmark</string>
+    <!-- The shorter button on an item's own page, under the heading "Video bookmarks". -->
+    <string name="videos_add">+ Add</string>
+    <!-- What a screen reader calls the search box. -->
+    <string name="videos_search">Search bookmarks</string>
+    <string name="videos_search_placeholder">Search…</string>
+    <string name="videos_none">No bookmarks yet.</string>
+    <string name="videos_no_matches">No matches.</string>
+    <!-- On an item's page when it has no bookmarks. -->
+    <string name="videos_linked_empty">Save a YouTube link at the exact moment that explains this well.</string>
+
+    <!-- What a screen reader says for a bookmark's row. %1$s is the bookmark's title. -->
+    <string name="videos_play">Play %1$s on YouTube</string>
+    <string name="videos_delete_title">Delete bookmark?</string>
+    <!-- %1$s is the bookmark's title. -->
+    <string name="videos_delete_text">Delete the bookmark "%1$s"?</string>
+
+    <string name="videos_form_link">YouTube link</string>
+    <!-- The address is an example of a link that names a moment; keep it as it is. -->
+    <string name="videos_form_link_hint">For example https://youtu.be/…?t=95</string>
+    <string name="videos_form_title">Title</string>
+    <!-- Label of the field for the moment the video starts playing from. -->
+    <string name="videos_form_start">Start at</string>
+    <!-- Label of the picker for the concept, position or technique a bookmark is about. -->
+    <string name="videos_form_about">About</string>
+    <string name="videos_form_not_linked">— Not linked —</string>
+    <string name="videos_form_note">Note</string>
+    <string name="videos_form_note_hint">What to watch for</string>
+    <string name="videos_form_save">Save bookmark</string>
+    <string name="videos_error_link">That does not look like a YouTube link.</string>
+    <!-- The three examples are forms of time the field accepts; keep them as they are. -->
+    <string name="videos_error_time">Use a time like 1:30, 90, or 1m30s.</string>
+</resources>
