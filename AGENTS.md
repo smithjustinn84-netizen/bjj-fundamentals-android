@@ -17,6 +17,7 @@ This project uses the **Kotlin Toolchain (Amper)** through the `./kotlin` wrappe
 ./kotlin test -m core -p jvm   # one module's tests, fast
 ./kotlin check lint detekt     # ktlint and detekt
 ./kotlin do format             # ktlint's auto-fixes
+tools/check.sh                 # every check CI runs; --fast skips the build and the tests
 ```
 
 - A module's code is in `src/` (shared), `src@android/` and `src@jvm/`; tests in `test/` and `test@jvm/`. **Never create `src/commonMain/kotlin/`**: Amper silently ignores it.
@@ -67,7 +68,7 @@ Where does new code go?
 - A page moves to another through the `Nav` it is handed, never the back stack itself.
 - Every destination is a `@Serializable` `NavKey` in `nav/Routes.kt`, registered in `navConfiguration` and given an `entry<…>` (both in `App.kt`). The bar has five tabs, the same on every window size.
 - No raw `dp`, `sp`, colour or duration in a screen: they come from `design/theme` (`Spacing`, `Radius`, `Sizes`, `TextSizes`, `Motion`, `BjjTheme.palette`).
-- Screen text is in string resources: `apps/app/composeResources/values/`, one file per area (`strings.xml` for the shell and shared words, then `strings_<area>.xml` with names prefixed `<area>_`), read with `stringResource(Res.string.x)`. Counts are `<plurals>`, never core's `plural`. A ViewModel exposes an enum, a sealed type or a `StringResource`, and the screen resolves it. Write `'` and `"` plainly in the XML and a single `%` for a percent sign: this toolchain does not unescape `\'` or `%%`. Still in code: labels that core's own logic uses (search, card prompts, `core/Labels.kt`), core's formatters (`formatMatTime`, `describeInterval`) and the weekday and month names in `ui/home/TodayLabel.kt`.
+- Screen text is in string resources: `apps/app/composeResources/values/`, one file per area (`strings.xml` for the shell and shared words, then `strings_<area>.xml` with names prefixed `<area>_`), read with `stringResource(Res.string.x)`. Counts are `<plurals>`, never core's `plural`. A ViewModel exposes an enum, a sealed type or a `StringResource`, and the screen resolves it. Write `'` and `"` plainly in the XML and a single `%` for a percent sign: this toolchain does not unescape `\'` or `%%`. Still in code: labels that core's own logic uses (search, card prompts, `core/Labels.kt`), core's formatters (`formatMatTime`, `describeInterval`) and the weekday and month names in `ui/home/TodayLabel.kt`. `tools/check_strings.py` enforces this: it fails on a name that is unused, duplicated or in the wrong file, on those escapes, and on a literal of two or more words in `apps/app/src*/ui/` or `App.kt`. Text that must stay in code takes `// text-in-code: <why>` on its line.
 - Services set `id`, `createdAt`, `updatedAt`. Callers pass an `...Input` type without them. Multi-step writes go in one `storage.transaction`.
 - No magic numbers: name the constant and say what it means. Comments explain why, not what. No commented-out code.
 - Tests use `kotlin.test` with hand-written fakes and `testCore()`; no mocking library. Test names are backticked sentences without commas.
@@ -92,15 +93,16 @@ This repo uses [Jujutsu](https://jj-vcs.github.io/jj/) (`jj`) on a git backend, 
 - The working copy is always a change; there is no staging area. `jj st` and `jj diff` show it.
 - Finish a change with `jj commit -m "..."`. `main` is a bookmark and does not move by itself: `jj bookmark move main --to @-`.
 - jj does not run git hooks. Run the check command before every `jj commit`.
+- Actions in `.github/workflows/` are pinned to a commit SHA with the version in a trailing comment, and `actions/checkout` sets `persist-credentials: false`; zizmor fails the build otherwise. Dependabot raises the pins weekly. Do not replace a pin with a tag.
 - Commit or push only when the user asks.
 
 ## Definition of done
 
 1. The check passes. Run it; do not assume:
    ```sh
-   ./kotlin check lint detekt && python3 tools/check_layers.py && ./kotlin build && ./kotlin test
+   tools/check.sh
    ```
-   CI (`.github/workflows/ci.yml`) runs the same stages. If you change one, change the other.
+   It lints the workflows (actionlint and zizmor, when installed), then runs `check_layers.py`, `check_strings.py`, ktlint, detekt, the build and the tests. CI (`.github/workflows/ci.yml`) runs the same stages. If you change one, change the other.
 2. New or changed logic in `core` or `storage-room` has a test that would fail without the change.
 3. UI changes were exercised on the emulator (`run-on-device`), including the empty and error states, as a phone and as a tablet, in light and dark.
 4. Nothing left behind: no unused code, dead branches, stray logs, or files that only existed for debugging.

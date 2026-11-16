@@ -21,15 +21,39 @@ permissions:
 env:
   KOTLIN_CLI_NO_WELCOME_BANNER: "1"
 
-# The same stages as the local check (CLAUDE.md, "Definition of done"). Change one, change the other.
+# The same stages as the local check, tools/check.sh. Change one, change the other.
 jobs:
+  # The workflows themselves: actionlint for mistakes in the YAML and its shell, zizmor for unsafe patterns
+  # (an unpinned action, a token left behind, a script built from untrusted text). Both tools are pinned, to
+  # an image digest and to a version; raise the pins by hand, and in tools/check.sh's note too.
+  workflows:
+    name: workflows
+    runs-on: ubuntu-24.04
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+
+      - name: actionlint
+        run: >
+          docker run --rm -v "$PWD:/repo:ro" -w /repo
+          rhysd/actionlint@sha256:b1934ee5f1c509618f2508e6eb47ee0d3520686341fec936f3b79331f9315667
+          -color
+
+      - name: zizmor
+        run: pipx run zizmor==1.32.0 --offline .
+
   static:
-    name: layers, lint, detekt
+    name: layers, strings, lint, detekt
     # Pinned rather than `-latest`, so an image migration cannot change the build under us.
     runs-on: ubuntu-24.04
     timeout-minutes: 20
     steps:
-      - uses: actions/checkout@v7
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          # No later step pushes, so the token is not left in .git/config.
+          persist-credentials: false
 
       # No setup-java: the ./kotlin wrapper provisions its own JRE and toolchain. This cache holds the
       # toolchain, the JRE, the Maven dependencies and the Android SDK components it installs itself. Each
@@ -37,7 +61,7 @@ jobs:
       # cache is visible to that PR alone.
       - name: Restore the Kotlin toolchain and dependencies
         id: cache
-        uses: actions/cache/restore@v6
+        uses: actions/cache/restore@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v6.1.0
         with:
           path: ~/.cache/JetBrains/Kotlin
           key: kotlin-static-${{ runner.os }}-${{ hashFiles('kotlin', 'project.yaml', '**/module.yaml', 'libs.versions.toml') }}
@@ -48,6 +72,11 @@ jobs:
           python3 tools/check_layers.py --self-test
           python3 tools/check_layers.py
 
+      - name: Screen text is in sound string resources
+        run: |
+          python3 tools/check_strings.py --self-test
+          python3 tools/check_strings.py
+
       - name: Lint
         run: ./kotlin check lint
 
@@ -57,7 +86,7 @@ jobs:
       # detekt.html and detekt.sarif per module, for a failure the log only summarises.
       - name: Attach the detekt reports
         if: failure()
-        uses: actions/upload-artifact@v7
+        uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
         with:
           name: detekt-reports
           path: build/tasks/_*_detekt@detekt-plugin/
@@ -65,7 +94,7 @@ jobs:
 
       - name: Save the Kotlin toolchain and dependencies
         if: github.ref == 'refs/heads/main' && steps.cache.outputs.cache-hit != 'true'
-        uses: actions/cache/save@v6
+        uses: actions/cache/save@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v6.1.0
         with:
           path: ~/.cache/JetBrains/Kotlin
           key: ${{ steps.cache.outputs.cache-primary-key }}
@@ -75,11 +104,14 @@ jobs:
     runs-on: ubuntu-24.04
     timeout-minutes: 30
     steps:
-      - uses: actions/checkout@v7
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          # No later step pushes, so the token is not left in .git/config.
+          persist-credentials: false
 
       - name: Restore the Kotlin toolchain and dependencies
         id: cache
-        uses: actions/cache/restore@v6
+        uses: actions/cache/restore@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v6.1.0
         with:
           path: ~/.cache/JetBrains/Kotlin
           key: kotlin-check-${{ runner.os }}-${{ hashFiles('kotlin', 'project.yaml', '**/module.yaml', 'libs.versions.toml') }}
@@ -95,7 +127,7 @@ jobs:
       # JUnit XML per module and platform, for a failure the log only summarises.
       - name: Attach the test reports
         if: failure()
-        uses: actions/upload-artifact@v7
+        uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
         with:
           name: test-reports
           path: build/reports/
@@ -103,7 +135,7 @@ jobs:
 
       - name: Save the Kotlin toolchain and dependencies
         if: github.ref == 'refs/heads/main' && steps.cache.outputs.cache-hit != 'true'
-        uses: actions/cache/save@v6
+        uses: actions/cache/save@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v6.1.0
         with:
           path: ~/.cache/JetBrains/Kotlin
           key: ${{ steps.cache.outputs.cache-primary-key }}
@@ -112,11 +144,12 @@ jobs:
   ci:
     name: CI
     if: always()
-    needs: [static, check]
+    needs: [workflows, static, check]
     runs-on: ubuntu-24.04
     timeout-minutes: 5
     steps:
       - name: Every job passed
         run: |
+          test "${{ needs.workflows.result }}" = "success"
           test "${{ needs.static.result }}" = "success"
           test "${{ needs.check.result }}" = "success"

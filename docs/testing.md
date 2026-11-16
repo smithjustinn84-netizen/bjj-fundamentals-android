@@ -23,6 +23,20 @@
 - A new storage engine extends `StorageContract`; when that passes, the app runs on it.
 - Golden values are generated, never edited. When one disagrees with the Kotlin, the Kotlin is wrong. Regenerate them with `tools/web-fixtures` (see its README) after the web app changes.
 
+## Static checks
+
+`tools/check.sh` runs all of these and then the build and the tests; `--fast` stops after the static ones.
+
+| Check | Catches |
+| --- | --- |
+| actionlint, zizmor | Mistakes in the workflows and unsafe patterns in them: an action not pinned to a SHA, a token left in the checkout. |
+| `tools/check_layers.py` | An import that points outward: core reaching for Android or the JVM, a screen naming the storage engine. |
+| `tools/check_strings.py` | English written into a screen; a string that is unused, duplicated or in the wrong file; escapes and placeholders the resources library does not handle; plural forms that disagree. |
+| `./kotlin check lint` | ktlint formatting. |
+| `./kotlin check detekt` | detekt and the Compose rules. |
+
+Both scripts have a `--self-test` that CI runs first, so a broken checker cannot pass silently.
+
 ## What is not automated
 
 - Screens are exercised by hand on the emulator (the `run-on-device` skill): as a phone and a tablet, in light and dark, online and in airplane mode.
