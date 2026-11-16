@@ -30,7 +30,6 @@ import dev.justinsmith.bjj.core.LinkedKind
 import dev.justinsmith.bjj.core.VideoBookmark
 import dev.justinsmith.bjj.core.formatTime
 import dev.justinsmith.bjj.core.groupLabel
-import dev.justinsmith.bjj.core.itemName
 import dev.justinsmith.bjj.core.label
 import dev.justinsmith.bjj.core.linkedKind
 import dev.justinsmith.bjj.core.parseTime
@@ -83,6 +82,18 @@ class VideoActions(val open: (String) -> Unit, val add: (VideoInput) -> Unit, va
 
 /** An item a bookmark can be about. */
 data class ItemRef(val kind: ItemKind, val id: String)
+
+/** An item offered in the bookmark form's "About" picker, with its name. */
+data class AboutOption(val item: ItemRef, val name: String)
+
+/** Every item a bookmark can be about, by kind and then in the library's own order. */
+fun aboutOptions(lib: Library): List<AboutOption> = ItemKind.entries.flatMap { kind ->
+    when (kind) {
+        ItemKind.Concept -> lib.concepts.map { Named(it.id, it.name) }
+        ItemKind.Position -> lib.positions.map { Named(it.id, it.name) }
+        ItemKind.Transition -> lib.transitions.map { Named(it.id, it.name) }
+    }.map { AboutOption(ItemRef(kind, it.id), it.name) }
+}
 
 /**
  * One bookmark: a link that opens the video outside the app, with Delete beside it. [linked] names the item it
@@ -156,7 +167,7 @@ fun VideoRow(
 
 /**
  * The form for a new bookmark. With [linkedTo] it is attached to that item and the "About" picker is hidden;
- * otherwise [lib] fills the picker. [onDone] is called after saving or cancelling.
+ * otherwise [about] fills the picker. [onDone] is called after saving or cancelling.
  */
 @Composable
 fun VideoForm(
@@ -164,7 +175,7 @@ fun VideoForm(
     onDone: () -> Unit,
     modifier: Modifier = Modifier,
     linkedTo: ItemRef? = null,
-    lib: Library? = null,
+    about: List<AboutOption> = emptyList(),
     showCancel: Boolean = true,
 ) {
     var url by rememberSaveable { mutableStateOf("") }
@@ -228,23 +239,17 @@ fun VideoForm(
                 hint = START_EXAMPLE,
             )
         }
-        if (linkedTo == null && lib != null) {
-            val options: List<ItemRef?> = listOf(null) + ItemKind.entries.flatMap { kind ->
-                when (kind) {
-                    ItemKind.Concept -> lib.concepts.map { it.id }
-                    ItemKind.Position -> lib.positions.map { it.id }
-                    ItemKind.Transition -> lib.transitions.map { it.id }
-                }.map { ItemRef(kind, it) }
-            }
+        if (linkedTo == null && about.isNotEmpty()) {
+            val names = remember(about) { about.associate { it.item to it.name } }
             ChoiceField(
                 label = stringResource(Res.string.videos_form_about),
-                options = options,
+                options = listOf<ItemRef?>(null) + about.map { it.item },
                 selected = picked,
                 optionLabel = { ref ->
                     if (ref == null) {
                         stringResource(Res.string.videos_form_not_linked)
                     } else {
-                        "${ref.kind.groupLabel}: ${itemName(lib, ref.kind, ref.id).orEmpty()}"
+                        "${ref.kind.groupLabel}: ${names[ref].orEmpty()}"
                     }
                 },
                 onSelect = { picked = it },

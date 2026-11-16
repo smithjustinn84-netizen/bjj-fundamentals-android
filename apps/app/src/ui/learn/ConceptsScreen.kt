@@ -4,15 +4,12 @@ import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.getValue
 import androidx.compose.ui.Modifier
-import dev.justinsmith.bjj.core.CardKind
+import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import dev.justinsmith.bjj.core.Concept
 import dev.justinsmith.bjj.core.Deck
 import dev.justinsmith.bjj.core.ItemKind
-import dev.justinsmith.bjj.core.Library
-import dev.justinsmith.bjj.core.VideoBookmark
-import dev.justinsmith.bjj.core.reviewOf
-import dev.justinsmith.bjj.core.services.linkedVideos
 import dev.justinsmith.bjj.design.components.BjjText
 import dev.justinsmith.bjj.design.components.Bullets
 import dev.justinsmith.bjj.design.components.Button
@@ -58,6 +55,7 @@ import dev.justinsmith.bjj.ui.common.ItemRef
 import dev.justinsmith.bjj.ui.common.LearnSwitch
 import dev.justinsmith.bjj.ui.common.LibrarySearch
 import dev.justinsmith.bjj.ui.common.LinkedVideos
+import dev.justinsmith.bjj.ui.common.Loading
 import dev.justinsmith.bjj.ui.common.Missing
 import dev.justinsmith.bjj.ui.common.Nav
 import dev.justinsmith.bjj.ui.common.NotesBlock
@@ -68,21 +66,24 @@ import dev.justinsmith.bjj.ui.common.PagerTarget
 import dev.justinsmith.bjj.ui.common.ProgressLegend
 import dev.justinsmith.bjj.ui.common.StarterOffer
 import dev.justinsmith.bjj.ui.common.VideoActions
-import dev.justinsmith.bjj.ui.common.WithSnapshot
 import dev.justinsmith.bjj.ui.common.label
-import dev.justinsmith.bjj.ui.common.progressOf
-import dev.justinsmith.bjj.ui.common.videoActions
 import org.jetbrains.compose.resources.stringResource
+import org.koin.compose.viewmodel.koinViewModel
+import org.koin.core.parameter.parametersOf
 
 @Composable
 fun ConceptsRoute(nav: Nav) {
-    WithSnapshot { snapshot, viewModel ->
-        ConceptsScreen(
-            lib = snapshot.library,
-            missing = snapshot.missingStarterConcepts.map { it.name },
+    val viewModel = koinViewModel<ConceptsViewModel>()
+    val state by viewModel.uiState.collectAsStateWithLifecycle()
+    when (val ready = state) {
+        ConceptsUiState.Loading -> Loading()
+
+        is ConceptsUiState.Ready -> ConceptsScreen(
+            state = ready,
             nav = nav,
-            onAddStarter = viewModel::addMissingStarterConcepts,
-            onDismissStarter = viewModel::dismissMissingStarterConcepts,
+            onSearch = viewModel::search,
+            onAddStarter = viewModel::addStarter,
+            onDismissStarter = viewModel::dismissStarter,
         )
     }
 }
@@ -90,13 +91,14 @@ fun ConceptsRoute(nav: Nav) {
 /** Every concept in learning order: its picture, its name, what it is, and how well it is known. */
 @Composable
 fun ConceptsScreen(
-    lib: Library,
-    missing: List<String>,
+    state: ConceptsUiState.Ready,
     nav: Nav,
+    onSearch: (String) -> Unit,
     onAddStarter: () -> Unit,
     onDismissStarter: () -> Unit,
     modifier: Modifier = Modifier,
 ) {
+    val concepts = state.concepts
     Page(modifier) {
         LearnSwitch(LearnSection.Concepts, { nav.selectTab(LearnTab(it)) })
         PageHead(
@@ -104,7 +106,7 @@ fun ConceptsScreen(
             about = stringResource(Res.string.learn_concepts_about),
         )
         Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(Spacing.s2)) {
-            if (lib.concepts.isNotEmpty()) {
+            if (concepts.isNotEmpty()) {
                 Button(
                     stringResource(Res.string.learn_concepts_study),
                     { nav.selectTab(ReviewTab(Deck.Concept.key)) },
@@ -118,62 +120,50 @@ fun ConceptsScreen(
                 Modifier.weight(1f),
             )
         }
-        LibrarySearch(lib, { kind, id -> nav.open(itemKey(kind, id)) })
-        StarterOffer(Res.plurals.learn_starter_concepts_missing, missing, onAddStarter, onDismissStarter)
-        if (lib.concepts.isEmpty()) {
+        LibrarySearch(state.search, onSearch, { kind, id -> nav.open(itemKey(kind, id)) })
+        StarterOffer(Res.plurals.learn_starter_concepts_missing, state.missingStarter, onAddStarter, onDismissStarter)
+        if (concepts.isEmpty()) {
             BjjText(stringResource(Res.string.learn_concepts_empty), color = BjjTheme.palette.muted)
         } else {
             ProgressLegend()
-            Columns(lib.concepts) { concept ->
+            Columns(concepts) { concept ->
                 Tile(
                     name = concept.name,
                     onClick = { nav.open(ConceptDetail(concept.id)) },
                     detail = concept.summary,
                     picture = if (hasConceptArtwork(concept.id)) ({ ConceptArtwork(concept.id) }) else null,
-                ) {
-                    ProgressDot(progressOf(reviewOf(lib, CardKind.Concept, concept.id)))
-                }
+                ) { ProgressDot(concept.progress) }
             }
         }
     }
 }
 
 @Composable
-fun ConceptDetailRoute(id: String, nav: Nav) {
-    WithSnapshot { snapshot, viewModel ->
-        val concept = snapshot.library.conceptById[id]
-        if (concept == null) {
-            Missing(
-                stringResource(Res.string.learn_concept),
-                stringResource(Res.string.common_concepts),
-                { nav.selectTab(LearnTab(LearnSection.Concepts)) },
-            )
-        } else {
-            ConceptDetailScreen(
-                concept = concept,
-                lib = snapshot.library,
-                videos = linkedVideos(snapshot.videos, ItemKind.Concept, id),
-                nav = nav,
-                videoActions = viewModel.videoActions(),
-            )
-        }
+fun ConceptDetailRoute(key: ConceptDetail, nav: Nav) {
+    val viewModel = koinViewModel<ConceptDetailViewModel> { parametersOf(key) }
+    val state by viewModel.uiState.collectAsStateWithLifecycle()
+    when (val ready = state) {
+        ConceptDetailUiState.Loading -> Loading()
+
+        ConceptDetailUiState.Missing -> Missing(
+            stringResource(Res.string.learn_concept),
+            stringResource(Res.string.common_concepts),
+            { nav.selectTab(LearnTab(LearnSection.Concepts)) },
+        )
+
+        is ConceptDetailUiState.Ready -> ConceptDetailScreen(ready, nav, viewModel.videoActions)
     }
 }
 
 @Composable
 fun ConceptDetailScreen(
-    concept: Concept,
-    lib: Library,
-    videos: List<VideoBookmark>,
+    state: ConceptDetailUiState.Ready,
     nav: Nav,
     videoActions: VideoActions,
     modifier: Modifier = Modifier,
 ) {
-    val usedIn = lib.positions.filter { concept.id in it.conceptIds }
-    val index = lib.concepts.indexOfFirst { it.id == concept.id }
-    val previous = lib.concepts.getOrNull(index - 1)
-    val next = lib.concepts.getOrNull(index + 1)
-    val state = reviewOf(lib, CardKind.Concept, concept.id)
+    val concept = state.concept
+    val videos = state.videos
     val onToPositions = stringResource(Res.string.learn_concept_on_to_positions)
     Page(modifier, maxWidth = Sizes.readingMax) {
         DetailHeader(
@@ -183,7 +173,7 @@ fun ConceptDetailScreen(
             title = concept.name,
             eyebrow = {
                 Eyebrow(stringResource(Res.string.learn_concept))
-                StatusPill(progressOf(state).label, progressOf(state))
+                StatusPill(state.progress.label, state.progress)
             },
             lead = concept.summary,
         )
@@ -194,10 +184,12 @@ fun ConceptDetailScreen(
                 Divider()
                 Section(stringResource(Res.string.learn_try_this_drill)) { BjjText(concept.drill) }
             }
-            if (usedIn.isNotEmpty()) {
+            if (state.usedIn.isNotEmpty()) {
                 Divider()
                 Section(stringResource(Res.string.learn_concept_where_it_matters)) {
-                    Wrap { for (position in usedIn) Chip(position.name, { nav.open(PositionDetail(position.id)) }) }
+                    Wrap {
+                        for (position in state.usedIn) Chip(position.name, { nav.open(PositionDetail(position.id)) })
+                    }
                 }
             }
             if (concept.notes.isNotBlank()) Divider()
@@ -206,8 +198,8 @@ fun ConceptDetailScreen(
             LinkedVideos(ItemRef(ItemKind.Concept, concept.id), videos, videoActions)
         }
         Pager(
-            previous = previous?.let { PagerTarget(it.name) { nav.replace(ConceptDetail(it.id)) } },
-            next = next?.let { PagerTarget(it.name) { nav.replace(ConceptDetail(it.id)) } }
+            previous = state.previous?.let { PagerTarget(it.name) { nav.replace(ConceptDetail(it.id)) } },
+            next = state.next?.let { PagerTarget(it.name) { nav.replace(ConceptDetail(it.id)) } }
                 ?: PagerTarget(onToPositions) { nav.selectTab(LearnTab(LearnSection.Positions)) },
         )
     }

@@ -4,11 +4,13 @@ import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.size
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.drawBehind
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.unit.dp
+import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import dev.justinsmith.bjj.core.ItemKind
 import dev.justinsmith.bjj.core.ThemeChoice
 import dev.justinsmith.bjj.core.label
@@ -45,17 +47,21 @@ import dev.justinsmith.bjj.resources.more_stored_note
 import dev.justinsmith.bjj.resources.more_title
 import dev.justinsmith.bjj.resources.more_videos_detail
 import dev.justinsmith.bjj.resources.more_videos_empty
+import dev.justinsmith.bjj.ui.common.Loading
 import dev.justinsmith.bjj.ui.common.Nav
 import dev.justinsmith.bjj.ui.common.Page
 import dev.justinsmith.bjj.ui.common.RowCard
-import dev.justinsmith.bjj.ui.common.WithSnapshot
 import org.jetbrains.compose.resources.pluralStringResource
 import org.jetbrains.compose.resources.stringResource
+import org.koin.compose.viewmodel.koinViewModel
 
 @Composable
 fun MoreRoute(nav: Nav) {
-    WithSnapshot { snapshot, viewModel ->
-        MoreScreen(snapshot.videos.size, snapshot.themeChoice, nav, viewModel::setTheme)
+    val viewModel = koinViewModel<MoreViewModel>()
+    val state by viewModel.uiState.collectAsStateWithLifecycle()
+    when (val ready = state) {
+        MoreUiState.Loading -> Loading()
+        is MoreUiState.Ready -> MoreScreen(ready.videoCount, ready.theme, nav, viewModel::setTheme)
     }
 }
 

@@ -43,21 +43,15 @@ import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import dev.justinsmith.bjj.core.CardKind
-import dev.justinsmith.bjj.core.Library
 import dev.justinsmith.bjj.core.MapEdge
 import dev.justinsmith.bjj.core.MapLayout
 import dev.justinsmith.bjj.core.MapNode
 import dev.justinsmith.bjj.core.MapOrientation
 import dev.justinsmith.bjj.core.Point
-import dev.justinsmith.bjj.core.Position
 import dev.justinsmith.bjj.core.TransitionType
 import dev.justinsmith.bjj.core.arrowHead
-import dev.justinsmith.bjj.core.connections
 import dev.justinsmith.bjj.core.endsTheRoll
 import dev.justinsmith.bjj.core.label
-import dev.justinsmith.bjj.core.layoutPositionMap
-import dev.justinsmith.bjj.core.reviewOf
 import dev.justinsmith.bjj.design.components.BjjText
 import dev.justinsmith.bjj.design.components.Card
 import dev.justinsmith.bjj.design.components.Divider
@@ -83,12 +77,10 @@ import dev.justinsmith.bjj.resources.map_no_techniques_from_here
 import dev.justinsmith.bjj.resources.map_select_prompt
 import dev.justinsmith.bjj.resources.map_submissions
 import dev.justinsmith.bjj.resources.map_ways_in
-import dev.justinsmith.bjj.ui.common.Direction
 import dev.justinsmith.bjj.ui.common.Nav
 import dev.justinsmith.bjj.ui.common.SideBySide
 import dev.justinsmith.bjj.ui.common.TransitionList
 import dev.justinsmith.bjj.ui.common.hasRail
-import dev.justinsmith.bjj.ui.common.progressOf
 import dev.justinsmith.bjj.ui.common.windowWidth
 import org.jetbrains.compose.resources.pluralStringResource
 import org.jetbrains.compose.resources.stringResource
@@ -112,16 +104,14 @@ private val ARROW_TYPES = TransitionType.entries.filterNot(::endsTheRoll)
  * only draws it.
  */
 @Composable
-fun PositionMap(lib: Library, nav: Nav, modifier: Modifier = Modifier) {
+fun PositionMap(map: MapUi, nav: Nav, modifier: Modifier = Modifier) {
     val orientation = if (windowWidth() >= MAP_ACROSS) MapOrientation.Horizontal else MapOrientation.Vertical
-    val layout = remember(lib.positions, lib.transitions, orientation) {
-        layoutPositionMap(lib.positions, lib.transitions, orientation)
-    }
+    val layout = map.layouts.getValue(orientation)
     var selectedId by rememberSaveable { mutableStateOf<String?>(null) }
-    val selected = selectedId?.let { lib.positionById[it] }
+    val selected = selectedId?.let { map.positions[it] }
     val sheet = @Composable {
         Card {
-            MapSheet(lib, layout, orientation, selected?.id) { id -> selectedId = if (selectedId == id) null else id }
+            MapSheet(map, layout, orientation, selected?.id) { id -> selectedId = if (selectedId == id) null else id }
             Divider()
             Legend()
         }
@@ -129,7 +119,7 @@ fun PositionMap(lib: Library, nav: Nav, modifier: Modifier = Modifier) {
     val panel = @Composable {
         Card {
             if (selected != null) {
-                SelectedPosition(selected, lib, nav)
+                SelectedPosition(selected, nav)
             } else {
                 BjjText(stringResource(Res.string.map_select_prompt), color = BjjTheme.palette.muted)
             }
@@ -149,7 +139,7 @@ fun PositionMap(lib: Library, nav: Nav, modifier: Modifier = Modifier) {
 /** The map itself: arrows on a canvas, with the lanes' headings and the positions' boxes laid over it. */
 @Composable
 private fun MapSheet(
-    lib: Library,
+    map: MapUi,
     layout: MapLayout,
     orientation: MapOrientation,
     activeId: String?,
@@ -182,11 +172,10 @@ private fun MapSheet(
             )
         }
         for (node in layout.nodes) {
-            val position = lib.positionById[node.id] ?: continue
+            val position = map.positions[node.id] ?: continue
             MapNodeButton(
                 node = node,
                 position = position,
-                lib = lib,
                 selected = node.id == activeId,
                 dimmed = activeId != null && node.id != activeId && node.id !in neighbours,
                 onToggle = { onToggle(node.id) },
@@ -277,8 +266,7 @@ private const val DIM_NODE = 0.35f
 @Composable
 private fun MapNodeButton(
     node: MapNode,
-    position: Position,
-    lib: Library,
+    position: MapPosition,
     selected: Boolean,
     dimmed: Boolean,
     onToggle: () -> Unit,
@@ -300,7 +288,7 @@ private fun MapNodeButton(
         horizontalAlignment = Alignment.CenterHorizontally,
     ) {
         Row(horizontalArrangement = Arrangement.spacedBy(Spacing.s1), verticalAlignment = Alignment.CenterVertically) {
-            ProgressDot(progressOf(reviewOf(lib, CardKind.Position, position.id)))
+            ProgressDot(position.progress)
             BjjText(
                 position.name,
                 style = Type.small.copy(fontSize = 13.sp, fontWeight = FontWeight.SemiBold),
@@ -319,8 +307,9 @@ private fun MapNodeButton(
 }
 
 @Composable
-private fun SelectedPosition(position: Position, lib: Library, nav: Nav, modifier: Modifier = Modifier) {
-    val (outgoing, incoming) = connections(lib, position.id)
+private fun SelectedPosition(position: MapPosition, nav: Nav, modifier: Modifier = Modifier) {
+    val outgoing = position.outgoing
+    val incoming = position.incoming
     val open = { id: String -> nav.open(TransitionDetail(id)) }
     Column(modifier.fillMaxWidth(), verticalArrangement = Arrangement.spacedBy(Spacing.s2)) {
         Eyebrow(position.category.label)
@@ -328,7 +317,7 @@ private fun SelectedPosition(position: Position, lib: Library, nav: Nav, modifie
         BjjText(position.summary, style = Type.small, color = BjjTheme.palette.muted)
         Eyebrow(stringResource(Res.string.map_from_here))
         if (outgoing.isNotEmpty()) {
-            TransitionList(outgoing, lib.positionById, Direction.Out, open)
+            TransitionList(outgoing, open)
         } else {
             BjjText(
                 stringResource(Res.string.map_no_techniques_from_here),
@@ -338,7 +327,7 @@ private fun SelectedPosition(position: Position, lib: Library, nav: Nav, modifie
         }
         if (incoming.isNotEmpty()) {
             Eyebrow(stringResource(Res.string.map_ways_in))
-            TransitionList(incoming, lib.positionById, Direction.In, open)
+            TransitionList(incoming, open)
         }
     }
 }

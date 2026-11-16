@@ -7,6 +7,7 @@ import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.width
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.key
 import androidx.compose.runtime.mutableIntStateOf
@@ -19,11 +20,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
-import dev.justinsmith.bjj.core.Library
-import dev.justinsmith.bjj.core.RECENT_CLASS_COUNT
 import dev.justinsmith.bjj.core.TrainingEntry
-import dev.justinsmith.bjj.core.allSituations
-import dev.justinsmith.bjj.core.findSituation
 import dev.justinsmith.bjj.core.formatClassCount
 import dev.justinsmith.bjj.core.formatMatTime
 import dev.justinsmith.bjj.core.id
@@ -34,7 +31,6 @@ import dev.justinsmith.bjj.core.recentlyStuck
 import dev.justinsmith.bjj.core.services.TrainingEntryInput
 import dev.justinsmith.bjj.core.situationName
 import dev.justinsmith.bjj.core.stuckSituationIds
-import dev.justinsmith.bjj.core.trainingSummary
 import dev.justinsmith.bjj.design.components.BjjText
 import dev.justinsmith.bjj.design.components.Button
 import dev.justinsmith.bjj.design.components.ButtonKind
@@ -96,11 +92,11 @@ import dev.justinsmith.bjj.resources.log_techniques_all
 import dev.justinsmith.bjj.resources.log_techniques_choose
 import dev.justinsmith.bjj.resources.log_worked
 import dev.justinsmith.bjj.ui.common.EmptyState
+import dev.justinsmith.bjj.ui.common.Loading
 import dev.justinsmith.bjj.ui.common.Nav
 import dev.justinsmith.bjj.ui.common.Page
 import dev.justinsmith.bjj.ui.common.PageHead
 import dev.justinsmith.bjj.ui.common.SideBySide
-import dev.justinsmith.bjj.ui.common.WithSnapshot
 import dev.justinsmith.bjj.ui.home.formatDay
 import org.jetbrains.compose.resources.StringResource
 import org.jetbrains.compose.resources.stringResource
@@ -114,37 +110,40 @@ private val MINUTE_PRESETS = listOf(45, 60, 90, 120)
 
 @Composable
 fun TrainingLogRoute(nav: Nav) {
-    val log = koinViewModel<LogViewModel>()
-    val state by log.state.collectAsStateWithLifecycle()
-    WithSnapshot { snapshot, app ->
-        TrainingLogScreen(
-            lib = snapshot.library,
-            entries = snapshot.trainingLog,
-            today = dev.justinsmith.bjj.core.localDayKey(app.now(), app.zone),
-            state = state,
-            nav = nav,
-            onSave = log::save,
-            onRemove = log::remove,
-        )
+    val viewModel = koinViewModel<LogViewModel>()
+    val state by viewModel.uiState.collectAsStateWithLifecycle()
+    when (val ready = state) {
+        LogUiState.Loading -> Loading()
+        is LogUiState.Ready -> TrainingLogScreen(ready, nav, viewModel::save, viewModel::remove)
     }
 }
 
 @Composable
 fun TrainingLogScreen(
-    lib: Library,
-    entries: List<TrainingEntry>,
-    today: String,
-    state: LogUiState,
+    state: LogUiState.Ready,
     nav: Nav,
-    onSave: (String?, TrainingEntryInput, () -> Unit) -> Unit,
+    onSave: (String?, TrainingEntryInput) -> Unit,
     onRemove: (String) -> Unit,
     modifier: Modifier = Modifier,
 ) {
+    val entries = state.entries
     var editingId by rememberSaveable { mutableStateOf<String?>(null) }
     // Bumped after each save so the form starts empty for the next entry.
     var formRound by rememberSaveable { mutableIntStateOf(0) }
-    val editing = entries.firstOrNull { it.id == editingId }
-    val summary = trainingSummary(entries)
+    // How many saves this page has started the form over for. A save the ViewModel reports beyond that is new.
+    var savesSeen by rememberSaveable { mutableIntStateOf(state.writes.saved) }
+    val startOver: () -> Unit = {
+        editingId = null
+        formRound++
+    }
+    LaunchedEffect(state.writes.saved) {
+        if (state.writes.saved != savesSeen) {
+            savesSeen = state.writes.saved
+            startOver()
+        }
+    }
+    val editing = entries.firstOrNull { it.entry.id == editingId }?.entry
+    val summary = state.summary
     Page(modifier) {
         PageHead(
             stringResource(Res.string.common_training_log),
@@ -154,10 +153,7 @@ fun TrainingLogScreen(
             first = {
                 Card {
                     key(editing?.id, formRound) {
-                        EntryForm(lib, entries, editing, today, state, onSave) {
-                            editingId = null
-                            formRound++
-                        }
+                        EntryForm(state.choices, editing, state.today, state.writes, onSave, onCancel = startOver)
                     }
                 }
             },
@@ -176,11 +172,11 @@ fun TrainingLogScreen(
                             stringResource(Res.string.log_empty_text),
                         )
                     } else {
-                        entries.forEachIndexed { index, entry ->
+                        entries.forEachIndexed { index, row ->
                             if (index > 0) Divider()
-                            EntryRow(lib, entry, nav, onEdit = {
-                                editingId = entry.id
-                            }, onRemove = { onRemove(entry.id) })
+                            EntryRow(row, nav, onEdit = {
+                                editingId = row.entry.id
+                            }, onRemove = { onRemove(row.entry.id) })
                         }
                     }
                 }
@@ -244,14 +240,12 @@ private class EntryDraft(entry: TrainingEntry?, today: String) {
 
 @Composable
 private fun ColumnScope.EntryForm(
-    lib: Library,
-    /** Every entry so far: recent ones decide which choices are offered up front. */
-    entries: List<TrainingEntry>,
+    choices: LogChoices,
     entry: TrainingEntry?,
     today: String,
-    state: LogUiState,
-    onSave: (String?, TrainingEntryInput, () -> Unit) -> Unit,
-    onDone: () -> Unit,
+    state: LogWrites,
+    onSave: (String?, TrainingEntryInput) -> Unit,
+    onCancel: () -> Unit,
 ) {
     val draft = remember { EntryDraft(entry, today) }
     val muted = BjjTheme.palette.muted
@@ -275,8 +269,8 @@ private fun ColumnScope.EntryForm(
     }
     BjjText(stringResource(Res.string.log_day_hint, formatDay(draft.day), today), style = Type.small, color = muted)
     MinutesField(draft)
-    StuckField(lib, entries, draft)
-    TechniquesField(lib, entries, draft)
+    StuckField(choices, draft)
+    TechniquesField(choices, draft)
     TextField(
         stringResource(Res.string.log_focus),
         draft.focus,
@@ -298,13 +292,13 @@ private fun ColumnScope.EntryForm(
             stringResource(if (entry != null) Res.string.log_save_changes else Res.string.log_save_entry),
             {
                 draft.dayError = !isDayKey(draft.day.trim())
-                if (!draft.dayError) onSave(entry?.id, draft.input(), onDone)
+                if (!draft.dayError) onSave(entry?.id, draft.input())
             },
             Modifier.weight(1f),
             ButtonKind.Primary,
             enabled = !state.saving,
         )
-        if (entry != null) Button(stringResource(Res.string.common_cancel), onDone, Modifier.weight(1f))
+        if (entry != null) Button(stringResource(Res.string.common_cancel), onCancel, Modifier.weight(1f))
     }
 }
 
@@ -331,12 +325,13 @@ private fun ColumnScope.MinutesField(draft: EntryDraft) {
 }
 
 @Composable
-private fun ColumnScope.StuckField(lib: Library, entries: List<TrainingEntry>, draft: EntryDraft) {
-    val situations = allSituations(lib)
+private fun ColumnScope.StuckField(choices: LogChoices, draft: EntryDraft) {
+    val situations = choices.situations
     if (situations.isEmpty()) return
     // Offered up front; remembered so the row does not reshuffle as chips are toggled.
     val quickIds = remember {
-        quickPicks(draft.stuckIds, recentlyStuck(entries, RECENT_CLASS_COUNT)) { findSituation(lib, it) != null }
+        val known = situations.map { it.id }.toSet()
+        quickPicks(draft.stuckIds, choices.recentlyStuck) { it in known }
     }
     val (quick, others) = situations.partition { it.id in quickIds }
     BjjText(stringResource(Res.string.log_stuck), style = Type.label)
@@ -346,32 +341,30 @@ private fun ColumnScope.StuckField(lib: Library, entries: List<TrainingEntry>, d
         color = BjjTheme.palette.muted,
     )
     if (quick.isNotEmpty()) {
-        Wrap { for (s in quick) ToggleChip(situationName(s), s.id in draft.stuckIds, { draft.toggleStuck(s.id, it) }) }
+        Wrap { for (s in quick) ToggleChip(s.name, s.id in draft.stuckIds, { draft.toggleStuck(s.id, it) }) }
     }
     if (others.isNotEmpty()) {
         val more = if (quick.isEmpty()) Res.string.log_stuck_choose else Res.string.log_stuck_others
         Folded(stringResource(more), startOpen = false) {
             Wrap {
-                for (s in others) ToggleChip(situationName(s), s.id in draft.stuckIds, { draft.toggleStuck(s.id, it) })
+                for (s in others) ToggleChip(s.name, s.id in draft.stuckIds, { draft.toggleStuck(s.id, it) })
             }
         }
     }
 }
 
 @Composable
-private fun ColumnScope.TechniquesField(lib: Library, entries: List<TrainingEntry>, draft: EntryDraft) {
-    val groups = lib.positions.map { p ->
-        p to lib.transitions.filter { it.fromId == p.id }
-    }.filter { it.second.isNotEmpty() }
+private fun ColumnScope.TechniquesField(choices: LogChoices, draft: EntryDraft) {
+    val groups = choices.techniqueGroups
     if (groups.isEmpty()) return
     val quick = remember {
-        quickPicks(draft.techniqueIds, recentlyPractised(entries, RECENT_CLASS_COUNT)) { it in lib.transitionById }
+        quickPicks(draft.techniqueIds, choices.recentlyPractised) { it in choices.techniqueNames }
     }
     BjjText(stringResource(Res.string.log_techniques), style = Type.label)
     if (quick.isNotEmpty()) {
         Wrap {
             for (id in quick) {
-                val name = lib.transitionById[id]?.name.orEmpty()
+                val name = choices.techniqueNames[id].orEmpty()
                 ToggleChip(name, id in draft.techniqueIds, { draft.toggleTechnique(id, it) })
             }
         }
@@ -380,7 +373,7 @@ private fun ColumnScope.TechniquesField(lib: Library, entries: List<TrainingEntr
     Folded(stringResource(more), startOpen = false) {
         Column(verticalArrangement = Arrangement.spacedBy(Spacing.s2)) {
             for ((position, techniques) in groups) {
-                BjjText(position.name, style = Type.small, color = BjjTheme.palette.muted)
+                BjjText(position, style = Type.small, color = BjjTheme.palette.muted)
                 Wrap {
                     for (t in techniques) {
                         ToggleChip(t.name, t.id in draft.techniqueIds, {
@@ -396,10 +389,11 @@ private fun ColumnScope.TechniquesField(lib: Library, entries: List<TrainingEntr
 private val DAY_WIDTH = 132.dp
 
 @Composable
-private fun EntryRow(lib: Library, entry: TrainingEntry, nav: Nav, onEdit: () -> Unit, onRemove: () -> Unit) {
+private fun EntryRow(row: LogEntryUi, nav: Nav, onEdit: () -> Unit, onRemove: () -> Unit) {
     var confirming by remember { mutableStateOf(false) }
-    val techniques = entry.techniqueIds.mapNotNull { lib.transitionById[it] }
-    val stuck = stuckSituationIds(entry).mapNotNull { findSituation(lib, it) }
+    val entry = row.entry
+    val techniques = row.techniques
+    val stuck = row.stuck
     val notes = listOf(
         Res.string.log_entry_taught to entry.taught,
         Res.string.log_entry_worked to entry.worked,

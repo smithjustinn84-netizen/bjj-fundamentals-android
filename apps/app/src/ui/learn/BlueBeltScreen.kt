@@ -6,18 +6,15 @@ import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.width
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
+import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import dev.justinsmith.bjj.core.BeltRank
-import dev.justinsmith.bjj.core.BeltTestList
-import dev.justinsmith.bjj.core.CardKind
 import dev.justinsmith.bjj.core.Deck
 import dev.justinsmith.bjj.core.ItemKind
-import dev.justinsmith.bjj.core.Library
-import dev.justinsmith.bjj.core.blueBeltTestList
 import dev.justinsmith.bjj.core.groupLabel
-import dev.justinsmith.bjj.core.reviewOf
 import dev.justinsmith.bjj.design.components.BjjText
 import dev.justinsmith.bjj.design.components.Button
 import dev.justinsmith.bjj.design.components.ButtonKind
@@ -54,39 +51,34 @@ import dev.justinsmith.bjj.resources.learn_starter_techniques_missing
 import dev.justinsmith.bjj.ui.common.Columns
 import dev.justinsmith.bjj.ui.common.EmptyState
 import dev.justinsmith.bjj.ui.common.LearnSwitch
+import dev.justinsmith.bjj.ui.common.Loading
 import dev.justinsmith.bjj.ui.common.Nav
 import dev.justinsmith.bjj.ui.common.Page
 import dev.justinsmith.bjj.ui.common.ProgressLegend
 import dev.justinsmith.bjj.ui.common.RowCard
 import dev.justinsmith.bjj.ui.common.StarterOffer
-import dev.justinsmith.bjj.ui.common.WithSnapshot
-import dev.justinsmith.bjj.ui.common.progressOf
 import org.jetbrains.compose.resources.stringResource
+import org.koin.compose.viewmodel.koinViewModel
 
 @Composable
 fun BlueBeltRoute(nav: Nav) {
-    WithSnapshot { snapshot, viewModel ->
-        BlueBeltScreen(
-            lib = snapshot.library,
-            missing = snapshot.missingStarterTechniques.map { it.name },
-            nav = nav,
-            onAddStarter = viewModel::addMissingStarterTechniques,
-            onDismissStarter = viewModel::dismissMissingStarterTechniques,
-        )
+    val viewModel = koinViewModel<BlueBeltViewModel>()
+    val state by viewModel.uiState.collectAsStateWithLifecycle()
+    when (val ready = state) {
+        BlueBeltUiState.Loading -> Loading()
+        is BlueBeltUiState.Ready -> BlueBeltScreen(ready, nav, viewModel::addStarter, viewModel::dismissStarter)
     }
 }
 
 /** The techniques a blue belt test asks for, by type, with how many are learned. */
 @Composable
 fun BlueBeltScreen(
-    lib: Library,
-    missing: List<String>,
+    state: BlueBeltUiState.Ready,
     nav: Nav,
     onAddStarter: () -> Unit,
     onDismissStarter: () -> Unit,
     modifier: Modifier = Modifier,
 ) {
-    val list = blueBeltTestList(lib)
     Page(modifier) {
         LearnSwitch(LearnSection.BlueBelt, { nav.selectTab(LearnTab(it)) })
         Row(horizontalArrangement = Arrangement.spacedBy(Spacing.s3), verticalAlignment = Alignment.CenterVertically) {
@@ -98,8 +90,13 @@ fun BlueBeltScreen(
             )
         }
         BjjText(stringResource(Res.string.learn_blue_belt_about), color = BjjTheme.palette.muted)
-        StarterOffer(Res.plurals.learn_starter_techniques_missing, missing, onAddStarter, onDismissStarter)
-        if (list.total == 0) {
+        StarterOffer(
+            Res.plurals.learn_starter_techniques_missing,
+            state.missingStarter,
+            onAddStarter,
+            onDismissStarter,
+        )
+        if (state.total == 0) {
             Card {
                 EmptyState(
                     icon = BjjIcons.Belt,
@@ -114,24 +111,24 @@ fun BlueBeltScreen(
                 }
             }
         } else {
-            Summary(list, onStudy = { nav.selectTab(ReviewTab(Deck.BlueBelt.key)) })
+            Summary(state.learned, state.total, onStudy = { nav.selectTab(ReviewTab(Deck.BlueBelt.key)) })
             ProgressLegend()
-            Groups(lib, list, nav)
+            Groups(state.groups, nav)
         }
     }
 }
 
 @Composable
-private fun Summary(list: BeltTestList, onStudy: () -> Unit, modifier: Modifier = Modifier) {
+private fun Summary(learned: Int, total: Int, onStudy: () -> Unit, modifier: Modifier = Modifier) {
     Card(modifier) {
         Row(horizontalArrangement = Arrangement.spacedBy(Spacing.s4), verticalAlignment = Alignment.CenterVertically) {
             BeltGraphic(BeltRank.Blue, stripes = 0, Modifier.width(BELT_WIDTH))
             Column(Modifier.weight(1f), verticalArrangement = Arrangement.spacedBy(Spacing.s1)) {
                 BjjText(
-                    stringResource(Res.string.learn_blue_belt_learned, list.learned, list.total),
+                    stringResource(Res.string.learn_blue_belt_learned, learned, total),
                     style = Type.strong,
                 )
-                ProgressBar(list.learned.toFloat() / list.total)
+                ProgressBar(learned.toFloat() / total)
             }
         }
         Button(
@@ -146,23 +143,22 @@ private fun Summary(list: BeltTestList, onStudy: () -> Unit, modifier: Modifier 
 private val BELT_WIDTH = 96.dp
 
 @Composable
-private fun Groups(lib: Library, list: BeltTestList, nav: Nav, modifier: Modifier = Modifier) {
-    Columns(list.groups, modifier, spacing = Spacing.s4) { group ->
+private fun Groups(groups: List<BeltTestGroupUi>, nav: Nav, modifier: Modifier = Modifier) {
+    Columns(groups, modifier, spacing = Spacing.s4) { group ->
         Column(verticalArrangement = Arrangement.spacedBy(Spacing.s2)) {
             GroupTitle(stringResource(Res.string.learn_blue_belt_group, group.type.groupLabel, group.techniques.size))
             RowCard {
                 group.techniques.forEachIndexed { index, technique ->
                     if (index > 0) Divider()
-                    val from = lib.positionById[technique.fromId]
                     RowLink(
                         technique.name,
                         { nav.open(TransitionDetail(technique.id)) },
                         BjjIcons.Chevron,
-                        leading = { ProgressDot(progressOf(reviewOf(lib, CardKind.Transition, technique.id))) },
+                        leading = { ProgressDot(technique.progress) },
                     ) {
-                        if (from != null) {
+                        if (technique.from != null) {
                             BjjText(
-                                stringResource(Res.string.learn_from_position, from.name),
+                                stringResource(Res.string.learn_from_position, technique.from),
                                 style = Type.small,
                                 color = BjjTheme.palette.muted,
                             )

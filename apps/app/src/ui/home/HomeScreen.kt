@@ -16,6 +16,7 @@ import androidx.compose.foundation.layout.width
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.getValue
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -26,39 +27,18 @@ import androidx.compose.ui.semantics.clearAndSetSemantics
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import dev.justinsmith.bjj.core.CardKind
-import dev.justinsmith.bjj.core.DEFAULT_NEW_CARDS
+import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import dev.justinsmith.bjj.core.Deck
+import dev.justinsmith.bjj.core.DrillPick
 import dev.justinsmith.bjj.core.DrillReason
-import dev.justinsmith.bjj.core.FOUNDATION_LESSONS
-import dev.justinsmith.bjj.core.Library
-import dev.justinsmith.bjj.core.RECENT_CLASS_COUNT
-import dev.justinsmith.bjj.core.STICKING_POINT_LIMIT
-import dev.justinsmith.bjj.core.StudyQueue
-import dev.justinsmith.bjj.core.beltRank
-import dev.justinsmith.bjj.core.buildQueue
-import dev.justinsmith.bjj.core.cardId
-import dev.justinsmith.bjj.core.cardName
-import dev.justinsmith.bjj.core.conceptsToLearn
-import dev.justinsmith.bjj.core.currentLesson
-import dev.justinsmith.bjj.core.findSituation
+import dev.justinsmith.bjj.core.PathStep
+import dev.justinsmith.bjj.core.PathStepKind
+import dev.justinsmith.bjj.core.Situation
+import dev.justinsmith.bjj.core.TrainingSummary
 import dev.justinsmith.bjj.core.formatClassCount
 import dev.justinsmith.bjj.core.formatMatTime
-import dev.justinsmith.bjj.core.isEscape
 import dev.justinsmith.bjj.core.label
-import dev.justinsmith.bjj.core.lessonOrder
-import dev.justinsmith.bjj.core.lessonProgress
-import dev.justinsmith.bjj.core.lessonTechniques
-import dev.justinsmith.bjj.core.pickDrill
-import dev.justinsmith.bjj.core.progressSummary
-import dev.justinsmith.bjj.core.recentlyStuck
-import dev.justinsmith.bjj.core.reviewOf
-import dev.justinsmith.bjj.core.services.Snapshot
-import dev.justinsmith.bjj.core.services.studyStats
 import dev.justinsmith.bjj.core.situationName
-import dev.justinsmith.bjj.core.stickingPoints
-import dev.justinsmith.bjj.core.studyFirst
-import dev.justinsmith.bjj.core.trainingSummary
 import dev.justinsmith.bjj.design.components.BjjText
 import dev.justinsmith.bjj.design.components.Button
 import dev.justinsmith.bjj.design.components.ButtonKind
@@ -85,7 +65,6 @@ import dev.justinsmith.bjj.design.theme.Radius
 import dev.justinsmith.bjj.design.theme.Sizes
 import dev.justinsmith.bjj.design.theme.Spacing
 import dev.justinsmith.bjj.design.theme.Type
-import dev.justinsmith.bjj.nav.ConceptDetail
 import dev.justinsmith.bjj.nav.LearnSection
 import dev.justinsmith.bjj.nav.LearnTab
 import dev.justinsmith.bjj.nav.LogTab
@@ -145,17 +124,15 @@ import dev.justinsmith.bjj.resources.today_study_lesson
 import dev.justinsmith.bjj.resources.today_study_rank_note
 import dev.justinsmith.bjj.resources.today_title
 import dev.justinsmith.bjj.resources.today_training_line
+import dev.justinsmith.bjj.ui.common.CardLink
 import dev.justinsmith.bjj.ui.common.LibrarySearch
+import dev.justinsmith.bjj.ui.common.Loading
 import dev.justinsmith.bjj.ui.common.Nav
 import dev.justinsmith.bjj.ui.common.Page
-import dev.justinsmith.bjj.ui.common.WithSnapshot
-import dev.justinsmith.bjj.ui.common.progressOf
 import org.jetbrains.compose.resources.StringResource
 import org.jetbrains.compose.resources.pluralStringResource
 import org.jetbrains.compose.resources.stringResource
-
-/** Today shows only the next few concepts; the Concepts page has them all. */
-private const val HOME_CONCEPT_LIMIT = 6
+import org.koin.compose.viewmodel.koinViewModel
 
 /** Why today's drill was chosen, said to the student. */
 private val DrillReason.text: StringResource
@@ -168,36 +145,20 @@ private val DrillReason.text: StringResource
 
 @Composable
 fun HomeRoute(nav: Nav) {
-    WithSnapshot { snapshot, viewModel ->
-        val now = viewModel.now()
-        HomeScreen(
-            snapshot = snapshot,
-            now = now,
-            dateLabel = todayLabel(now, viewModel.zone),
-            streakDays = studyStats(snapshot, now, viewModel.zone).streakDays,
-            nav = nav,
-        )
+    val viewModel = koinViewModel<HomeViewModel>()
+    val state by viewModel.uiState.collectAsStateWithLifecycle()
+    when (val ready = state) {
+        HomeUiState.Loading -> Loading()
+        is HomeUiState.Ready -> HomeScreen(ready, nav, viewModel::search)
     }
 }
 
 /** Today: what to review, where the student stands, and what to do next. */
 @Composable
-fun HomeScreen(
-    snapshot: Snapshot,
-    now: Long,
-    dateLabel: String,
-    streakDays: Int,
-    nav: Nav,
-    modifier: Modifier = Modifier,
-) {
-    val lib = snapshot.library
-    val log = snapshot.trainingLog
-    val progress = progressSummary(lib)
-    val rank = beltRank(progress.percentLearned)
-    // The same session the Review page would offer with its default settings.
-    val preview = buildQueue(lib, Deck.All, DEFAULT_NEW_CARDS, now, studyFirst(lib, log, RECENT_CLASS_COUNT))
+fun HomeScreen(state: HomeUiState.Ready, nav: Nav, onSearch: (String) -> Unit, modifier: Modifier = Modifier) {
+    val rank = state.rank
     Page(modifier) {
-        Hero(dateLabel, streakDays, preview, progress.started, onReview = { nav.selectTab(ReviewTab()) })
+        Hero(state.dateLabel, state.streakDays, state.review, onReview = { nav.selectTab(ReviewTab()) })
         Column(verticalArrangement = Arrangement.spacedBy(Spacing.s1)) {
             BeltBand(rank.belt, rank.stripes)
             val nextBelt = rank.nextBelt
@@ -211,49 +172,52 @@ fun HomeScreen(
             val learned = if (nextBelt != null) {
                 stringResource(
                     Res.string.today_learned_to_next,
-                    progress.learned,
-                    progress.total,
+                    state.learned,
+                    state.total,
                     rank.percentToNextBelt,
                     nextBelt.label.lowercase(),
                 )
             } else {
-                stringResource(Res.string.today_learned, progress.learned, progress.total)
+                stringResource(Res.string.today_learned, state.learned, state.total)
             }
             BjjText(learned, color = BjjTheme.palette.muted)
             val note = stringResource(Res.string.today_study_rank_note)
             BjjText(note, style = Type.small, color = BjjTheme.palette.muted)
         }
-        DrillCard(lib, snapshot, nav)
-        TrainingCard(snapshot, nav)
-        LibrarySearch(lib, { kind, id -> nav.open(itemKey(kind, id)) })
-        LessonCard(lib, nav)
+        state.drill?.let { DrillCard(it, nav) }
+        TrainingCard(state.training, state.stuck, nav)
+        LibrarySearch(state.search, onSearch, { kind, id -> nav.open(itemKey(kind, id)) })
+        state.lesson?.let { LessonCard(it, nav) }
         Card {
             BjjText(stringResource(Res.string.today_path_title), style = Type.h2)
-            PathSteps(pathSteps(snapshot, nav))
+            PathSteps(state.path, nav)
         }
-        StickingCard(lib, nav)
-        ConceptsCard(lib, nav)
+        StickingCard(state.sticking, nav)
+        ConceptsCard(state.concepts, state.conceptCount, nav)
     }
 }
 
 /** What the review block says under its number: how the session splits, or what to do when nothing is ready. */
 @Composable
-private fun reviewLine(preview: StudyQueue, started: Int): String {
-    val due = preview.due.size
-    val newCount = preview.queue.size - due
-    val fromClass = preview.fromClass
-    return when {
-        preview.queue.isEmpty() -> stringResource(Res.string.today_review_nothing_due)
-        started == 0 -> stringResource(Res.string.today_review_first)
-        fromClass > 0 -> stringResource(Res.string.today_review_split_from_class, due, newCount, fromClass)
-        else -> stringResource(Res.string.today_review_split, due, newCount)
-    }
+private fun reviewLine(review: ReviewOffer): String = when {
+    review.ready == 0 -> stringResource(Res.string.today_review_nothing_due)
+
+    review.started == 0 -> stringResource(Res.string.today_review_first)
+
+    review.fromClass > 0 -> stringResource(
+        Res.string.today_review_split_from_class,
+        review.due,
+        review.fresh,
+        review.fromClass,
+    )
+
+    else -> stringResource(Res.string.today_review_split, review.due, review.fresh)
 }
 
 /** The one thing to do today: how many cards a session would hold, and the button that starts it. */
 @Composable
-private fun Hero(dateLabel: String, streakDays: Int, preview: StudyQueue, started: Int, onReview: () -> Unit) {
-    val ready = preview.queue.size
+private fun Hero(dateLabel: String, streakDays: Int, review: ReviewOffer, onReview: () -> Unit) {
+    val ready = review.ready
     val p = BjjTheme.palette
     Box(Modifier.fillMaxWidth().drawBehind { block(p.fill, p.outline, Radius.lg) }) {
         // 柔, "ju": the gentle of jiu-jitsu. Decoration only.
@@ -280,7 +244,7 @@ private fun Hero(dateLabel: String, streakDays: Int, preview: StudyQueue, starte
                 BjjText("${countUp(ready)}", style = Type.count)
                 Column {
                     BjjText(pluralStringResource(Res.plurals.today_cards_ready, ready), style = Type.strong)
-                    BjjText(reviewLine(preview, started), style = Type.small, color = p.fillSoft)
+                    BjjText(reviewLine(review), style = Type.small, color = p.fillSoft)
                 }
             }
             Button(
@@ -334,8 +298,7 @@ private fun StreakStamp(days: Int, modifier: Modifier = Modifier) {
 private const val STAMP_TILT = -5f
 
 @Composable
-private fun DrillCard(lib: Library, snapshot: Snapshot, nav: Nav, modifier: Modifier = Modifier) {
-    val drill = pickDrill(lib, snapshot.trainingLog) ?: return
+private fun DrillCard(drill: DrillPick, nav: Nav, modifier: Modifier = Modifier) {
     val interactions = remember { MutableInteractionSource() }
     Row(
         modifier
@@ -362,9 +325,7 @@ private fun DrillCard(lib: Library, snapshot: Snapshot, nav: Nav, modifier: Modi
 }
 
 @Composable
-private fun TrainingCard(snapshot: Snapshot, nav: Nav, modifier: Modifier = Modifier) {
-    val lib = snapshot.library
-    val training = trainingSummary(snapshot.trainingLog)
+private fun TrainingCard(training: TrainingSummary, stuck: List<Situation>, nav: Nav, modifier: Modifier = Modifier) {
     val muted = BjjTheme.palette.muted
     Card(modifier) {
         if (training.classes == 0) {
@@ -381,7 +342,6 @@ private fun TrainingCard(snapshot: Snapshot, nav: Nav, modifier: Modifier = Modi
                 formatMatTime(training.minutes),
             )
             BjjText(line, style = Type.small, color = muted)
-            val stuck = recentlyStuck(snapshot.trainingLog, RECENT_CLASS_COUNT).mapNotNull { findSituation(lib, it) }
             if (stuck.isNotEmpty()) {
                 BjjText(stringResource(Res.string.today_stuck_note), style = Type.small, color = muted)
                 Wrap {
@@ -397,12 +357,11 @@ private fun TrainingCard(snapshot: Snapshot, nav: Nav, modifier: Modifier = Modi
 }
 
 @Composable
-private fun LessonCard(lib: Library, nav: Nav, modifier: Modifier = Modifier) {
-    val lesson = currentLesson(lib) ?: return
-    val progress = lessonProgress(lib, lesson)
+private fun LessonCard(offer: LessonOffer, nav: Nav, modifier: Modifier = Modifier) {
+    val lesson = offer.lesson
+    val progress = offer.progress
     Card(modifier) {
-        val number = FOUNDATION_LESSONS.indexOf(lesson) + 1
-        Eyebrow(stringResource(Res.string.today_lesson_number, number, FOUNDATION_LESSONS.size))
+        Eyebrow(stringResource(Res.string.today_lesson_number, offer.number, offer.of))
         SectionHead(lesson.title) {
             Button(
                 stringResource(Res.string.today_all_lessons),
@@ -423,35 +382,31 @@ private fun LessonCard(lib: Library, nav: Nav, modifier: Modifier = Modifier) {
 }
 
 @Composable
-private fun StickingCard(lib: Library, nav: Nav, modifier: Modifier = Modifier) {
-    val sticking = stickingPoints(lib, STICKING_POINT_LIMIT)
+private fun StickingCard(sticking: List<CardLink>, nav: Nav, modifier: Modifier = Modifier) {
     if (sticking.isEmpty()) return
     Card(modifier) {
         BjjText(stringResource(Res.string.today_sticking_title), style = Type.h2)
         BjjText(stringResource(Res.string.today_sticking_note), color = BjjTheme.palette.muted)
         Wrap {
-            for (item in sticking) {
-                Chip(cardName(lib, item).orEmpty(), { nav.open(studyItemKey(item)) }) {
-                    ProgressDot(progressOf(reviewOf(lib, item.kind, item.id)))
-                }
+            for (card in sticking) {
+                Chip(card.name, { nav.open(studyItemKey(card.item)) }) { ProgressDot(card.progress) }
             }
         }
     }
 }
 
 @Composable
-private fun ConceptsCard(lib: Library, nav: Nav, modifier: Modifier = Modifier) {
-    val next = conceptsToLearn(lib, HOME_CONCEPT_LIMIT)
+private fun ConceptsCard(next: List<CardLink>, conceptCount: Int, nav: Nav, modifier: Modifier = Modifier) {
     Card(modifier) {
         SectionHead(stringResource(Res.string.today_concepts_title)) {
             Button(
-                stringResource(Res.string.today_concepts_all, lib.concepts.size),
+                stringResource(Res.string.today_concepts_all, conceptCount),
                 { nav.selectTab(LearnTab(LearnSection.Concepts)) },
                 size = ButtonSize.Small,
             )
         }
         if (next.isEmpty()) {
-            val text = if (lib.concepts.isEmpty()) {
+            val text = if (conceptCount == 0) {
                 Res.string.today_concepts_none
             } else {
                 Res.string.today_concepts_all_learned
@@ -460,79 +415,54 @@ private fun ConceptsCard(lib: Library, nav: Nav, modifier: Modifier = Modifier) 
         } else {
             Wrap {
                 for (concept in next) {
-                    Chip(concept.name, { nav.open(ConceptDetail(concept.id)) }) {
-                        ProgressDot(progressOf(reviewOf(lib, CardKind.Concept, concept.id)))
-                    }
+                    Chip(concept.name, { nav.open(studyItemKey(concept.item)) }) { ProgressDot(concept.progress) }
                 }
             }
         }
     }
 }
 
-/** One step of the suggested path: what it is, whether it is done, and where its link goes. */
-private class PathStep(
-    val title: String,
-    val done: Boolean,
-    val body: String,
-    val link: Pair<String, () -> Unit>? = null,
-)
+/** What a step of the path is called and what it asks for. */
+private val PathStepKind.title: StringResource
+    get() = when (this) {
+        PathStepKind.Survive -> Res.string.today_path_survive_title
+        PathStepKind.Concepts -> Res.string.today_path_concepts_title
+        PathStepKind.Positions -> Res.string.today_path_positions_title
+        PathStepKind.Attack -> Res.string.today_path_attack_title
+        PathStepKind.Videos -> Res.string.today_path_videos_title
+    }
 
-/** The link under a step of the path that has something left to learn: the name of what comes next. */
-@Composable
-private fun nextUp(name: String): String = stringResource(Res.string.today_path_next_up, name)
+private val PathStepKind.body: StringResource
+    get() = when (this) {
+        PathStepKind.Survive -> Res.string.today_path_survive_body
+        PathStepKind.Concepts -> Res.string.today_path_concepts_body
+        PathStepKind.Positions -> Res.string.today_path_positions_body
+        PathStepKind.Attack -> Res.string.today_path_attack_body
+        PathStepKind.Videos -> Res.string.today_path_videos_body
+    }
 
+/**
+ * The link under a step: the name of what comes next in it while something is left to learn. With nothing
+ * left, the attack step points at the map and the videos step at the bookmarks; the others have no link.
+ */
 @Composable
-private fun pathSteps(snapshot: Snapshot, nav: Nav): List<PathStep> {
-    val lib = snapshot.library
-    val unstudied = { kind: CardKind, id: String -> cardId(kind, id) !in lib.reviews }
-    val nextConcept = lib.concepts.firstOrNull { unstudied(CardKind.Concept, it.id) }
-    val nextPosition = lessonOrder(lib)
-        .filter { it.kind == CardKind.Position && unstudied(it.kind, it.id) }
-        .firstNotNullOfOrNull { lib.positionById[it.id] }
-    val notStarted = lessonTechniques(lib).filter { unstudied(CardKind.Transition, it.id) }
-    val nextEscape = notStarted.firstOrNull { isEscape(it.type) }
-    val nextAttack = notStarted.firstOrNull { !isEscape(it.type) }
-    return listOf(
-        PathStep(
-            stringResource(Res.string.today_path_survive_title),
-            done = lib.transitions.any { isEscape(it.type) } && nextEscape == null,
-            body = stringResource(Res.string.today_path_survive_body),
-            link = nextEscape?.let { nextUp(it.name) to { nav.open(TransitionDetail(it.id)) } },
-        ),
-        PathStep(
-            stringResource(Res.string.today_path_concepts_title),
-            done = lib.concepts.isNotEmpty() && nextConcept == null,
-            body = stringResource(Res.string.today_path_concepts_body),
-            link = nextConcept?.let { nextUp(it.name) to { nav.open(ConceptDetail(it.id)) } },
-        ),
-        PathStep(
-            stringResource(Res.string.today_path_positions_title),
-            done = lib.positions.isNotEmpty() && nextPosition == null,
-            body = stringResource(Res.string.today_path_positions_body),
-            link = nextPosition?.let { nextUp(it.name) to { nav.open(PositionDetail(it.id)) } },
-        ),
-        PathStep(
-            stringResource(Res.string.today_path_attack_title),
-            done = lib.transitions.any { !isEscape(it.type) } && nextAttack == null,
-            body = stringResource(Res.string.today_path_attack_body),
-            link = nextAttack?.let { nextUp(it.name) to { nav.open(TransitionDetail(it.id)) } }
-                ?: (
-                    stringResource(Res.string.today_path_see_map) to
-                        { nav.selectTab(LearnTab(LearnSection.Positions)) }
-                    ),
-        ),
-        PathStep(
-            stringResource(Res.string.today_path_videos_title),
-            done = snapshot.videos.isNotEmpty(),
-            body = stringResource(Res.string.today_path_videos_body),
-            link = stringResource(Res.string.common_videos) to { nav.open(Videos) },
-        ),
-    )
+private fun PathStep.link(nav: Nav): Pair<String, () -> Unit>? {
+    val next = next
+    return when {
+        next != null -> stringResource(Res.string.today_path_next_up, nextName) to { nav.open(studyItemKey(next)) }
+
+        kind == PathStepKind.Attack -> stringResource(Res.string.today_path_see_map) to
+            { nav.selectTab(LearnTab(LearnSection.Positions)) }
+
+        kind == PathStepKind.Videos -> stringResource(Res.string.common_videos) to { nav.open(Videos) }
+
+        else -> null
+    }
 }
 
 /** The suggested path as a stepper down the card. The first unfinished step is marked as the current one. */
 @Composable
-private fun PathSteps(steps: List<PathStep>, modifier: Modifier = Modifier) {
+private fun PathSteps(steps: List<PathStep>, nav: Nav, modifier: Modifier = Modifier) {
     val p = BjjTheme.palette
     val currentIndex = steps.indexOfFirst { !it.done }
     Column(modifier.fillMaxWidth(), verticalArrangement = Arrangement.spacedBy(Spacing.s3)) {
@@ -562,9 +492,9 @@ private fun PathSteps(steps: List<PathStep>, modifier: Modifier = Modifier) {
                     }
                 }
                 Column(Modifier.weight(1f)) {
-                    BjjText(step.title, style = Type.strong)
-                    BjjText(step.body, color = p.muted)
-                    step.link?.let { (label, open) -> LinkButton(label, open) }
+                    BjjText(stringResource(step.kind.title), style = Type.strong)
+                    BjjText(stringResource(step.kind.body), color = p.muted)
+                    step.link(nav)?.let { (label, open) -> LinkButton(label, open) }
                 }
             }
         }

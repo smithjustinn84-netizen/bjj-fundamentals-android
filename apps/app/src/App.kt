@@ -7,6 +7,7 @@ import androidx.compose.animation.core.tween
 import androidx.compose.animation.fadeIn
 import androidx.compose.animation.fadeOut
 import androidx.compose.animation.slideInVertically
+import androidx.compose.animation.slideOutHorizontally
 import androidx.compose.animation.togetherWith
 import androidx.compose.foundation.background
 import androidx.compose.foundation.isSystemInDarkTheme
@@ -26,16 +27,16 @@ import androidx.compose.ui.Modifier
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.viewmodel.navigation3.rememberViewModelStoreNavEntryDecorator
 import androidx.navigation3.runtime.NavBackStack
+import androidx.navigation3.runtime.NavEntryDecorator
 import androidx.navigation3.runtime.NavKey
 import androidx.navigation3.runtime.entryProvider
 import androidx.navigation3.runtime.rememberNavBackStack
 import androidx.navigation3.runtime.rememberSaveableStateHolderNavEntryDecorator
 import androidx.navigation3.ui.NavDisplay
+import androidx.navigationevent.NavigationEvent
 import androidx.savedstate.serialization.SavedStateConfiguration
 import dev.justinsmith.bjj.core.Theme
-import dev.justinsmith.bjj.core.ThemeChoice
 import dev.justinsmith.bjj.core.resolveTheme
-import dev.justinsmith.bjj.core.services.studyStats
 import dev.justinsmith.bjj.design.reducedMotion
 import dev.justinsmith.bjj.design.theme.BjjTheme
 import dev.justinsmith.bjj.design.theme.Motion
@@ -59,7 +60,6 @@ import dev.justinsmith.bjj.nav.replaceTop
 import dev.justinsmith.bjj.nav.selectTab
 import dev.justinsmith.bjj.platform.SystemBars
 import dev.justinsmith.bjj.ui.backup.BackupRoute
-import dev.justinsmith.bjj.ui.common.AppViewModel
 import dev.justinsmith.bjj.ui.common.Nav
 import dev.justinsmith.bjj.ui.common.hasRail
 import dev.justinsmith.bjj.ui.common.hasWideRail
@@ -76,6 +76,7 @@ import dev.justinsmith.bjj.ui.log.TrainingLogRoute
 import dev.justinsmith.bjj.ui.more.MoreRoute
 import dev.justinsmith.bjj.ui.review.ReviewRoute
 import dev.justinsmith.bjj.ui.review.ReviewSessionRoute
+import dev.justinsmith.bjj.ui.shell.ShellViewModel
 import dev.justinsmith.bjj.ui.shell.TabBar
 import dev.justinsmith.bjj.ui.shell.TabRail
 import dev.justinsmith.bjj.ui.videos.VideosRoute
@@ -107,10 +108,9 @@ internal val navConfiguration = SavedStateConfiguration {
 /** The app: its theme, its one back stack, and the bar or rail that moves between the five tabs. */
 @Composable
 fun App(modifier: Modifier = Modifier) {
-    val viewModel = koinViewModel<AppViewModel>()
-    val snapshot by viewModel.snapshot.collectAsStateWithLifecycle()
-    // Until the stored choice is read the device decides, which is also what a new library gets.
-    val theme = resolveTheme(snapshot?.themeChoice ?: ThemeChoice.Device, isSystemInDarkTheme())
+    val viewModel = koinViewModel<ShellViewModel>()
+    val shell by viewModel.uiState.collectAsStateWithLifecycle()
+    val theme = resolveTheme(shell.themeChoice, isSystemInDarkTheme())
     BjjTheme(dark = theme == Theme.Dark) {
         SystemBars(dark = theme == Theme.Dark)
         val backStack = rememberNavBackStack(navConfiguration, TodayTab)
@@ -123,7 +123,7 @@ fun App(modifier: Modifier = Modifier) {
             )
         }
         val current = backStack.currentTab()
-        val dueCount = snapshot?.let { studyStats(it, viewModel.now(), viewModel.zone).dueCount } ?: 0
+        val dueCount = shell.dueCount
         // A review session takes the whole window: nothing to wander off to until it is done or closed.
         val showBar = backStack.lastOrNull() !is ReviewSession
         val rail = hasRail()
@@ -147,6 +147,11 @@ fun App(modifier: Modifier = Modifier) {
 @Composable
 private fun Pages(backStack: NavBackStack<NavKey>, nav: Nav, modifier: Modifier = Modifier) {
     val still = reducedMotion()
+    val ground = BjjTheme.palette.bg
+    // A page going back slides off over the one underneath, so it has to be a sheet you cannot see through.
+    val opaque = remember(ground) {
+        NavEntryDecorator<NavKey> { entry -> Box(Modifier.fillMaxSize().background(ground)) { entry.Content() } }
+    }
     NavDisplay(
         backStack = backStack,
         onBack = { backStack.back() },
@@ -155,11 +160,13 @@ private fun Pages(backStack: NavBackStack<NavKey>, nav: Nav, modifier: Modifier 
         entryDecorators = listOf(
             rememberSaveableStateHolderNavEntryDecorator(),
             rememberViewModelStoreNavEntryDecorator(),
+            opaque,
         ),
         modifier = modifier,
         transitionSpec = { pageEnter(still) },
-        popTransitionSpec = { pageEnter(still) },
-        predictivePopTransitionSpec = { pageEnter(still) },
+        popTransitionSpec = { pageLeave(still, NavigationEvent.EDGE_NONE) },
+        // The same tween, which the back gesture scrubs with the finger and runs backwards if it lets go.
+        predictivePopTransitionSpec = { edge -> pageLeave(still, edge) },
         entryProvider = remember(nav) {
             entryProvider {
                 entry<TodayTab> { HomeRoute(nav) }
@@ -171,13 +178,13 @@ private fun Pages(backStack: NavBackStack<NavKey>, nav: Nav, modifier: Modifier 
                         LearnSection.BlueBelt -> BlueBeltRoute(nav)
                     }
                 }
-                entry<ReviewTab> { key -> ReviewRoute(key.deck, key.lessonId, nav) }
+                entry<ReviewTab> { key -> ReviewRoute(key, nav) }
                 entry<ReviewSession> { key -> ReviewSessionRoute(key, nav) }
                 entry<LogTab> { TrainingLogRoute(nav) }
                 entry<MoreTab> { MoreRoute(nav) }
-                entry<ConceptDetail> { key -> ConceptDetailRoute(key.id, nav) }
-                entry<PositionDetail> { key -> PositionDetailRoute(key.id, key.side, nav) }
-                entry<TransitionDetail> { key -> TransitionDetailRoute(key.id, nav) }
+                entry<ConceptDetail> { key -> ConceptDetailRoute(key, nav) }
+                entry<PositionDetail> { key -> PositionDetailRoute(key, nav) }
+                entry<TransitionDetail> { key -> TransitionDetailRoute(key, nav) }
                 entry<Videos> { VideosRoute(nav) }
                 entry<Backup> { BackupRoute(nav) }
                 entry<Editor> { key -> EditorRoute(key, nav) }
@@ -196,6 +203,21 @@ private fun pageEnter(still: Boolean): ContentTransform =
     } else {
         (fadeIn(tween(Motion.BASE)) + slideInVertically(tween(Motion.BASE)) { it / RISE_FROM }) togetherWith
             fadeOut(tween(Motion.FAST))
+    }
+
+/**
+ * Back is the other way round: the page underneath is already there, and the one on top slides off it, away
+ * from the edge the back gesture came from. It does not fade: the gesture can hold the page halfway, and two
+ * pages of text showing through each other cannot be read. It must not reuse [pageEnter], or going back looks
+ * like opening the page underneath.
+ */
+private fun pageLeave(still: Boolean, @NavigationEvent.SwipeEdge edge: Int): ContentTransform =
+    if (still) {
+        EnterTransition.None togetherWith ExitTransition.None
+    } else {
+        val towardsStart = edge == NavigationEvent.EDGE_RIGHT
+        EnterTransition.None togetherWith
+            slideOutHorizontally(tween(Motion.BASE)) { width -> if (towardsStart) -width else width }
     }
 
 /** A page starts this fraction of its height below where it lands. */

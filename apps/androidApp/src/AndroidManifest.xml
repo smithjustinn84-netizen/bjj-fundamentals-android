@@ -7,9 +7,12 @@
     <!-- Whether to show that player or the drawing: offline, the drawing. Also normal, no prompt. -->
     <uses-permission android:name="android.permission.ACCESS_NETWORK_STATE"/>
 
+    <!-- enableOnBackInvokedCallback: the back gesture previews where it leads. Android 16 does this for
+         every app; on 13 to 15 an app has to ask. -->
     <application
             android:name=".BjjApplication"
             android:allowBackup="true"
+            android:enableOnBackInvokedCallback="true"
             android:icon="@mipmap/ic_launcher"
             android:label="@string/app_name"
             android:roundIcon="@mipmap/ic_launcher"

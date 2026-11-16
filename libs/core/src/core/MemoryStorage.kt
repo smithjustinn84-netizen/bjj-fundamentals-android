@@ -14,14 +14,26 @@ class MemoryStorage(private val initialData: BackupData) : AppStorage {
     private var data = initialData
     private var nextLogId = firstFreeLogId(initialData)
     private var openTransactions = 0
+
+    /** True from a write until it is reported: a transaction that only read has nothing to report. */
+    private var unreported = false
     private val changed =
         MutableSharedFlow<Unit>(extraBufferCapacity = 1, onBufferOverflow = BufferOverflow.DROP_OLDEST)
 
     override val changes: Flow<Unit> = changed
 
+    /** Reports what has been written, if anything has, unless a transaction is still open. */
     private fun committed() {
         // Inside a transaction nothing is committed yet; `transaction` reports once at the end.
-        if (openTransactions == 0) changed.tryEmit(Unit)
+        if (openTransactions == 0 && unreported) {
+            unreported = false
+            changed.tryEmit(Unit)
+        }
+    }
+
+    private fun wrote() {
+        unreported = true
+        committed()
     }
 
     private inner class Table<T : HasId>(
@@ -30,7 +42,7 @@ class MemoryStorage(private val initialData: BackupData) : AppStorage {
     ) : Repository<T> {
         private fun update(change: (List<T>) -> List<T>) {
             data = data.write(change(read(data)))
-            committed()
+            wrote()
         }
 
         override suspend fun all(): List<T> = read(data)
@@ -70,7 +82,7 @@ class MemoryStorage(private val initialData: BackupData) : AppStorage {
                 entry.copy(id = id)
             }
             data = data.copy(reviewLog = data.reviewLog + stored)
-            committed()
+            wrote()
         }
 
         override suspend fun all(): List<ReviewLogEntry> = data.reviewLog
@@ -85,7 +97,7 @@ class MemoryStorage(private val initialData: BackupData) : AppStorage {
 
         override suspend fun clear() {
             data = data.copy(reviewLog = emptyList())
-            committed()
+            wrote()
         }
     }
 
@@ -103,6 +115,7 @@ class MemoryStorage(private val initialData: BackupData) : AppStorage {
             if (before != null) {
                 data = before.first
                 nextLogId = before.second
+                unreported = false
             }
             throw error
         }
@@ -111,7 +124,7 @@ class MemoryStorage(private val initialData: BackupData) : AppStorage {
     override suspend fun reset() {
         data = initialData
         nextLogId = firstFreeLogId(initialData)
-        committed()
+        wrote()
     }
 }
 

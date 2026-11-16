@@ -71,36 +71,26 @@ import dev.justinsmith.bjj.ui.common.BackLink
 import dev.justinsmith.bjj.ui.common.Nav
 import dev.justinsmith.bjj.ui.common.Page
 import dev.justinsmith.bjj.ui.common.PageHead
-import dev.justinsmith.bjj.ui.common.WithSnapshot
-import dev.justinsmith.bjj.ui.home.formatDay
 import org.jetbrains.compose.resources.stringResource
 import org.koin.compose.viewmodel.koinViewModel
 
 @Composable
 fun BackupRoute(nav: Nav) {
     val backup = koinViewModel<BackupViewModel>()
-    val state by backup.state.collectAsStateWithLifecycle()
+    val state by backup.uiState.collectAsStateWithLifecycle()
     val files = rememberBackupFiles(onSave = backup::exported, onOpen = backup::picked)
-    WithSnapshot { snapshot, app ->
-        BackupScreen(
-            state = state,
-            counts = snapshot.tableCounts,
-            // The day a waiting backup was made, in words.
-            pendingDay = state.pending?.takeIf { it.exportedAt > 0 }?.let {
-                formatDay(dev.justinsmith.bjj.core.localDayKey(it.exportedAt, app.zone))
-            },
-            onBack = nav.back,
-            onExport = { backup.export(files.save) },
-            onImport = files.open,
-            onConfirmImport = backup::confirmImport,
-            onCancelImport = backup::cancelImport,
-            onResetProgress = backup::resetProgress,
-            onEraseAll = backup::eraseAll,
-        )
-    }
+    BackupScreen(
+        state = state,
+        onBack = nav.back,
+        onExport = { backup.export(files.save) },
+        onImport = files.open,
+        onConfirmImport = backup::confirmImport,
+        onCancelImport = backup::cancelImport,
+        onResetProgress = backup::resetProgress,
+        onEraseAll = backup::eraseAll,
+    )
 }
 
-/** What just happened, in words. */
 @Composable
 private fun messageText(message: BackupMessage): String = when (message) {
     BackupMessage.Saved -> stringResource(Res.string.backup_saved)
@@ -141,8 +131,6 @@ private fun summary(backup: BackupFile): String =
 @Composable
 fun BackupScreen(
     state: BackupUiState,
-    counts: Map<BackupTable, Int>,
-    pendingDay: String?,
     onBack: () -> Unit,
     onExport: () -> Unit,
     onImport: () -> Unit,
@@ -179,7 +167,7 @@ fun BackupScreen(
                 if (index > 0) Divider()
                 Row(Modifier.fillMaxWidth()) {
                     BjjText(table.label, Modifier.weight(1f))
-                    BjjText("${counts[table] ?: 0}", style = Type.strong)
+                    BjjText("${state.counts[table] ?: 0}", style = Type.strong)
                 }
             }
         }
@@ -196,7 +184,7 @@ fun BackupScreen(
             }
         }
     }
-    ImportDialog(state.pending, pendingDay, onConfirmImport, onCancelImport)
+    ImportDialog(state.pending, state.pendingDay, onConfirmImport, onCancelImport)
     if (confirmingReset) {
         StartOverDialog(
             title = stringResource(Res.string.backup_reset_title),

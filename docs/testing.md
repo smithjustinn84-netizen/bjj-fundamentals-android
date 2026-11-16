@@ -12,7 +12,7 @@
 | `core` | Every rule, the services over `MemoryStorage`, the backup format, and the golden values from the web app. | `libs/core/test/` |
 | `storage-room` | The storage contract over a real database file, including a restart. | `libs/storage-room/test@jvm/` |
 | `design` | Every drawing composes and draws in both themes; the palette and view-box maths. | `libs/design/test@jvm/` |
-| `app` | The ViewModels over a real core, the container, navigation helpers, dates in words. | `apps/app/test@jvm/` |
+| `app` | Every screen's ViewModel and the state it works out, over a real core on in-memory storage; the container, navigation helpers, dates in words. | `apps/app/test@jvm/` |
 
 `test/` runs on both platforms; `test@jvm/` on the desktop JVM only. Anything that needs a Compose host or the bundled SQLite goes in `test@jvm/`.
 

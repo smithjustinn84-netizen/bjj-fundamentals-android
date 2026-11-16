@@ -10,21 +10,13 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
-import dev.justinsmith.bjj.core.CardKind
+import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import dev.justinsmith.bjj.core.ItemKind
-import dev.justinsmith.bjj.core.Library
 import dev.justinsmith.bjj.core.Position
-import dev.justinsmith.bjj.core.PositionCategory
 import dev.justinsmith.bjj.core.PositionRole
-import dev.justinsmith.bjj.core.VideoBookmark
-import dev.justinsmith.bjj.core.connections
 import dev.justinsmith.bjj.core.label
-import dev.justinsmith.bjj.core.positionOptions
-import dev.justinsmith.bjj.core.positionProgress
-import dev.justinsmith.bjj.core.reviewOf
 import dev.justinsmith.bjj.core.roleGoals
 import dev.justinsmith.bjj.core.roleLabel
-import dev.justinsmith.bjj.core.services.linkedVideos
 import dev.justinsmith.bjj.design.components.BjjText
 import dev.justinsmith.bjj.design.components.Button
 import dev.justinsmith.bjj.design.components.ButtonKind
@@ -78,13 +70,13 @@ import dev.justinsmith.bjj.resources.learn_positions_view_list
 import dev.justinsmith.bjj.resources.learn_positions_view_map
 import dev.justinsmith.bjj.ui.common.Columns
 import dev.justinsmith.bjj.ui.common.DetailHeader
-import dev.justinsmith.bjj.ui.common.Direction
 import dev.justinsmith.bjj.ui.common.EmptyState
 import dev.justinsmith.bjj.ui.common.ItemPicture
 import dev.justinsmith.bjj.ui.common.ItemRef
 import dev.justinsmith.bjj.ui.common.LearnSwitch
 import dev.justinsmith.bjj.ui.common.LibrarySearch
 import dev.justinsmith.bjj.ui.common.LinkedVideos
+import dev.justinsmith.bjj.ui.common.Loading
 import dev.justinsmith.bjj.ui.common.Missing
 import dev.justinsmith.bjj.ui.common.Nav
 import dev.justinsmith.bjj.ui.common.NotesBlock
@@ -96,14 +88,13 @@ import dev.justinsmith.bjj.ui.common.ProgressLegend
 import dev.justinsmith.bjj.ui.common.RowCard
 import dev.justinsmith.bjj.ui.common.TransitionList
 import dev.justinsmith.bjj.ui.common.VideoActions
-import dev.justinsmith.bjj.ui.common.WithSnapshot
 import dev.justinsmith.bjj.ui.common.label
-import dev.justinsmith.bjj.ui.common.progressOf
-import dev.justinsmith.bjj.ui.common.videoActions
 import dev.justinsmith.bjj.ui.map.PositionMap
 import dev.justinsmith.bjj.ui.map.roomForMap
 import org.jetbrains.compose.resources.StringResource
 import org.jetbrains.compose.resources.stringResource
+import org.koin.compose.viewmodel.koinViewModel
+import org.koin.core.parameter.parametersOf
 
 /** The two ways to look at the positions. */
 enum class PositionsView { List, Map }
@@ -116,15 +107,25 @@ private val PositionsView.label: StringResource
 
 @Composable
 fun PositionsRoute(nav: Nav) {
-    WithSnapshot { snapshot, _ -> PositionsScreen(snapshot.library, nav) }
+    val viewModel = koinViewModel<PositionsViewModel>()
+    val state by viewModel.uiState.collectAsStateWithLifecycle()
+    when (val ready = state) {
+        PositionsUiState.Loading -> Loading()
+        is PositionsUiState.Ready -> PositionsScreen(ready, nav, viewModel::search)
+    }
 }
 
 @Composable
-fun PositionsScreen(lib: Library, nav: Nav, modifier: Modifier = Modifier) {
+fun PositionsScreen(
+    state: PositionsUiState.Ready,
+    nav: Nav,
+    onSearch: (String) -> Unit,
+    modifier: Modifier = Modifier,
+) {
     // Null until the user picks a view; until then the window decides: the map is hard to read on a phone.
     var chosen by rememberSaveable { mutableStateOf<PositionsView?>(null) }
     val view = chosen ?: if (roomForMap()) PositionsView.Map else PositionsView.List
-    val orphans = lib.transitions.filter { it.fromId !in lib.positionById }
+    val orphans = state.orphans
     Page(modifier) {
         LearnSwitch(LearnSection.Positions, { nav.selectTab(LearnTab(it)) })
         PageHead(
@@ -150,9 +151,9 @@ fun PositionsScreen(lib: Library, nav: Nav, modifier: Modifier = Modifier) {
                 Modifier.weight(1f),
             )
         }
-        LibrarySearch(lib, { kind, id -> nav.open(itemKey(kind, id)) })
+        LibrarySearch(state.search, onSearch, { kind, id -> nav.open(itemKey(kind, id)) })
         when {
-            lib.positions.isEmpty() -> Card {
+            state.groups.isEmpty() -> Card {
                 EmptyState(
                     icon = BjjIcons.Map,
                     title = stringResource(Res.string.learn_positions_empty_title),
@@ -166,45 +167,42 @@ fun PositionsScreen(lib: Library, nav: Nav, modifier: Modifier = Modifier) {
                 }
             }
 
-            view == PositionsView.Map -> PositionMap(lib, nav)
+            view == PositionsView.Map -> PositionMap(state.map, nav)
 
             else -> {
                 ProgressLegend()
-                PositionList(lib, nav)
+                PositionList(state.groups, nav)
             }
         }
         if (orphans.isNotEmpty()) {
             GroupTitle(stringResource(Res.string.learn_positions_orphans))
-            RowCard { TransitionList(orphans, lib.positionById, Direction.Out, { nav.open(TransitionDetail(it)) }) }
+            RowCard { TransitionList(orphans, { nav.open(TransitionDetail(it)) }) }
         }
     }
 }
 
 /** Every position as a row, grouped by category: its picture, its name and how much of it is learned. */
 @Composable
-private fun PositionList(lib: Library, nav: Nav, modifier: Modifier = Modifier) {
+private fun PositionList(groups: List<PositionGroup>, nav: Nav, modifier: Modifier = Modifier) {
     Column(modifier.fillMaxWidth(), verticalArrangement = Arrangement.spacedBy(Spacing.s2)) {
-        for (category in PositionCategory.entries) {
-            val inCategory = lib.positions.filter { it.category == category }
-            if (inCategory.isEmpty()) continue
-            GroupTitle(category.label)
-            Columns(inCategory) { position ->
-                val progress = positionProgress(lib, position.id)
+        for (group in groups) {
+            GroupTitle(group.category.label)
+            Columns(group.positions) { position ->
                 Tile(
                     name = position.name,
                     onClick = { nav.open(PositionDetail(position.id)) },
-                    detail = if (progress.total > 0) {
+                    detail = if (position.total > 0) {
                         stringResource(
                             Res.string.learn_positions_techniques_learned,
-                            progress.learned,
-                            progress.total,
+                            position.learned,
+                            position.total,
                         )
                     } else {
                         stringResource(Res.string.learn_no_techniques_from_here)
                     },
                     picture = if (hasPositionArtwork(position.id)) ({ PositionArtwork(position.id) }) else null,
                 ) {
-                    ProgressDot(progressOf(reviewOf(lib, CardKind.Position, position.id)))
+                    ProgressDot(position.progress)
                     Icon(BjjIcons.Chevron, description = null, tint = BjjTheme.palette.muted)
                 }
             }
@@ -213,44 +211,33 @@ private fun PositionList(lib: Library, nav: Nav, modifier: Modifier = Modifier) 
 }
 
 @Composable
-fun PositionDetailRoute(id: String, side: PositionRole?, nav: Nav) {
-    WithSnapshot { snapshot, viewModel ->
-        val position = snapshot.library.positionById[id]
-        if (position == null) {
-            Missing(
-                stringResource(Res.string.learn_position),
-                stringResource(Res.string.common_positions),
-                { nav.selectTab(LearnTab(LearnSection.Positions)) },
-            )
-        } else {
-            PositionDetailScreen(
-                position = position,
-                lib = snapshot.library,
-                videos = linkedVideos(snapshot.videos, ItemKind.Position, id),
-                // A link from the log or Today can open the page on the side the student was stuck on.
-                openOn = side ?: PositionRole.Top,
-                nav = nav,
-                videoActions = viewModel.videoActions(),
-            )
-        }
+fun PositionDetailRoute(key: PositionDetail, nav: Nav) {
+    val viewModel = koinViewModel<PositionDetailViewModel> { parametersOf(key) }
+    val state by viewModel.uiState.collectAsStateWithLifecycle()
+    when (val ready = state) {
+        PositionDetailUiState.Loading -> Loading()
+
+        PositionDetailUiState.Missing -> Missing(
+            stringResource(Res.string.learn_position),
+            stringResource(Res.string.common_positions),
+            { nav.selectTab(LearnTab(LearnSection.Positions)) },
+        )
+
+        is PositionDetailUiState.Ready -> PositionDetailScreen(ready, nav, viewModel.videoActions)
     }
 }
 
 @Composable
 fun PositionDetailScreen(
-    position: Position,
-    lib: Library,
-    videos: List<VideoBookmark>,
-    openOn: PositionRole,
+    state: PositionDetailUiState.Ready,
     nav: Nav,
     videoActions: VideoActions,
     modifier: Modifier = Modifier,
 ) {
-    var side by rememberSaveable { mutableStateOf(openOn) }
-    val incoming = connections(lib, position.id).incoming
-    val concepts = position.conceptIds.mapNotNull { lib.conceptById[it] }
-    val index = lib.positions.indexOfFirst { it.id == position.id }
-    val state = reviewOf(lib, CardKind.Position, position.id)
+    val position = state.position
+    val videos = state.videos
+    val concepts = state.concepts
+    var side by rememberSaveable { mutableStateOf(state.openOn) }
     val openTechnique = { technique: String -> nav.open(TransitionDetail(technique)) }
     Page(modifier, maxWidth = Sizes.readingMax) {
         DetailHeader(
@@ -260,7 +247,7 @@ fun PositionDetailScreen(
             title = position.name,
             eyebrow = {
                 Eyebrow(position.category.label)
-                StatusPill(progressOf(state).label, progressOf(state))
+                StatusPill(state.progress.label, state.progress)
             },
             lead = position.summary,
         )
@@ -272,17 +259,17 @@ fun PositionDetailScreen(
             }, { roleLabel(position.category, it) }, Modifier.fillMaxWidth())
             Section(stringResource(Res.string.learn_position_goals)) { PointList(roleGoals(position, side)) }
             Divider()
-            SideOptions(position, lib, side, nav)
+            SideOptions(state, side, nav)
             if (concepts.isNotEmpty()) {
                 Divider()
                 Section(stringResource(Res.string.learn_position_concepts)) {
                     Wrap { for (concept in concepts) Chip(concept.name, { nav.open(ConceptDetail(concept.id)) }) }
                 }
             }
-            if (incoming.isNotEmpty()) {
+            if (state.waysIn.isNotEmpty()) {
                 Divider()
                 Section(stringResource(Res.string.learn_position_ways_in)) {
-                    TransitionList(incoming, lib.positionById, Direction.In, openTechnique)
+                    TransitionList(state.waysIn, openTechnique)
                 }
             }
             if (position.notes.isNotBlank()) Divider()
@@ -291,46 +278,40 @@ fun PositionDetailScreen(
             LinkedVideos(ItemRef(ItemKind.Position, position.id), videos, videoActions)
         }
         Pager(
-            previous = lib.positions.getOrNull(index - 1)?.let {
-                PagerTarget(it.name) { nav.replace(PositionDetail(it.id)) }
-            },
-            next = lib.positions.getOrNull(index + 1)?.let {
-                PagerTarget(it.name) { nav.replace(PositionDetail(it.id)) }
-            },
+            previous = state.previous?.let { PagerTarget(it.name) { nav.replace(PositionDetail(it.id)) } },
+            next = state.next?.let { PagerTarget(it.name) { nav.replace(PositionDetail(it.id)) } },
         )
     }
 }
 
 /** What one side of a position can do: how much of it is learned, then the techniques open to that side. */
 @Composable
-private fun SideOptions(position: Position, lib: Library, side: PositionRole, nav: Nav, modifier: Modifier = Modifier) {
-    val outgoing = connections(lib, position.id).outgoing
-    val options = positionOptions(lib, position.id)
-    val progress = positionProgress(lib, position.id)
+private fun SideOptions(
+    state: PositionDetailUiState.Ready,
+    side: PositionRole,
+    nav: Nav,
+    modifier: Modifier = Modifier,
+) {
+    val options = state.options[side].orEmpty()
     Column(modifier, verticalArrangement = Arrangement.spacedBy(Spacing.s2)) {
         SectionHead(stringResource(Res.string.learn_position_options)) {
             Button(
                 stringResource(Res.string.learn_add_technique),
-                { nav.open(Editor(ItemKind.Transition, fromPositionId = position.id)) },
+                { nav.open(Editor(ItemKind.Transition, fromPositionId = state.position.id)) },
                 size = ButtonSize.Small,
             )
         }
-        if (progress.total > 0) {
-            val line = stringResource(Res.string.learn_position_learned, progress.learned, progress.total)
+        if (state.total > 0) {
+            val line = stringResource(Res.string.learn_position_learned, state.learned, state.total)
             BjjText(line, style = Type.small, color = BjjTheme.palette.muted)
         }
         when {
-            outgoing.isEmpty() -> BjjText(
+            !state.hasTechniques -> BjjText(
                 stringResource(Res.string.learn_no_techniques_from_here),
                 color = BjjTheme.palette.muted,
             )
 
-            options[side].isNotEmpty() -> TransitionList(
-                options[side],
-                lib.positionById,
-                Direction.Out,
-                { nav.open(TransitionDetail(it)) },
-            )
+            options.isNotEmpty() -> TransitionList(options, { nav.open(TransitionDetail(it)) })
 
             else -> BjjText(
                 stringResource(Res.string.learn_position_side_empty),

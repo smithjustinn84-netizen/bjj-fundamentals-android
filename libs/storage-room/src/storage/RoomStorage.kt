@@ -117,9 +117,15 @@ private fun ReviewLogEntity.entry() = ReviewLogEntry(
     reviewedAt = reviewedAt,
 )
 
-/** Marks a coroutine as running inside [RoomStorage.transaction], so a nested one joins it and reports nothing. */
-private object InTransaction : AbstractCoroutineContextElement(Key) {
-    object Key : CoroutineContext.Key<InTransaction>
+/**
+ * Marks a coroutine as running inside [RoomStorage.transaction], so a nested one joins it and reports nothing,
+ * and notes whether anything was written: a transaction that only read has no change to report.
+ */
+private class InTransaction : AbstractCoroutineContextElement(Key) {
+    @Volatile
+    var wrote = false
+
+    companion object Key : CoroutineContext.Key<InTransaction>
 }
 
 /**
@@ -137,7 +143,8 @@ class RoomStorage internal constructor(private val database: BjjDatabase, privat
 
     /** A write on its own is committed when it returns; inside a transaction the transaction reports for it. */
     private suspend fun committed() {
-        if (currentCoroutineContext()[InTransaction.Key] == null) changed.tryEmit(Unit)
+        val transaction = currentCoroutineContext()[InTransaction]
+        if (transaction == null) changed.tryEmit(Unit) else transaction.wrote = true
     }
 
     private inner class Table<T : HasId>(table: BackupTable, private val serializer: KSerializer<T>) : Repository<T> {
@@ -200,12 +207,13 @@ class RoomStorage internal constructor(private val database: BjjDatabase, privat
     }
 
     override suspend fun <T> transaction(work: suspend () -> T): T {
-        if (currentCoroutineContext()[InTransaction.Key] != null) return work()
+        if (currentCoroutineContext()[InTransaction] != null) return work()
+        val transaction = InTransaction()
         // Every DAO call made inside uses this connection, so they commit or roll back together.
         val result = database.useWriterConnection { connection ->
-            connection.immediateTransaction { withContext(InTransaction) { work() } }
+            connection.immediateTransaction { withContext(transaction) { work() } }
         }
-        changed.tryEmit(Unit)
+        if (transaction.wrote) changed.tryEmit(Unit)
         return result
     }
 
@@ -214,6 +222,7 @@ class RoomStorage internal constructor(private val database: BjjDatabase, privat
         log.clear()
         rows.put(seed.rows)
         log.put(seed.reviewLog)
+        committed()
     }
 
     /** Closes the database. For a test reopening it; the app keeps its storage for as long as it runs. */

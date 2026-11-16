@@ -37,7 +37,7 @@ Imports only point inward: `ui → bindings → storage → core`. **`libs/core`
 | `libs/core-testing` | The storage contract every engine must pass, `testCore()`, entity builders. | Anything core may not contain. |
 | `libs/storage-room` | The implementation of `AppStorage` over Room. The only module that imports `androidx.room`. | App rules, Compose, UI text. |
 | `libs/design` | Theme, tokens, components, icons, drawings. Draws what core calculates. | Storage, ViewModels, navigation, Koin. |
-| `apps/app` | `di/` (the composition root: picks the engine, builds the core), `bindings/` (the shared snapshot screens read), `nav/`, `ui/<screen>/`. | Business rules. The storage engine anywhere but `di/`. |
+| `apps/app` | `di/` (the composition root: picks the engine, builds the core), `bindings/` (the one snapshot every ViewModel reads, and the clock), `nav/`, `ui/<screen>/` (each screen and its ViewModel). | Business rules. The storage engine anywhere but `di/`. |
 | `apps/androidApp` | Manifest, resources, `MainActivity`, the application class. | Code that could live in `app`. |
 
 `tools/check_layers.py` enforces the import rules.
@@ -47,7 +47,7 @@ Where does new code go?
 - A rule or calculation ("when is a card due", "is this link valid") → a pure function in `core`, taking `now` as a parameter, with a test.
 - Anything that reads or writes stored data → a method on a service in `core/services/`, written against `AppStorage`. It gets ids, time and the time zone from `CoreEnv`, never from globals.
 - Something the storage engine itself must do → add it to `AppStorage`, implement it in **every** engine (`MemoryStorage`, the Room engine), and add a case to the storage contract in `core-testing`. Do this rarely: prefer composing existing methods in a service.
-- Anything the user sees or taps → `apps/app/src/ui/`, built from `design` components.
+- Anything the user sees or taps → `apps/app/src/ui/`, built from `design` components. What a screen shows is decided in its ViewModel's `...UiState` function, by calling core; the composable draws that state and decides nothing.
 - Anything only Android can do (a WebView, a file picker, connectivity) → an `expect` composable or an injected interface, with the `actual` in `src@android/` and a stand-in in `src@jvm/` for tests.
 
 ## Hard constraints
@@ -60,11 +60,15 @@ Where does new code go?
 - **No `!!`, no unchecked casts without a comment saying why they are safe, no `@Suppress` without a reason** on the same line. Never weaken `detekt.yml` or `.editorconfig` to make a finding go away.
 - **Never edit a committed Room schema** (`libs/storage-room/schemas/`). A model field is not a schema change: rows are stored whole as JSON documents.
 - **All persistence goes through `AppStorage`** so it is covered by backup. No SharedPreferences, no DataStore, no files.
+- **A storage engine reports a change only when something was written.** The app reads everything again after each change, in a transaction: an engine that reported that read would have it read for ever. The storage contract checks this.
 
 ## Conventions
 
 - An enum is the list of its values; rules about a value are functions beside it (`endsTheRoll(type)`, not `type == Submission`). Every `when` over an enum or sealed type is exhaustive with no `else`, so a new member fails to compile until handled.
-- Each screen is `XRoute` (resolves the ViewModel, collects state) and a stateless `XScreen`. Pages that only show the library share one `AppViewModel` and start with `WithSnapshot`, which hands them the one `Snapshot` every screen reads (`bindings/AppData`); they work out what to show with pure core functions. A page with a form or a session of its own (review, the editor, the log, backup) has its own ViewModel exposing a `StateFlow`. ViewModels hold no rules of their own.
+- Each screen is three things. `XViewModel` exposes one `uiState: StateFlow<XUiState>`, built with `screenState` (`ui/common/ScreenState.kt`) from the one `Snapshot` every screen reads (`bindings/AppData`) by a pure function beside it (`xUiState(snapshot, …)`) that calls core. `XRoute` resolves the ViewModel and collects the state. `XScreen` is stateless and draws it.
+- A composable never takes a `Library` or a `Snapshot` and never calls a core function that does: lookups, counts, what is next and what is missing are worked out for it. It gets plain values and the row models in `ui/common/Models.kt` (`CardLink`, `TechniqueRow`, `Named`, …), and may call core's label and format helpers (`type.label`, `roleLabel`, `formatMatTime`). What is typed or toggled but not yet saved (a form's draft, a search box's text, which side is showing) stays in the composable.
+- A ViewModel holds no rules of its own, and takes only what it uses: `AppData`, the one core service it writes through (`ItemService`, `ReviewService`, …), `Clock` when it needs the time, and its page's `NavKey` when the page is about one thing (`koinViewModel { parametersOf(key) }`). Never `Core` or `CoreEnv`. Register it in `di/AppKoin.kt`; a new key type also goes in the container test's list.
+- A ViewModel tells its screen what happened through its state, never through a callback or a one-off event: the editor's `outcome` and the log's `saved` count are state the route reacts to.
 - A page moves to another through the `Nav` it is handed, never the back stack itself.
 - Every destination is a `@Serializable` `NavKey` in `nav/Routes.kt`, registered in `navConfiguration` and given an `entry<…>` (both in `App.kt`). The bar has five tabs, the same on every window size.
 - No raw `dp`, `sp`, colour or duration in a screen: they come from `design/theme` (`Spacing`, `Radius`, `Sizes`, `TextSizes`, `Motion`, `BjjTheme.palette`).

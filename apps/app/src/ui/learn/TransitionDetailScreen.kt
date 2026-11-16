@@ -1,23 +1,15 @@
 package dev.justinsmith.bjj.ui.learn
 
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.getValue
 import androidx.compose.ui.Modifier
-import dev.justinsmith.bjj.core.CardKind
+import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import dev.justinsmith.bjj.core.ItemKind
-import dev.justinsmith.bjj.core.Library
 import dev.justinsmith.bjj.core.Transition
-import dev.justinsmith.bjj.core.VideoBookmark
-import dev.justinsmith.bjj.core.connections
-import dev.justinsmith.bjj.core.endRole
 import dev.justinsmith.bjj.core.endSideLabel
 import dev.justinsmith.bjj.core.endsTheRoll
-import dev.justinsmith.bjj.core.isOnBlueBeltTest
 import dev.justinsmith.bjj.core.label
-import dev.justinsmith.bjj.core.performerRole
-import dev.justinsmith.bjj.core.reviewOf
 import dev.justinsmith.bjj.core.roleLabel
-import dev.justinsmith.bjj.core.services.linkedVideos
-import dev.justinsmith.bjj.core.techniqueDrill
 import dev.justinsmith.bjj.design.components.BjjText
 import dev.justinsmith.bjj.design.components.Card
 import dev.justinsmith.bjj.design.components.Chip
@@ -54,6 +46,7 @@ import dev.justinsmith.bjj.ui.common.DetailHeader
 import dev.justinsmith.bjj.ui.common.ItemPicture
 import dev.justinsmith.bjj.ui.common.ItemRef
 import dev.justinsmith.bjj.ui.common.LinkedVideos
+import dev.justinsmith.bjj.ui.common.Loading
 import dev.justinsmith.bjj.ui.common.Missing
 import dev.justinsmith.bjj.ui.common.Nav
 import dev.justinsmith.bjj.ui.common.NotesBlock
@@ -63,82 +56,69 @@ import dev.justinsmith.bjj.ui.common.PagerTarget
 import dev.justinsmith.bjj.ui.common.TechniqueLinks
 import dev.justinsmith.bjj.ui.common.TransitionArtwork
 import dev.justinsmith.bjj.ui.common.VideoActions
-import dev.justinsmith.bjj.ui.common.WithSnapshot
 import dev.justinsmith.bjj.ui.common.label
-import dev.justinsmith.bjj.ui.common.progressOf
-import dev.justinsmith.bjj.ui.common.videoActions
 import org.jetbrains.compose.resources.stringResource
+import org.koin.compose.viewmodel.koinViewModel
+import org.koin.core.parameter.parametersOf
 
 @Composable
-fun TransitionDetailRoute(id: String, nav: Nav) {
-    WithSnapshot { snapshot, viewModel ->
-        val transition = snapshot.library.transitionById[id]
-        if (transition == null) {
-            Missing(
-                stringResource(Res.string.learn_technique),
-                stringResource(Res.string.common_positions),
-                { nav.selectTab(LearnTab(LearnSection.Positions)) },
-            )
-        } else {
-            TransitionDetailScreen(
-                transition = transition,
-                lib = snapshot.library,
-                videos = linkedVideos(snapshot.videos, ItemKind.Transition, id),
-                nav = nav,
-                videoActions = viewModel.videoActions(),
-            )
-        }
+fun TransitionDetailRoute(key: TransitionDetail, nav: Nav) {
+    val viewModel = koinViewModel<TransitionDetailViewModel> { parametersOf(key) }
+    val state by viewModel.uiState.collectAsStateWithLifecycle()
+    when (val ready = state) {
+        TransitionDetailUiState.Loading -> Loading()
+
+        TransitionDetailUiState.Missing -> Missing(
+            stringResource(Res.string.learn_technique),
+            stringResource(Res.string.common_positions),
+            { nav.selectTab(LearnTab(LearnSection.Positions)) },
+        )
+
+        is TransitionDetailUiState.Ready -> TransitionDetailScreen(ready, nav, viewModel.videoActions)
     }
 }
 
 @Composable
 fun TransitionDetailScreen(
-    transition: Transition,
-    lib: Library,
-    videos: List<VideoBookmark>,
+    state: TransitionDetailUiState.Ready,
     nav: Nav,
     videoActions: VideoActions,
     modifier: Modifier = Modifier,
 ) {
-    val from = lib.positionById[transition.fromId]
-    // Paging stays among the techniques that start where this one does, the way the position page lists them.
-    val siblings = from?.let { connections(lib, it.id).outgoing }.orEmpty()
-    val index = siblings.indexOfFirst { it.id == transition.id }
-    val state = reviewOf(lib, CardKind.Transition, transition.id)
+    val transition = state.transition
     Page(modifier, maxWidth = Sizes.readingMax) {
         DetailHeader(
-            backLabel = from?.name ?: stringResource(Res.string.common_positions),
+            backLabel = state.from?.name ?: stringResource(Res.string.common_positions),
             onBack = nav.back,
             onEdit = { nav.open(Editor(ItemKind.Transition, transition.id)) },
             title = transition.name,
             eyebrow = {
                 Tag(transition.type.label, BjjTheme.palette.typeColor(transition.type))
-                if (isOnBlueBeltTest(transition)) {
+                if (state.onBlueBeltTest) {
                     Tag(
                         stringResource(Res.string.common_blue_belt_test),
                         BjjTheme.palette.beltBlue,
                         onColor = BjjTheme.palette.onBelt,
                     )
                 }
-                StatusPill(progressOf(state).label, progressOf(state))
+                StatusPill(state.progress.label, state.progress)
             },
-        ) { Ends(transition, lib, nav) }
-        Body(transition, lib, videos, nav, videoActions)
+        ) { Ends(state, nav) }
+        Body(state, nav, videoActions)
         Pager(
-            previous = siblings.getOrNull(index - 1)?.let {
-                PagerTarget(it.name) { nav.replace(TransitionDetail(it.id)) }
-            },
-            next = siblings.getOrNull(index + 1)?.let { PagerTarget(it.name) { nav.replace(TransitionDetail(it.id)) } },
+            previous = state.previous?.let { PagerTarget(it.name) { nav.replace(TransitionDetail(it.id)) } },
+            next = state.next?.let { PagerTarget(it.name) { nav.replace(TransitionDetail(it.id)) } },
         )
     }
 }
 
 /** Where a technique starts and ends, as two chips with an arrow between, then who does it and where they end up. */
 @Composable
-private fun Ends(transition: Transition, lib: Library, nav: Nav) {
-    val from = lib.positionById[transition.fromId]
-    val to = lib.positionById[transition.toId]
-    val endSide = endRole(lib, transition)
+private fun Ends(state: TransitionDetailUiState.Ready, nav: Nav) {
+    val transition = state.transition
+    val from = state.from
+    val to = state.to
+    val endSide = state.endSide
     val muted = BjjTheme.palette.muted
     Wrap {
         if (from != null) Chip(from.name, { nav.open(PositionDetail(from.id)) }) else BjjText("?", color = muted)
@@ -155,7 +135,7 @@ private fun Ends(transition: Transition, lib: Library, nav: Nav) {
         }
     }
     if (from != null) {
-        val who = roleLabel(from.category, performerRole(lib, transition))
+        val who = roleLabel(from.category, state.performer)
         val line = if (to != null && endSide != null) {
             stringResource(Res.string.learn_technique_who_and_end, who, endSideLabel(to.category, endSide))
         } else {
@@ -166,16 +146,12 @@ private fun Ends(transition: Transition, lib: Library, nav: Nav) {
 }
 
 @Composable
-private fun Body(
-    transition: Transition,
-    lib: Library,
-    videos: List<VideoBookmark>,
-    nav: Nav,
-    videoActions: VideoActions,
-) {
-    val drill = techniqueDrill(transition)
+private fun Body(state: TransitionDetailUiState.Ready, nav: Nav, videoActions: VideoActions) {
+    val transition = state.transition
+    val videos = state.videos
+    val drill = state.drill
     Card {
-        ItemPicture(videos) { TransitionArtwork(transition, lib.positionById) }
+        ItemPicture(videos) { state.picture?.let { TransitionArtwork(it) } }
         Section(stringResource(Res.string.learn_technique_steps)) { PointList(transition.steps, numbered = true) }
         if (transition.commonMistakes.isNotEmpty()) {
             Divider()
@@ -188,7 +164,7 @@ private fun Body(
         if (endsTheRoll(transition.type)) {
             SoftBlock(stringResource(Res.string.learn_technique_submission_care))
         }
-        TechniqueLinks(lib, transition.id, { nav.open(TransitionDetail(it)) })
+        TechniqueLinks(state.links, { nav.open(TransitionDetail(it)) })
         if (transition.notes.isNotBlank()) Divider()
         NotesBlock(transition.notes)
         Divider()

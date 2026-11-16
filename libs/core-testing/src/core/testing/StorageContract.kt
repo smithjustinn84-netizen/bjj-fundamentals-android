@@ -15,6 +15,7 @@ import kotlinx.coroutines.test.runTest
 import kotlin.test.Test
 import kotlin.test.assertEquals
 import kotlin.test.assertFailsWith
+import kotlin.test.assertFalse
 import kotlin.test.assertNotNull
 import kotlin.test.assertNull
 import kotlin.test.assertTrue
@@ -180,6 +181,17 @@ abstract class StorageContract {
                 storage.reviewLog.add(logEntry(1))
             }
         }
+    }
+
+    @Test
+    fun `a transaction that only reads reports no change`() = storageTest { storage ->
+        // Whoever reads again after each change reads in a transaction: reporting that one would never end.
+        val reported = async(start = CoroutineStart.UNDISPATCHED) { storage.changes.first() }
+        assertEquals(2, storage.transaction { storage.concepts.count() })
+        testScheduler.runCurrent()
+        assertFalse(reported.isCompleted)
+        storage.transaction { storage.transaction { storage.concepts.put(concept(id = "c6")) } }
+        reported.await()
     }
 
     @Test

@@ -4,16 +4,10 @@ import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.getValue
 import androidx.compose.ui.Modifier
+import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import dev.justinsmith.bjj.core.Deck
-import dev.justinsmith.bjj.core.FOUNDATION_LESSONS
-import dev.justinsmith.bjj.core.Lesson
-import dev.justinsmith.bjj.core.Library
-import dev.justinsmith.bjj.core.cardName
-import dev.justinsmith.bjj.core.currentLesson
-import dev.justinsmith.bjj.core.lessonCards
-import dev.justinsmith.bjj.core.lessonProgress
-import dev.justinsmith.bjj.core.reviewOf
 import dev.justinsmith.bjj.design.components.BjjText
 import dev.justinsmith.bjj.design.components.Button
 import dev.justinsmith.bjj.design.components.ButtonKind
@@ -42,51 +36,48 @@ import dev.justinsmith.bjj.resources.learn_lesson_study
 import dev.justinsmith.bjj.resources.learn_lessons_about
 import dev.justinsmith.bjj.ui.common.Columns
 import dev.justinsmith.bjj.ui.common.LearnSwitch
+import dev.justinsmith.bjj.ui.common.Loading
 import dev.justinsmith.bjj.ui.common.Nav
 import dev.justinsmith.bjj.ui.common.Page
 import dev.justinsmith.bjj.ui.common.PageHead
 import dev.justinsmith.bjj.ui.common.ProgressLegend
-import dev.justinsmith.bjj.ui.common.WithSnapshot
-import dev.justinsmith.bjj.ui.common.progressOf
 import org.jetbrains.compose.resources.pluralStringResource
 import org.jetbrains.compose.resources.stringResource
+import org.koin.compose.viewmodel.koinViewModel
 
 @Composable
 fun LessonsRoute(nav: Nav) {
-    WithSnapshot { snapshot, _ -> LessonsScreen(snapshot.library, nav) }
-}
-
-@Composable
-fun LessonsScreen(lib: Library, nav: Nav, modifier: Modifier = Modifier) {
-    val current = currentLesson(lib)
-    Page(modifier) {
-        LearnSwitch(LearnSection.Lessons, { nav.selectTab(LearnTab(it)) })
-        PageHead(
-            stringResource(Res.string.common_lessons),
-            about = stringResource(Res.string.learn_lessons_about, FOUNDATION_LESSONS.size),
-        )
-        ProgressLegend()
-        Columns(FOUNDATION_LESSONS.withIndex().toList(), spacing = Spacing.s4) { (index, lesson) ->
-            LessonCard(lib, lesson, number = index + 1, current = lesson == current, nav = nav)
-        }
+    val viewModel = koinViewModel<LessonsViewModel>()
+    val state by viewModel.uiState.collectAsStateWithLifecycle()
+    when (val ready = state) {
+        LessonsUiState.Loading -> Loading()
+        is LessonsUiState.Ready -> LessonsScreen(ready, nav)
     }
 }
 
 @Composable
-private fun LessonCard(
-    lib: Library,
-    lesson: Lesson,
-    number: Int,
-    current: Boolean,
-    nav: Nav,
-    modifier: Modifier = Modifier,
-) {
-    val cards = lessonCards(lib, lesson)
-    val progress = lessonProgress(lib, lesson)
+fun LessonsScreen(state: LessonsUiState.Ready, nav: Nav, modifier: Modifier = Modifier) {
+    Page(modifier) {
+        LearnSwitch(LearnSection.Lessons, { nav.selectTab(LearnTab(it)) })
+        PageHead(
+            stringResource(Res.string.common_lessons),
+            about = stringResource(Res.string.learn_lessons_about, state.lessons.size),
+        )
+        ProgressLegend()
+        Columns(state.lessons, spacing = Spacing.s4) { LessonCard(it, nav) }
+    }
+}
+
+@Composable
+private fun LessonCard(card: LessonCardUi, nav: Nav, modifier: Modifier = Modifier) {
+    val lesson = card.lesson
+    val cards = card.cards
+    val progress = card.progress
+    val current = card.current
     val heading = if (current) Res.string.learn_lesson_number_current else Res.string.learn_lesson_number
     Card(modifier) {
         Column(verticalArrangement = Arrangement.spacedBy(Spacing.s1)) {
-            Eyebrow(stringResource(heading, number))
+            Eyebrow(stringResource(heading, card.number))
             BjjText(lesson.title, style = Type.h2)
             BjjText(lesson.summary, color = BjjTheme.palette.muted)
         }
@@ -106,10 +97,8 @@ private fun LessonCard(
                 ProgressBar(progress.learned.toFloat() / progress.total)
             }
             Wrap {
-                for (card in cards) {
-                    Chip(cardName(lib, card).orEmpty(), { nav.open(studyItemKey(card)) }) {
-                        ProgressDot(progressOf(reviewOf(lib, card.kind, card.id)))
-                    }
+                for (link in cards) {
+                    Chip(link.name, { nav.open(studyItemKey(link.item)) }) { ProgressDot(link.progress) }
                 }
             }
             SoftBlock(stringResource(Res.string.learn_lesson_practice, lesson.practice))

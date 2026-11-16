@@ -6,8 +6,10 @@ import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.rememberUpdatedState
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
@@ -16,16 +18,8 @@ import androidx.compose.ui.semantics.liveRegion
 import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.text.input.ImeAction
 import dev.justinsmith.bjj.core.ItemKind
-import dev.justinsmith.bjj.core.Library
-import dev.justinsmith.bjj.core.Position
-import dev.justinsmith.bjj.core.SEARCH_RESULT_LIMIT
-import dev.justinsmith.bjj.core.Transition
-import dev.justinsmith.bjj.core.endRole
 import dev.justinsmith.bjj.core.endSideLabel
-import dev.justinsmith.bjj.core.endsTheRoll
 import dev.justinsmith.bjj.core.label
-import dev.justinsmith.bjj.core.searchLibrary
-import dev.justinsmith.bjj.core.techniqueLinks
 import dev.justinsmith.bjj.design.components.BjjText
 import dev.justinsmith.bjj.design.components.Button
 import dev.justinsmith.bjj.design.components.ButtonKind
@@ -79,16 +73,29 @@ fun LearnSwitch(section: LearnSection, onSelect: (LearnSection) -> Unit, modifie
     Segmented(LearnSection.entries, section, onSelect, { stringResource(it.label) }, modifier.fillMaxWidth())
 }
 
-/** One box that finds any concept, position or technique by its name or its text. */
+/**
+ * One box that finds any concept, position or technique by its name or its text. What is typed stays here and
+ * is sent to [onSearch] as it changes; [search] is what the screen's ViewModel found for it.
+ */
 @Composable
-fun LibrarySearch(lib: Library, onOpen: (ItemKind, String) -> Unit, modifier: Modifier = Modifier) {
+fun LibrarySearch(
+    search: SearchUi,
+    onSearch: (String) -> Unit,
+    onOpen: (ItemKind, String) -> Unit,
+    modifier: Modifier = Modifier,
+) {
     var query by rememberSaveable { mutableStateOf("") }
-    val hits = searchLibrary(lib, query, SEARCH_RESULT_LIMIT)
-    val searching = query.isNotBlank()
+    // What was typed comes back with the page after the app was put away; the results have to be asked for again.
+    val currentOnSearch by rememberUpdatedState(onSearch)
+    LaunchedEffect(Unit) { if (query != search.query) currentOnSearch(query) }
+    val hits = search.hits
     Column(modifier.fillMaxWidth(), verticalArrangement = Arrangement.spacedBy(Spacing.s3)) {
         TextInput(
             value = query,
-            onValueChange = { query = it },
+            onValueChange = {
+                query = it
+                onSearch(it)
+            },
             label = stringResource(Res.string.learn_search_label),
             modifier = Modifier.woodblock(
                 fill = BjjTheme.palette.surface,
@@ -99,10 +106,10 @@ fun LibrarySearch(lib: Library, onOpen: (ItemKind, String) -> Unit, modifier: Mo
             imeAction = ImeAction.Search,
             onSurface = true,
         )
-        if (searching && hits.isEmpty()) {
+        if (search.query.isNotBlank() && hits.isEmpty()) {
             // Said aloud as it changes, so a screen reader hears that nothing matched.
             BjjText(
-                stringResource(Res.string.learn_search_no_match, query.trim()),
+                stringResource(Res.string.learn_search_no_match, search.query.trim()),
                 Modifier.semantics { liveRegion = LiveRegionMode.Polite },
                 color = BjjTheme.palette.muted,
             )
@@ -151,44 +158,31 @@ fun StarterOffer(
     }
 }
 
-/** Which end of a technique a row names: where it leads, or where it comes from. */
-enum class Direction { Out, In }
-
+/** The other end of a technique, in words. */
 @Composable
-private fun otherEnd(technique: Transition, positionById: Map<String, Position>, direction: Direction): String {
-    if (direction == Direction.In) {
-        val from = positionById[technique.fromId] ?: return ""
-        return stringResource(Res.string.learn_from_position, from.name)
-    }
-    if (endsTheRoll(technique.type)) return stringResource(Res.string.learn_leads_to_tap)
-    val to = positionById[technique.toId] ?: return ""
-    val side = endRole(positionById, technique)
-    return if (side != null) {
-        stringResource(Res.string.learn_leads_to_side, to.name, endSideLabel(to.category, side))
+private fun OtherEnd.text(): String = when (this) {
+    OtherEnd.Unknown -> ""
+
+    is OtherEnd.From -> stringResource(Res.string.learn_from_position, position)
+
+    OtherEnd.Tap -> stringResource(Res.string.learn_leads_to_tap)
+
+    is OtherEnd.To -> if (side != null) {
+        stringResource(Res.string.learn_leads_to_side, position, endSideLabel(category, side))
     } else {
-        stringResource(Res.string.learn_leads_to, to.name)
+        stringResource(Res.string.learn_leads_to, position)
     }
 }
 
 /** Techniques as a list of links, each with its type and other end. */
 @Composable
-fun TransitionList(
-    transitions: List<Transition>,
-    positionById: Map<String, Position>,
-    direction: Direction,
-    onOpen: (String) -> Unit,
-    modifier: Modifier = Modifier,
-) {
+fun TransitionList(rows: List<TechniqueRow>, onOpen: (String) -> Unit, modifier: Modifier = Modifier) {
     Column(modifier.fillMaxWidth()) {
-        transitions.forEachIndexed { index, technique ->
+        rows.forEachIndexed { index, technique ->
             if (index > 0) Divider()
             RowLink(technique.name, { onOpen(technique.id) }, BjjIcons.Chevron) {
                 Tag(technique.type.label, BjjTheme.palette.typeColor(technique.type))
-                BjjText(
-                    otherEnd(technique, positionById, direction),
-                    style = Type.small,
-                    color = BjjTheme.palette.muted,
-                )
+                BjjText(technique.otherEnd.text(), style = Type.small, color = BjjTheme.palette.muted)
             }
         }
     }
@@ -199,29 +193,24 @@ fun TransitionList(
  * defends. Draws nothing for a technique with no links, which is every technique the user added.
  */
 @Composable
-fun TechniqueLinks(lib: Library, id: String, onOpen: (String) -> Unit, modifier: Modifier = Modifier) {
-    val links = techniqueLinks(lib, id)
+fun TechniqueLinks(links: TechniqueLinksUi, onOpen: (String) -> Unit, modifier: Modifier = Modifier) {
     if (links.isEmpty) return
     Column(modifier.fillMaxWidth(), verticalArrangement = Arrangement.spacedBy(Spacing.s4)) {
         if (links.followUps.isNotEmpty()) {
             Section(stringResource(Res.string.learn_links_follow_ups)) {
                 links.followUps.forEachIndexed { index, followUp ->
                     if (index > 0) Divider()
-                    RowLink(followUp.technique.name, { onOpen(followUp.technique.id) }, BjjIcons.Chevron) {
+                    RowLink(followUp.name, { onOpen(followUp.id) }, BjjIcons.Chevron) {
                         BjjText(followUp.whenText, style = Type.small, color = BjjTheme.palette.muted)
                     }
                 }
             }
         }
         if (links.defences.isNotEmpty()) {
-            Section(stringResource(Res.string.learn_links_defences)) {
-                TransitionList(links.defences, lib.positionById, Direction.In, onOpen)
-            }
+            Section(stringResource(Res.string.learn_links_defences)) { TransitionList(links.defences, onOpen) }
         }
         if (links.answers.isNotEmpty()) {
-            Section(stringResource(Res.string.learn_links_answers)) {
-                TransitionList(links.answers, lib.positionById, Direction.In, onOpen)
-            }
+            Section(stringResource(Res.string.learn_links_answers)) { TransitionList(links.answers, onOpen) }
         }
     }
 }

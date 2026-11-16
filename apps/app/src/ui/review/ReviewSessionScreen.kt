@@ -52,16 +52,7 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import dev.justinsmith.bjj.core.Grade
-import dev.justinsmith.bjj.core.Library
-import dev.justinsmith.bjj.core.ReviewState
-import dev.justinsmith.bjj.core.StudyItem
-import dev.justinsmith.bjj.core.cardName
-import dev.justinsmith.bjj.core.describeInterval
 import dev.justinsmith.bjj.core.label
-import dev.justinsmith.bjj.core.newReviewState
-import dev.justinsmith.bjj.core.reviewOf
-import dev.justinsmith.bjj.core.services.Snapshot
-import dev.justinsmith.bjj.core.services.studyStats
 import dev.justinsmith.bjj.design.components.BjjText
 import dev.justinsmith.bjj.design.components.Button
 import dev.justinsmith.bjj.design.components.ButtonKind
@@ -111,69 +102,45 @@ import dev.justinsmith.bjj.resources.review_show_answer
 import dev.justinsmith.bjj.ui.common.Loading
 import dev.justinsmith.bjj.ui.common.Nav
 import dev.justinsmith.bjj.ui.common.Page
-import dev.justinsmith.bjj.ui.common.WithSnapshot
 import org.jetbrains.compose.resources.pluralStringResource
 import org.jetbrains.compose.resources.stringResource
 import org.koin.compose.viewmodel.koinViewModel
+import org.koin.core.parameter.parametersOf
 
 @Composable
 fun ReviewSessionRoute(key: ReviewSession, nav: Nav) {
-    val session = koinViewModel<ReviewSessionViewModel>()
-    val state by session.state.collectAsStateWithLifecycle()
-    WithSnapshot { snapshot, app ->
-        val lib = snapshot.library
-        val queueNow = { queueFor(snapshot, deckOf(key.deck), key.lessonId, key.newCards, app.now()).queue }
-        LaunchedEffect(Unit) { session.startIfIdle(queueNow()) }
-        val current = state.current
-        // If the current card's item was deleted mid-session, drop it.
-        val gone = current != null && cardName(lib, current) == null
-        LaunchedEffect(current, gone) { if (current != null && gone) session.drop(current) }
-        when {
-            state.finished -> SessionComplete(
-                doneCount = state.doneCount,
-                tally = state.tally,
-                streakDays = studyStats(snapshot, app.now(), app.zone).streakDays,
-                moreWaiting = queueNow().size,
-                onAgain = { session.restart(queueNow()) },
-                onDone = { nav.selectTab(TodayTab) },
-                onPositions = { nav.selectTab(LearnTab(LearnSection.Positions)) },
-            )
+    val viewModel = koinViewModel<ReviewSessionViewModel> { parametersOf(key) }
+    val state by viewModel.uiState.collectAsStateWithLifecycle()
+    when (val session = state) {
+        SessionUiState.Loading -> Loading()
 
-            current == null || gone -> Loading()
+        is SessionUiState.Complete -> SessionComplete(
+            state = session,
+            onAgain = viewModel::restart,
+            onDone = { nav.selectTab(TodayTab) },
+            onPositions = { nav.selectTab(LearnTab(LearnSection.Positions)) },
+        )
 
-            else -> {
-                val now = app.now()
-                ActiveSession(
-                    state = state,
-                    current = current,
-                    snapshot = snapshot,
-                    card = reviewOf(lib, current.kind, current.id) ?: newReviewState(current.kind, current.id, now),
-                    now = now,
-                    onEnd = nav.back,
-                    onReveal = session::reveal,
-                    onGrade = session::grade,
-                    onOpen = { nav.open(it) },
-                )
-            }
-        }
+        is SessionUiState.Active -> ActiveSession(
+            state = session,
+            onEnd = nav.back,
+            onReveal = viewModel::reveal,
+            onGrade = viewModel::grade,
+            onOpen = { nav.open(it) },
+        )
     }
 }
 
 @Composable
 private fun ActiveSession(
-    state: SessionUiState,
-    current: StudyItem,
-    snapshot: Snapshot,
-    card: ReviewState,
-    now: Long,
+    state: SessionUiState.Active,
     onEnd: () -> Unit,
     onReveal: () -> Unit,
     onGrade: (Grade) -> Unit,
     onOpen: (androidx.navigation3.runtime.NavKey) -> Unit,
     modifier: Modifier = Modifier,
 ) {
-    val lib = snapshot.library
-    val total = state.doneCount + state.queue.orEmpty().size
+    val total = state.total
     val p = BjjTheme.palette
     Column(modifier.fillMaxSize(), horizontalAlignment = Alignment.CenterHorizontally) {
         Row(
@@ -208,7 +175,9 @@ private fun ActiveSession(
             val still = reducedMotion()
             // Keyed per card and per answer given, so each new card (or a repeated one) slides in afresh.
             AnimatedContent(
-                targetState = current to state.doneCount,
+                targetState = state.card to state.doneCount,
+                // The card and the answer count, not the card's content: a bookmark added mid-session is no new card.
+                contentKey = { (card, done) -> card.item to done },
                 transitionSpec = {
                     if (still) {
                         EnterTransition.None togetherWith ExitTransition.None
@@ -221,27 +190,25 @@ private fun ActiveSession(
                             (slideOutHorizontally(tween(Motion.BASE)) { -it / LEAVE_TO } + fadeOut(tween(Motion.BASE)))
                     }
                 },
-            ) { (item, _) ->
+            ) { (card, _) ->
                 // The side showing is read live, so revealing the answer turns this card over, not a new one in.
-                FlashCard(item, revealed = state.revealed && item == current, lib, snapshot, onOpen, still)
+                FlashCard(card, revealed = state.revealed && card.item == state.card.item, onOpen, still)
             }
         }
         // Pinned to the bottom of the screen, under the thumb, however long the card is.
-        Dock(state, card, now, onReveal, onGrade)
+        Dock(state, onReveal, onGrade)
     }
 }
 
 @Composable
 private fun FlashCard(
-    item: StudyItem,
+    card: CardFace,
     revealed: Boolean,
-    lib: Library,
-    snapshot: Snapshot,
     onOpen: (androidx.navigation3.runtime.NavKey) -> Unit,
     still: Boolean,
     modifier: Modifier = Modifier,
 ) {
-    val prompt = cardPrompt(item, lib) ?: return
+    val prompt = cardPrompt(card)
     // Turning to the answer, the card swings in from edge-on, as if flipped over.
     val turn = remember { Animatable(0f) }
     LaunchedEffect(revealed) {
@@ -267,18 +234,16 @@ private fun FlashCard(
         )
         if (revealed) {
             CardAnswer(
-                item,
-                lib,
-                snapshot.videos,
+                card,
                 { onOpen(TransitionDetail(it)) },
                 Modifier.semantics {
                     liveRegion =
                         LiveRegionMode.Polite
                 },
             )
-            LinkButton(stringResource(Res.string.review_open_full_page), { onOpen(studyItemKey(item)) })
+            LinkButton(stringResource(Res.string.review_open_full_page), { onOpen(studyItemKey(card.item)) })
         } else {
-            CardCue(item, lib)
+            CardCue(card)
         }
     }
 }
@@ -294,7 +259,7 @@ private const val ENTER_FROM = 4
 private const val LEAVE_TO = 3
 
 @Composable
-private fun Dock(state: SessionUiState, card: ReviewState, now: Long, onReveal: () -> Unit, onGrade: (Grade) -> Unit) {
+private fun Dock(state: SessionUiState.Active, onReveal: () -> Unit, onGrade: (Grade) -> Unit) {
     val p = BjjTheme.palette
     Column(Modifier.fillMaxWidth().background(p.surface), horizontalAlignment = Alignment.CenterHorizontally) {
         Box(Modifier.fillMaxWidth().height(Sizes.line).background(p.outline))
@@ -310,7 +275,7 @@ private fun Dock(state: SessionUiState, card: ReviewState, now: Long, onReveal: 
                 BjjText(stringResource(Res.string.review_how_well), style = Type.small, color = p.muted)
                 Row(horizontalArrangement = Arrangement.spacedBy(Spacing.s2)) {
                     for (grade in Grade.entries) {
-                        GradeButton(grade, describeInterval(card, grade, now), !state.saving, {
+                        GradeButton(grade, state.intervals[grade].orEmpty(), !state.saving, {
                             onGrade(grade)
                         }, Modifier.weight(1f))
                     }
@@ -385,16 +350,15 @@ private fun GradeBreakdown(tally: Map<Grade, Int>, modifier: Modifier = Modifier
 
 @Composable
 private fun SessionComplete(
-    doneCount: Int,
-    tally: Map<Grade, Int>,
-    streakDays: Int,
-    /** How many cards another round with the same deck and setting would hold. */
-    moreWaiting: Int,
+    state: SessionUiState.Complete,
     onAgain: () -> Unit,
     onDone: () -> Unit,
     onPositions: () -> Unit,
     modifier: Modifier = Modifier,
 ) {
+    val doneCount = state.doneCount
+    val streakDays = state.streakDays
+    val moreWaiting = state.moreWaiting
     val p = BjjTheme.palette
     Page(modifier, maxWidth = Sizes.readingMax) {
         Card {
@@ -411,7 +375,7 @@ private fun SessionComplete(
             PageTitle(stringResource(Res.string.review_complete_title))
             val reviewed = pluralStringResource(Res.plurals.review_complete_reviewed, doneCount, doneCount)
             BjjText(reviewed, style = Type.lead)
-            GradeBreakdown(tally)
+            GradeBreakdown(state.tally)
             if (streakDays > 0) {
                 Row(
                     horizontalArrangement = Arrangement.spacedBy(Spacing.s1),

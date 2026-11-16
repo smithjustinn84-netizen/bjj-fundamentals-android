@@ -11,11 +11,9 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import dev.justinsmith.bjj.core.DEFAULT_POSITION_CATEGORY
 import dev.justinsmith.bjj.core.DEFAULT_TRANSITION_TYPE
-import dev.justinsmith.bjj.core.Library
 import dev.justinsmith.bjj.core.Position
 import dev.justinsmith.bjj.core.PositionCategory
 import dev.justinsmith.bjj.core.PositionRole
-import dev.justinsmith.bjj.core.Transition
 import dev.justinsmith.bjj.core.TransitionType
 import dev.justinsmith.bjj.core.defaultEndRole
 import dev.justinsmith.bjj.core.defaultRole
@@ -24,7 +22,6 @@ import dev.justinsmith.bjj.core.endSideLabel
 import dev.justinsmith.bjj.core.endsTheRoll
 import dev.justinsmith.bjj.core.isOnBlueBeltTest
 import dev.justinsmith.bjj.core.label
-import dev.justinsmith.bjj.core.performerRole
 import dev.justinsmith.bjj.core.roleLabel
 import dev.justinsmith.bjj.core.services.ConceptInput
 import dev.justinsmith.bjj.core.services.PositionInput
@@ -70,14 +67,18 @@ private const val STEP_LINES = 6
 private const val MISTAKE_LINES = 3
 
 @Composable
-fun ConceptForm(context: FormContext, modifier: Modifier = Modifier) {
-    val lib = context.library
-    val stored = remember { context.itemId?.let { lib.conceptById[it] } }
+fun ConceptForm(
+    fields: EditorFields.ConceptFields,
+    context: FormContext,
+    onSave: (ConceptInput) -> Unit,
+    modifier: Modifier = Modifier,
+) {
+    val stored = remember { fields.stored }
     var name by remember { mutableStateOf(stored?.name.orEmpty()) }
     var summary by remember { mutableStateOf(stored?.summary.orEmpty()) }
     var keyPoints by remember { mutableStateOf(fromLines(stored?.keyPoints.orEmpty())) }
     var drill by remember { mutableStateOf(stored?.drill.orEmpty()) }
-    val startOrder = remember { stored?.order ?: nextOrder(lib.concepts.map { it.order }) }
+    val startOrder = remember { stored?.order ?: fields.nextOrder }
     var order by remember { mutableStateOf(startOrder.toString()) }
     var notes by remember { mutableStateOf(stored?.notes.orEmpty()) }
     FormShell(
@@ -92,7 +93,7 @@ fun ConceptForm(context: FormContext, modifier: Modifier = Modifier) {
                 order = order.trim().toIntOrNull() ?: startOrder,
                 notes = notes.trim(),
             )
-            context.viewModel.saveConcept(context.itemId, input, context.onSaved)
+            onSave(input)
         },
         modifier = modifier,
     ) {
@@ -112,16 +113,20 @@ fun ConceptForm(context: FormContext, modifier: Modifier = Modifier) {
 }
 
 @Composable
-fun PositionForm(context: FormContext, modifier: Modifier = Modifier) {
-    val lib = context.library
-    val stored = remember { context.itemId?.let { lib.positionById[it] } }
+fun PositionForm(
+    fields: EditorFields.PositionFields,
+    context: FormContext,
+    onSave: (PositionInput) -> Unit,
+    modifier: Modifier = Modifier,
+) {
+    val stored = remember { fields.stored }
     var name by remember { mutableStateOf(stored?.name.orEmpty()) }
     var summary by remember { mutableStateOf(stored?.summary.orEmpty()) }
     var category by remember { mutableStateOf(stored?.category ?: DEFAULT_POSITION_CATEGORY) }
     var topGoals by remember { mutableStateOf(fromLines(stored?.topGoals.orEmpty())) }
     var bottomGoals by remember { mutableStateOf(fromLines(stored?.bottomGoals.orEmpty())) }
     var conceptIds by remember { mutableStateOf(stored?.conceptIds.orEmpty()) }
-    val startOrder = remember { stored?.order ?: nextOrder(lib.positions.map { it.order }) }
+    val startOrder = remember { stored?.order ?: fields.nextOrder }
     var order by remember { mutableStateOf(startOrder.toString()) }
     var notes by remember { mutableStateOf(stored?.notes.orEmpty()) }
     FormShell(
@@ -138,7 +143,7 @@ fun PositionForm(context: FormContext, modifier: Modifier = Modifier) {
                 order = order.trim().toIntOrNull() ?: startOrder,
                 notes = notes.trim(),
             )
-            context.viewModel.savePosition(context.itemId, input, context.onSaved)
+            onSave(input)
         },
         modifier = modifier,
     ) {
@@ -165,10 +170,10 @@ fun PositionForm(context: FormContext, modifier: Modifier = Modifier) {
             hint = stringResource(Res.string.editor_one_per_line),
             lines = GOAL_LINES,
         )
-        if (lib.concepts.isNotEmpty()) {
+        if (fields.concepts.isNotEmpty()) {
             Column(Modifier.fillMaxWidth()) {
                 BjjText(stringResource(Res.string.editor_position_concepts), style = Type.label)
-                for (concept in lib.concepts) {
+                for (concept in fields.concepts) {
                     CheckRow(
                         concept.name,
                         checked = concept.id in conceptIds,
@@ -194,16 +199,17 @@ private fun SideField(
 }
 
 /** A technique's working copy: what the form shows and changes until it is saved. */
-private class TransitionDraft(lib: Library, stored: Transition?, fromPositionId: String?) {
+private class TransitionDraft(fields: EditorFields.TechniqueFields) {
+    private val stored = fields.stored
     var name by mutableStateOf(stored?.name.orEmpty())
     var type by mutableStateOf(stored?.type ?: DEFAULT_TRANSITION_TYPE)
-    var fromId by mutableStateOf(stored?.fromId ?: fromPositionId?.takeIf { it in lib.positionById }.orEmpty())
+    var fromId by mutableStateOf(stored?.fromId ?: fields.startFromId)
     var toId by mutableStateOf(stored?.toId.orEmpty())
 
     // A stored side that is just the usual one for the technique's type starts as null, so it keeps following the
     // type if that is changed. Only a side that differs was a deliberate pick, and that one stays put.
-    var pickedRole by mutableStateOf(stored?.let { pickedRole(lib, it) })
-    var pickedEnd by mutableStateOf(stored?.let { pickedEnd(lib, it) })
+    var pickedRole by mutableStateOf(fields.pickedRole)
+    var pickedEnd by mutableStateOf(fields.pickedEnd)
     var steps by mutableStateOf(fromLines(stored?.steps.orEmpty()))
     var mistakes by mutableStateOf(fromLines(stored?.commonMistakes.orEmpty()))
     var drill by mutableStateOf(stored?.let(::techniqueDrill).orEmpty())
@@ -226,26 +232,24 @@ private class TransitionDraft(lib: Library, stored: Transition?, fromPositionId:
     )
 }
 
-private fun pickedRole(lib: Library, stored: Transition): PositionRole? =
-    performerRole(lib, stored).takeIf { it != defaultRole(stored.type, lib.positionById[stored.fromId]?.category) }
-
-private fun pickedEnd(lib: Library, stored: Transition): PositionRole? =
-    endRole(lib, stored).takeIf { it != defaultEndRole(stored.type, performerRole(lib, stored)) }
-
 @Composable
-fun TransitionForm(context: FormContext, modifier: Modifier = Modifier) {
-    val lib = context.library
-    val draft =
-        remember { TransitionDraft(lib, context.itemId?.let { lib.transitionById[it] }, context.fromPositionId) }
-    val from: Position? = lib.positionById[draft.fromId]
-    val to: Position? = lib.positionById[draft.toId]
+fun TransitionForm(
+    fields: EditorFields.TechniqueFields,
+    context: FormContext,
+    onSave: (TransitionInput) -> Unit,
+    modifier: Modifier = Modifier,
+) {
+    val draft = remember { TransitionDraft(fields) }
+    val positions = fields.positions
+    val from: Position? = positions.firstOrNull { it.id == draft.fromId }
+    val to: Position? = positions.firstOrNull { it.id == draft.toId }
     val ends = endsTheRoll(draft.type)
     val role = draft.pickedRole ?: defaultRole(draft.type, from?.category)
     val endSide = draft.pickedEnd ?: defaultEndRole(draft.type, role)
     FormShell(
         context,
         canSave = draft.name.isNotBlank() && from != null && (ends || to != null),
-        onSave = { context.viewModel.saveTransition(context.itemId, draft.input(role, endSide), context.onSaved) },
+        onSave = { onSave(draft.input(role, endSide)) },
         modifier = modifier,
     ) {
         NameField(draft.name, { draft.name = it })
@@ -260,7 +264,7 @@ fun TransitionForm(context: FormContext, modifier: Modifier = Modifier) {
             val choose = stringResource(Res.string.editor_technique_choose)
             ChoiceField(
                 stringResource(Res.string.editor_technique_from),
-                lib.positions,
+                positions,
                 from,
                 { it.name },
                 { draft.fromId = it.id },
@@ -269,7 +273,7 @@ fun TransitionForm(context: FormContext, modifier: Modifier = Modifier) {
             if (!ends) {
                 ChoiceField(
                     stringResource(Res.string.editor_technique_to),
-                    lib.positions,
+                    positions,
                     to,
                     { it.name },
                     { draft.toId = it.id },

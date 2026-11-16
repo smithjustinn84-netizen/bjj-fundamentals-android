@@ -8,21 +8,10 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableIntStateOf
-import androidx.compose.runtime.mutableStateOf
-import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
-import dev.justinsmith.bjj.core.DEFAULT_NEW_CARDS
+import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import dev.justinsmith.bjj.core.Deck
-import dev.justinsmith.bjj.core.FOUNDATION_LESSONS
-import dev.justinsmith.bjj.core.RECENT_CLASS_COUNT
-import dev.justinsmith.bjj.core.StudyQueue
-import dev.justinsmith.bjj.core.buildLessonQueue
-import dev.justinsmith.bjj.core.buildQueue
-import dev.justinsmith.bjj.core.findLesson
-import dev.justinsmith.bjj.core.services.Snapshot
-import dev.justinsmith.bjj.core.studyFirst
 import dev.justinsmith.bjj.design.components.BjjText
 import dev.justinsmith.bjj.design.components.Button
 import dev.justinsmith.bjj.design.components.ButtonKind
@@ -38,6 +27,7 @@ import dev.justinsmith.bjj.design.theme.Sizes
 import dev.justinsmith.bjj.design.theme.Spacing
 import dev.justinsmith.bjj.design.theme.Type
 import dev.justinsmith.bjj.nav.ReviewSession
+import dev.justinsmith.bjj.nav.ReviewTab
 import dev.justinsmith.bjj.resources.Res
 import dev.justinsmith.bjj.resources.common_blue_belt_test
 import dev.justinsmith.bjj.resources.common_concepts
@@ -60,12 +50,14 @@ import dev.justinsmith.bjj.resources.review_start_session
 import dev.justinsmith.bjj.resources.review_title
 import dev.justinsmith.bjj.resources.review_what_to_study
 import dev.justinsmith.bjj.ui.common.EmptyState
+import dev.justinsmith.bjj.ui.common.Loading
 import dev.justinsmith.bjj.ui.common.Nav
 import dev.justinsmith.bjj.ui.common.Page
-import dev.justinsmith.bjj.ui.common.WithSnapshot
 import org.jetbrains.compose.resources.StringResource
 import org.jetbrains.compose.resources.pluralStringResource
 import org.jetbrains.compose.resources.stringResource
+import org.koin.compose.viewmodel.koinViewModel
+import org.koin.core.parameter.parametersOf
 
 val Deck.label: StringResource
     get() = when (this) {
@@ -77,41 +69,24 @@ val Deck.label: StringResource
         Deck.BlueBelt -> Res.string.common_blue_belt_test
     }
 
-/** The deck a key names; anything unrecognised is everything. */
-fun deckOf(key: String?): Deck = Deck.entries.firstOrNull { it.key == key } ?: Deck.All
-
 /** The most new cards a session can be asked to bring in. */
 private const val MAX_NEW_CARDS = 20
 
-/** The session a deck, or a lesson in its place, would hold now. */
-fun queueFor(snapshot: Snapshot, deck: Deck, lessonId: String?, newLimit: Int, now: Long): StudyQueue {
-    val lib = snapshot.library
-    val lesson = findLesson(lessonId)
-    return if (lesson != null) {
-        buildLessonQueue(lib, lesson, newLimit, now)
-    } else {
-        buildQueue(lib, deck, newLimit, now, studyFirst(lib, snapshot.trainingLog, RECENT_CLASS_COUNT))
-    }
-}
-
 @Composable
-fun ReviewRoute(deckKey: String?, lessonId: String?, nav: Nav) {
-    WithSnapshot { snapshot, viewModel ->
-        // A list page can open the review on its own deck, and Lessons on one lesson; picking a deck leaves it.
-        var deck by rememberSaveable { mutableStateOf(deckOf(deckKey)) }
-        var lesson by rememberSaveable { mutableStateOf(lessonId) }
-        var newLimit by rememberSaveable { mutableIntStateOf(DEFAULT_NEW_CARDS) }
-        ReviewScreen(
-            preview = queueFor(snapshot, deck, lesson, newLimit, viewModel.now()),
-            deck = deck,
-            lessonId = lesson,
-            newLimit = newLimit,
-            onDeck = {
-                lesson = null
-                deck = it
+fun ReviewRoute(key: ReviewTab, nav: Nav) {
+    val viewModel = koinViewModel<ReviewViewModel> { parametersOf(key) }
+    val state by viewModel.uiState.collectAsStateWithLifecycle()
+    when (val ready = state) {
+        ReviewUiState.Loading -> Loading()
+
+        is ReviewUiState.Ready -> ReviewScreen(
+            state = ready,
+            onDeck = viewModel::chooseDeck,
+            onNewLimit = viewModel::setNewLimit,
+            onStart = {
+                val choice = ready.choice
+                nav.open(ReviewSession(choice.deck.key, choice.lessonId, choice.newLimit))
             },
-            onNewLimit = { newLimit = it },
-            onStart = { nav.open(ReviewSession(deck.key, lesson, newLimit)) },
         )
     }
 }
@@ -119,26 +94,25 @@ fun ReviewRoute(deckKey: String?, lessonId: String?, nav: Nav) {
 /** Review before a session: how many cards are ready, what to study, and how many new cards to bring in. */
 @Composable
 fun ReviewScreen(
-    preview: StudyQueue,
-    deck: Deck,
-    lessonId: String?,
-    newLimit: Int,
+    state: ReviewUiState.Ready,
     onDeck: (Deck) -> Unit,
     onNewLimit: (Int) -> Unit,
     onStart: () -> Unit,
     modifier: Modifier = Modifier,
 ) {
+    val deck = state.choice.deck
+    val newLimit = state.choice.newLimit
+    val lesson = state.lesson
     val muted = BjjTheme.palette.muted
-    val lesson = findLesson(lessonId)
     Page(modifier, maxWidth = Sizes.readingMax) {
         PageTitle(stringResource(Res.string.review_title))
         Card {
-            if (preview.queue.isEmpty()) {
+            if (state.ready == 0) {
                 EmptyState(
                     icon = BjjIcons.Check,
                     title = stringResource(Res.string.review_empty_title),
                     text = stringResource(
-                        if (preview.fresh.isNotEmpty()) {
+                        if (state.newCount + state.moreNew > 0) {
                             Res.string.review_empty_raise_slider
                         } else {
                             Res.string.review_empty_deck
@@ -146,19 +120,19 @@ fun ReviewScreen(
                     ),
                 )
             } else {
-                val newCount = minOf(newLimit, preview.fresh.size)
-                val more = preview.fresh.size - newCount
+                val newCount = state.newCount
+                val more = state.moreNew
                 Column(verticalArrangement = Arrangement.spacedBy(Spacing.s1)) {
-                    val ready = preview.queue.size
+                    val ready = state.ready
                     BjjText(pluralStringResource(Res.plurals.review_cards_ready, ready, ready), style = Type.display)
                     val split = if (more > 0) {
-                        stringResource(Res.string.review_split_more, preview.due.size, newCount, more)
+                        stringResource(Res.string.review_split_more, state.due, newCount, more)
                     } else {
-                        stringResource(Res.string.review_split, preview.due.size, newCount)
+                        stringResource(Res.string.review_split, state.due, newCount)
                     }
                     BjjText(split, color = muted)
-                    if (preview.fromClass > 0) {
-                        val fromClass = preview.fromClass
+                    if (state.fromClass > 0) {
+                        val fromClass = state.fromClass
                         val line = pluralStringResource(Res.plurals.review_from_class, fromClass, fromClass)
                         BjjText(line, style = Type.small, color = muted)
                     }
@@ -174,9 +148,8 @@ fun ReviewScreen(
                 horizontalArrangement = Arrangement.spacedBy(Spacing.s2),
             ) {
                 if (lesson != null) {
-                    val number = FOUNDATION_LESSONS.indexOf(lesson) + 1
                     ToggleChip(
-                        stringResource(Res.string.review_lesson_chip, number, lesson.title),
+                        stringResource(Res.string.review_lesson_chip, lesson.number, lesson.title),
                         checked = true,
                         onChange = {
                         },
