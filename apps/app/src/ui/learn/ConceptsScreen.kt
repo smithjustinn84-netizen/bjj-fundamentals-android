@@ -178,7 +178,7 @@ fun ConceptDetailScreen(
             lead = concept.summary,
         )
         Card {
-            ItemPicture(videos) { if (hasConceptArtwork(concept.id)) ConceptArtwork(concept.id) }
+            ItemPicture(videos)
             Section(stringResource(Res.string.learn_concept_key_points)) { PointList(concept.keyPoints) }
             if (concept.drill.isNotEmpty()) {
                 Divider()

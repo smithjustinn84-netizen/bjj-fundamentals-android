@@ -76,8 +76,8 @@ The system's Back, the predictive back gesture included, is `NavDisplay`'s: it c
 
 Each is an `expect` in `apps/app/src` with its `actual` in `src@android` and a stand-in for tests in `src@jvm`:
 
-- `VideoPlayer`: YouTube's player in a WebView, the one thing that contacts another site. `ItemPicture` keeps the drawing in its place until the page has arrived and the player says it is ready (`VideoOverDrawing`).
-- `rememberOnline`: whether to show that player or the drawing.
+- `VideoPlayer`: YouTube's player in a WebView, the one thing that contacts another site. `ItemPicture` holds the player's place on plain paper until the page has arrived and the player says it is ready (`VideoOnPaper`).
+- `rememberOnline`: whether to show that player at all.
 - `rememberBackupFiles`: the system's file pickers.
 - `SystemBars`: the status and navigation icons, kept readable over the app's theme.
 - `reducedMotion` (in `design`): the system's "remove animations" setting.

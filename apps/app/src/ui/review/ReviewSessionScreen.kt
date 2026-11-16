@@ -242,8 +242,6 @@ private fun FlashCard(
                 },
             )
             LinkButton(stringResource(Res.string.review_open_full_page), { onOpen(studyItemKey(card.item)) })
-        } else {
-            CardCue(card)
         }
     }
 }

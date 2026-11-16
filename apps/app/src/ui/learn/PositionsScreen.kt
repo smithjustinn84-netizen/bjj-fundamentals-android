@@ -252,7 +252,7 @@ fun PositionDetailScreen(
             lead = position.summary,
         )
         Card {
-            ItemPicture(videos) { if (hasPositionArtwork(position.id)) PositionArtwork(position.id) }
+            ItemPicture(videos)
             // One side at a time: in a roll you are only ever on one of them.
             Segmented(PositionRole.entries, side, {
                 side = it

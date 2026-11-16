@@ -54,7 +54,6 @@ import dev.justinsmith.bjj.ui.common.Page
 import dev.justinsmith.bjj.ui.common.Pager
 import dev.justinsmith.bjj.ui.common.PagerTarget
 import dev.justinsmith.bjj.ui.common.TechniqueLinks
-import dev.justinsmith.bjj.ui.common.TransitionArtwork
 import dev.justinsmith.bjj.ui.common.VideoActions
 import dev.justinsmith.bjj.ui.common.label
 import org.jetbrains.compose.resources.stringResource
@@ -151,7 +150,7 @@ private fun Body(state: TransitionDetailUiState.Ready, nav: Nav, videoActions: V
     val videos = state.videos
     val drill = state.drill
     Card {
-        ItemPicture(videos) { state.picture?.let { TransitionArtwork(it) } }
+        ItemPicture(videos)
         Section(stringResource(Res.string.learn_technique_steps)) { PointList(transition.steps, numbered = true) }
         if (transition.commonMistakes.isNotEmpty()) {
             Divider()

@@ -22,13 +22,11 @@ import dev.justinsmith.bjj.design.components.Progress
 import dev.justinsmith.bjj.nav.TransitionDetail
 import dev.justinsmith.bjj.ui.common.Named
 import dev.justinsmith.bjj.ui.common.TechniqueLinksUi
-import dev.justinsmith.bjj.ui.common.TechniquePicture
 import dev.justinsmith.bjj.ui.common.VideoActions
 import dev.justinsmith.bjj.ui.common.VideoCommands
 import dev.justinsmith.bjj.ui.common.progressOf
 import dev.justinsmith.bjj.ui.common.screenState
 import dev.justinsmith.bjj.ui.common.techniqueLinksUi
-import dev.justinsmith.bjj.ui.common.techniquePicture
 import kotlinx.coroutines.flow.StateFlow
 
 /** A position at one end of a technique. */
@@ -52,8 +50,6 @@ sealed interface TransitionDetailUiState {
         /** Who does it, and which side of [to] they end on when that is known. */
         val performer: PositionRole,
         val endSide: PositionRole?,
-        /** Null when it cannot be drawn. */
-        val picture: TechniquePicture?,
         /** The drill to try, or "" when it has none. */
         val drill: String,
         val links: TechniqueLinksUi,
@@ -80,7 +76,6 @@ fun transitionDetailUiState(snapshot: Snapshot, id: String): TransitionDetailUiS
         to = lib.positionById[transition.toId]?.asEnd(),
         performer = performerRole(lib, transition),
         endSide = endRole(lib, transition),
-        picture = techniquePicture(lib, transition),
         drill = techniqueDrill(transition),
         links = techniqueLinksUi(lib, id),
         previous = siblings.getOrNull(index - 1)?.let { Named(it.id, it.name) },

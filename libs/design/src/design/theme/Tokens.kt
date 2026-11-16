@@ -109,4 +109,7 @@ object Motion {
 
     /** A number counting up to its value on Today. */
     const val COUNT_UP = 700
+
+    /** Half a breath of a placeholder pulsing while its content loads: darkening, or lightening again. */
+    const val PULSE = 900
 }

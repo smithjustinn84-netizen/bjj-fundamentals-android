@@ -15,7 +15,6 @@
     <string name="page_previous">← Previous</string>
     <string name="page_next">Next →</string>
     <!-- Caption under the drawing of a submission's end: the opponent taps out. -->
-    <string name="page_tap">Tap</string>
     <!-- What a screen reader calls the video player. %1$s is the bookmark's title. -->
     <string name="page_video">Video: %1$s</string>
 </resources>

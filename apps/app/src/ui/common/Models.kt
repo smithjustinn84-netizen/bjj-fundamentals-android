@@ -15,7 +15,6 @@ import dev.justinsmith.bjj.core.reviewOf
 import dev.justinsmith.bjj.core.searchLibrary
 import dev.justinsmith.bjj.core.techniqueLinks
 import dev.justinsmith.bjj.design.components.Progress
-import dev.justinsmith.bjj.design.graphics.hasPositionArtwork
 
 // What a ViewModel hands a screen in place of the library: each thing to draw with its lookups already done.
 // A ViewModel builds these from a snapshot with the functions here; a screen only draws them.
@@ -80,26 +79,6 @@ fun techniqueLinksUi(lib: Library, id: String): TechniqueLinksUi {
         defences = techniqueRows(lib, links.defences, Direction.In),
         answers = techniqueRows(lib, links.answers, Direction.In),
     )
-}
-
-/**
- * A technique drawn as its two ends: the position it starts from and the one it reaches. [toId] and [toName]
- * are null for one that ends the roll, whose second picture is a tap.
- */
-data class TechniquePicture(
-    val type: TransitionType,
-    val fromId: String,
-    val fromName: String,
-    val toId: String?,
-    val toName: String?,
-)
-
-/** The picture of a technique, or null when either end has no drawing, such as a position the user added. */
-fun techniquePicture(lib: Library, technique: Transition): TechniquePicture? {
-    val from = lib.positionById[technique.fromId]?.takeIf { hasPositionArtwork(it.id) } ?: return null
-    if (endsTheRoll(technique.type)) return TechniquePicture(technique.type, from.id, from.name, null, null)
-    val to = lib.positionById[technique.toId]?.takeIf { hasPositionArtwork(it.id) } ?: return null
-    return TechniquePicture(technique.type, from.id, from.name, to.id, to.name)
 }
 
 /** The search box's results for the [query] they were worked out for. */

@@ -33,8 +33,9 @@ The web app (`../bjj`) is the reference. This app matches it except where listed
 
 ## Platform
 
-- A page or card with a video opens on its drawing (plain paper for an item with none); the player is made once the page has arrived and appears over the drawing when YouTube has drawn itself. The web app puts the player there from the start. A WebView is slow to build and blank until YouTube answers, which made every page open on a black box.
-- The manifest asks for `INTERNET` (YouTube's player) and `ACCESS_NETWORK_STATE` (to show the drawing instead when offline). Neither prompts the user.
+- Concept, position and technique pages and review cards show no drawing, only the item's video when it has one; the lists and Home keep their drawings. The web app draws them on pages and cards, and cues a technique card's question with where it starts.
+- The video's player is made once the page has arrived, on plain paper that pulses (flat, still when animations are off) until YouTube has drawn itself, and then appears. The web app puts the player there from the start. A WebView is slow to build and blank until YouTube answers, which made every page open on a black box.
+- The manifest asks for `INTERNET` (YouTube's player) and `ACCESS_NETWORK_STATE` (to leave the player out when offline). Neither prompts the user.
 - Backups are saved and opened through the system's file picker.
 - The system's status and navigation icons follow the app's theme, not the device's.
 - Starter text that changes in a later version does not reach a library that already holds the item (the web app once refreshed unedited items in a one-off migration).

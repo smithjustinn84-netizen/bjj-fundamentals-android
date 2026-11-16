@@ -78,7 +78,6 @@
     <!-- %1$s is one side of a position, such as "Bottom of mount". -->
     <string name="review_question_situation">%1$s: what are your options?</string>
     <!-- Under the picture on a technique's question side. %1$s is the position's name. -->
-    <string name="review_start_here">You start here: %1$s.</string>
 
     <!-- The answer side of a card. %1$s is the drill, a sentence of its own. -->
     <string name="review_drill">Drill: %1$s</string>

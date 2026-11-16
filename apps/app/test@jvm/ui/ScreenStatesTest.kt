@@ -90,9 +90,7 @@ class ScreenStatesTest {
     fun `a technique's page knows its ends its neighbours and how it meets other techniques`() = runTest {
         val armbar = assertIs<TransitionDetailUiState.Ready>(transitionDetailUiState(snapshot(), "armbar-guard"))
         assertEquals(TransitionType.Submission, armbar.transition.type)
-        // It ends the roll: its picture is where it starts and a tap.
-        assertEquals(assertNotNull(armbar.from).id, armbar.picture?.fromId)
-        assertNull(armbar.picture?.toId)
+        assertEquals("closed-guard", assertNotNull(armbar.from).id)
         assertEquals(listOf("armbar-defence"), armbar.links.defences.map { it.id })
         assertTrue(armbar.onBlueBeltTest)
 
@@ -130,10 +128,8 @@ class ScreenStatesTest {
         assertEquals("mount", assertIs<CardFace.PositionCard>(face(CardKind.Position, "mount")).position.id)
         val technique = assertIs<CardFace.TechniqueCard>(face(CardKind.Transition, "armbar-guard"))
         assertNotNull(technique.fromName)
-        assertNotNull(technique.cueId)
         assertEquals(listOf("armbar-defence"), technique.links.defences.map { it.id })
         val situation = assertIs<CardFace.SituationCard>(face(CardKind.Situation, "mount:${PositionRole.Bottom.key}"))
-        assertEquals("mount", situation.positionId)
         assertTrue(situation.options.isNotEmpty() && situation.goals.isNotEmpty())
 
         for (kind in CardKind.entries) assertNull(face(kind, "nothing"))

@@ -10,7 +10,6 @@ import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.toArgb
 import androidx.compose.ui.graphics.toPixelMap
 import androidx.compose.ui.platform.testTag
@@ -75,11 +74,6 @@ class ArtworkTest {
     }
 
     @Test
-    fun `the tap draws in light and dark`() {
-        drawsOnPaper(listOf("tap")) { _, modifier -> TapArtwork(modifier) }
-    }
-
-    @Test
     fun `an item the user added has no picture and draws nothing`() = runComposeUiTest {
         assertFalse(hasConceptArtwork("my-own-concept"))
         assertFalse(hasPositionArtwork("my-own-position"))
@@ -124,7 +118,6 @@ class ArtworkTest {
                             BeltGraphic(rank, stripes)
                             BrandMark()
                             Enso(Modifier.width(PICTURE_WIDTH))
-                            TransitionArrow(Color.Black)
                         }
                     }
                 }
