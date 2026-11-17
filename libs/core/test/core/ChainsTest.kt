@@ -33,6 +33,14 @@ class ChainsTest {
     }
 
     @Test
+    fun `lists no follow-up twice for one technique`() {
+        lib.transitions.forEach { technique ->
+            val followUps = techniqueLinks(lib, technique.id).followUps.map { it.technique.id }
+            assertEquals(followUps.distinct(), followUps, technique.id)
+        }
+    }
+
+    @Test
     fun `leaves out techniques the library no longer has and has nothing for one the user added`() {
         val without = buildLibrary(
             emptyList(),

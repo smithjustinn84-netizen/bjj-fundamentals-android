@@ -356,14 +356,28 @@ internal val TECHNIQUE_LINKS: Map<String, Triple<List<String>, List<String>, Lis
             "sprawl",
         ),
         emptyList(),
+        listOf(
+            "single-leg|when one foot steps out in front",
+            "hip-throw|when they lean in and push forward",
+        ),
+    ),
+    "hip-throw" to Triple(
         emptyList(),
+        emptyList(),
+        listOf(
+            "double-leg|when they stand square with their feet level",
+            "single-leg|when one foot steps out in front",
+        ),
     ),
     "single-leg" to Triple(
         listOf(
             "sprawl",
         ),
         emptyList(),
-        emptyList(),
+        listOf(
+            "double-leg|when they stand square with their feet level",
+            "hip-throw|when they lean in and push forward",
+        ),
     ),
     "sprawl" to Triple(
         emptyList(),
@@ -388,6 +402,17 @@ internal val TECHNIQUE_LINKS: Map<String, Triple<List<String>, List<String>, Lis
         listOf(
             "triangle-choke|when they yank one arm free",
             "pendulum-sweep|when they stack their weight into you",
+            "omoplata-guard|when they post a hand on the mat beside your ribs",
+            "cross-collar-guard|when they keep both hands low on your hips or belt",
+            "scissor-sweep|when they posture up away from the collar grip",
+        ),
+    ),
+    "cross-collar-guard" to Triple(
+        emptyList(),
+        emptyList(),
+        listOf(
+            "armbar-guard|when they bring a hand up to strip the collar grip",
+            "scissor-sweep|when they posture up away from the collar grip",
         ),
     ),
     "guillotine-defence" to Triple(
@@ -432,12 +457,30 @@ internal val TECHNIQUE_LINKS: Map<String, Triple<List<String>, List<String>, Lis
             "guillotine-guard|when they pull the arm back and leave the head low",
         ),
     ),
+    "omoplata-guard" to Triple(
+        emptyList(),
+        emptyList(),
+        listOf(
+            "armbar-guard|when an arm crosses your centre line",
+            "triangle-choke|when they yank one arm free",
+            "pendulum-sweep|when they stack their weight into you",
+        ),
+    ),
     "pendulum-sweep" to Triple(
         emptyList(),
         emptyList(),
         listOf(
             "armbar-guard|when an arm crosses your centre line",
             "triangle-choke|when they yank one arm free",
+            "omoplata-guard|when they post a hand on the mat beside your ribs",
+        ),
+    ),
+    "scissor-sweep" to Triple(
+        emptyList(),
+        emptyList(),
+        listOf(
+            "cross-collar-guard|when they keep both hands low on your hips or belt",
+            "armbar-guard|when they bring a hand up to strip the collar grip",
         ),
     ),
     "triangle-defence" to Triple(
@@ -455,6 +498,73 @@ internal val TECHNIQUE_LINKS: Map<String, Triple<List<String>, List<String>, Lis
         listOf(
             "armbar-guard|when an arm crosses your centre line",
             "pendulum-sweep|when they stack their weight into you",
+            "omoplata-guard|when they post a hand on the mat beside your ribs",
+        ),
+    ),
+    "butterfly-sweep" to Triple(
+        emptyList(),
+        emptyList(),
+        listOf(
+            "tripod-sweep|when they stand up in your guard",
+        ),
+    ),
+    "double-under-pass" to Triple(
+        emptyList(),
+        emptyList(),
+        listOf(
+            "toreando-pass|when their knees are loose and you can stand out of reach",
+        ),
+    ),
+    "toreando-pass" to Triple(
+        emptyList(),
+        emptyList(),
+        listOf(
+            "double-under-pass|when they pull you in and lift their legs high",
+        ),
+    ),
+    "tripod-sweep" to Triple(
+        emptyList(),
+        emptyList(),
+        listOf(
+            "butterfly-sweep|when they kneel in front of you",
+        ),
+    ),
+    "knee-shield-sweep" to Triple(
+        emptyList(),
+        emptyList(),
+        listOf(
+            "half-guard-underhook-sweep|when they press their weight in and leave the far armpit open",
+            "half-to-full-guard|when they sit back to free their trapped leg",
+        ),
+    ),
+    "knee-slice" to Triple(
+        emptyList(),
+        emptyList(),
+        listOf(
+            "half-guard-to-mount|when they clamp your ankle and lie flat under the crossface",
+        ),
+    ),
+    "half-guard-to-mount" to Triple(
+        emptyList(),
+        emptyList(),
+        listOf(
+            "knee-slice|when their bottom knee opens or a frame slips",
+        ),
+    ),
+    "half-to-full-guard" to Triple(
+        emptyList(),
+        emptyList(),
+        listOf(
+            "half-guard-underhook-sweep|when they press their weight in and leave the far armpit open",
+            "knee-shield-sweep|when they block the underhook and lean on your shield",
+        ),
+    ),
+    "half-guard-underhook-sweep" to Triple(
+        emptyList(),
+        emptyList(),
+        listOf(
+            "knee-shield-sweep|when they block the underhook and lean on your shield",
+            "half-to-full-guard|when they sit back to free their trapped leg",
         ),
     ),
     "americana-defence" to Triple(
@@ -469,7 +579,29 @@ internal val TECHNIQUE_LINKS: Map<String, Triple<List<String>, List<String>, Lis
             "americana-defence",
         ),
         emptyList(),
+        listOf(
+            "kimura-side-control|when their far arm pushes at your neck or shoulder",
+            "side-control-to-back|when their near arm crosses to push your face",
+            "side-to-mount|when their arms stay tucked and their hips stay flat",
+        ),
+    ),
+    "side-control-to-back" to Triple(
         emptyList(),
+        emptyList(),
+        listOf(
+            "americana|when their far wrist comes up beside their head",
+            "kimura-side-control|when their far arm pushes at your neck or shoulder",
+            "side-to-mount|when their arms stay tucked and their hips stay flat",
+        ),
+    ),
+    "kimura-side-control" to Triple(
+        emptyList(),
+        emptyList(),
+        listOf(
+            "americana|when their far wrist comes up beside their head",
+            "side-control-to-back|when their near arm crosses to push your face",
+            "side-to-mount|when their arms stay tucked and their hips stay flat",
+        ),
     ),
     "side-control-escape" to Triple(
         emptyList(),
@@ -485,11 +617,50 @@ internal val TECHNIQUE_LINKS: Map<String, Triple<List<String>, List<String>, Lis
             "side-control-escape|when space opens at your hip",
         ),
     ),
+    "side-to-mount" to Triple(
+        emptyList(),
+        emptyList(),
+        listOf(
+            "americana|when their far wrist comes up beside their head",
+            "kimura-side-control|when their far arm pushes at your neck or shoulder",
+            "side-control-to-back|when their near arm crosses to push your face",
+        ),
+    ),
+    "americana-mount" to Triple(
+        emptyList(),
+        emptyList(),
+        listOf(
+            "cross-collar-choke|when they keep their elbows tight to their ribs",
+            "ezekiel-mount|when they hand-fight your collar grips",
+            "armbar-mount|when they push your chest with a straight arm",
+            "mount-to-back|when they turn onto their side to escape",
+        ),
+    ),
+    "armbar-mount" to Triple(
+        emptyList(),
+        emptyList(),
+        listOf(
+            "cross-collar-choke|when they keep their elbows tight to their ribs",
+            "ezekiel-mount|when they hand-fight your collar grips",
+            "americana-mount|when a wrist comes up beside their head to frame",
+            "mount-to-back|when they turn onto their side to escape",
+        ),
+    ),
     "upa-escape" to Triple(
         emptyList(),
         emptyList(),
         listOf(
             "elbow-knee-escape|when they base out wide to stop the bridge",
+        ),
+    ),
+    "cross-collar-choke" to Triple(
+        emptyList(),
+        emptyList(),
+        listOf(
+            "ezekiel-mount|when they hand-fight your collar grips",
+            "americana-mount|when a wrist comes up beside their head to frame",
+            "armbar-mount|when they push your chest with a straight arm",
+            "mount-to-back|when they turn onto their side to escape",
         ),
     ),
     "elbow-knee-escape" to Triple(
@@ -499,12 +670,34 @@ internal val TECHNIQUE_LINKS: Map<String, Triple<List<String>, List<String>, Lis
             "upa-escape|when they reach for your collar or post a hand close",
         ),
     ),
+    "ezekiel-mount" to Triple(
+        emptyList(),
+        emptyList(),
+        listOf(
+            "cross-collar-choke|when they keep their elbows tight to their ribs",
+            "americana-mount|when a wrist comes up beside their head to frame",
+            "armbar-mount|when they push your chest with a straight arm",
+            "mount-to-back|when they turn onto their side to escape",
+        ),
+    ),
+    "mount-to-back" to Triple(
+        emptyList(),
+        emptyList(),
+        listOf(
+            "cross-collar-choke|when they keep their elbows tight to their ribs",
+            "ezekiel-mount|when they hand-fight your collar grips",
+            "americana-mount|when a wrist comes up beside their head to frame",
+            "armbar-mount|when they push your chest with a straight arm",
+        ),
+    ),
     "rear-naked-choke" to Triple(
         listOf(
             "rear-naked-choke-defence",
         ),
         emptyList(),
-        emptyList(),
+        listOf(
+            "sliding-collar-choke|when they tuck their chin against the bare-arm choke",
+        ),
     ),
     "rear-naked-choke-defence" to Triple(
         emptyList(),
@@ -512,5 +705,40 @@ internal val TECHNIQUE_LINKS: Map<String, Triple<List<String>, List<String>, Lis
             "rear-naked-choke",
         ),
         emptyList(),
+    ),
+    "sliding-collar-choke" to Triple(
+        emptyList(),
+        emptyList(),
+        listOf(
+            "rear-naked-choke|when they fight your lapel grips and leave the neck open",
+        ),
+    ),
+    "turtle-breakdown" to Triple(
+        emptyList(),
+        emptyList(),
+        listOf(
+            "turtle-to-back|when a gap opens between their elbow and knee",
+        ),
+    ),
+    "turtle-recover-guard" to Triple(
+        emptyList(),
+        emptyList(),
+        listOf(
+            "turtle-sit-out|when they lean their chest on your back with no hooks in",
+        ),
+    ),
+    "turtle-sit-out" to Triple(
+        emptyList(),
+        emptyList(),
+        listOf(
+            "turtle-recover-guard|when they sit beside you without trapping your far hip",
+        ),
+    ),
+    "turtle-to-back" to Triple(
+        emptyList(),
+        emptyList(),
+        listOf(
+            "turtle-breakdown|when they seal their elbows to their knees",
+        ),
     ),
 )

@@ -32,6 +32,7 @@ private val STARTER_DILEMMAS: List<List<Member>> = listOf(
         Member("armbar-guard", "when an arm crosses your centre line"),
         Member("triangle-choke", "when they yank one arm free"),
         Member("pendulum-sweep", "when they stack their weight into you"),
+        Member("omoplata-guard", "when they post a hand on the mat beside your ribs"),
     ),
     listOf(
         Member("upa-escape", "when they reach for your collar or post a hand close"),
@@ -40,6 +41,58 @@ private val STARTER_DILEMMAS: List<List<Member>> = listOf(
     listOf(
         Member("side-control-escape", "when space opens at your hip"),
         Member("side-control-escape-knees", "when they block your bottom knee"),
+    ),
+    listOf(
+        Member("cross-collar-guard", "when they keep both hands low on your hips or belt"),
+        Member("armbar-guard", "when they bring a hand up to strip the collar grip"),
+        Member("scissor-sweep", "when they posture up away from the collar grip"),
+    ),
+    listOf(
+        Member("cross-collar-choke", "when they keep their elbows tight to their ribs"),
+        Member("ezekiel-mount", "when they hand-fight your collar grips"),
+        Member("americana-mount", "when a wrist comes up beside their head to frame"),
+        Member("armbar-mount", "when they push your chest with a straight arm"),
+        Member("mount-to-back", "when they turn onto their side to escape"),
+    ),
+    listOf(
+        Member("americana", "when their far wrist comes up beside their head"),
+        Member("kimura-side-control", "when their far arm pushes at your neck or shoulder"),
+        Member("side-control-to-back", "when their near arm crosses to push your face"),
+        Member("side-to-mount", "when their arms stay tucked and their hips stay flat"),
+    ),
+    listOf(
+        Member("rear-naked-choke", "when they fight your lapel grips and leave the neck open"),
+        Member("sliding-collar-choke", "when they tuck their chin against the bare-arm choke"),
+    ),
+    listOf(
+        Member("half-guard-underhook-sweep", "when they press their weight in and leave the far armpit open"),
+        Member("knee-shield-sweep", "when they block the underhook and lean on your shield"),
+        Member("half-to-full-guard", "when they sit back to free their trapped leg"),
+    ),
+    listOf(
+        Member("knee-slice", "when their bottom knee opens or a frame slips"),
+        Member("half-guard-to-mount", "when they clamp your ankle and lie flat under the crossface"),
+    ),
+    listOf(
+        Member("toreando-pass", "when their knees are loose and you can stand out of reach"),
+        Member("double-under-pass", "when they pull you in and lift their legs high"),
+    ),
+    listOf(
+        Member("butterfly-sweep", "when they kneel in front of you"),
+        Member("tripod-sweep", "when they stand up in your guard"),
+    ),
+    listOf(
+        Member("turtle-to-back", "when a gap opens between their elbow and knee"),
+        Member("turtle-breakdown", "when they seal their elbows to their knees"),
+    ),
+    listOf(
+        Member("turtle-recover-guard", "when they sit beside you without trapping your far hip"),
+        Member("turtle-sit-out", "when they lean their chest on your back with no hooks in"),
+    ),
+    listOf(
+        Member("double-leg", "when they stand square with their feet level"),
+        Member("single-leg", "when one foot steps out in front"),
+        Member("hip-throw", "when they lean in and push forward"),
     ),
 )
 
