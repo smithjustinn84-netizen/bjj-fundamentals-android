@@ -6,6 +6,7 @@ import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.ColumnScope
+import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.defaultMinSize
 import androidx.compose.foundation.layout.fillMaxSize
@@ -13,6 +14,8 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.imePadding
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.widthIn
+import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.lazy.LazyListScope
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.runtime.Composable
@@ -58,6 +61,27 @@ fun Page(modifier: Modifier = Modifier, maxWidth: Dp = Sizes.contentMax, content
                 .verticalScroll(rememberScrollState())
                 .padding(horizontal = Spacing.pageGutter)
                 .padding(top = Spacing.s4, bottom = Spacing.s6),
+            verticalArrangement = Arrangement.spacedBy(Spacing.s4),
+            content = content,
+        )
+    }
+}
+
+/**
+ * The same page for a long list, laid out only as far as it is scrolled: [content] adds the list's items, each
+ * spaced as a [Page]'s content is.
+ */
+@Composable
+fun LazyPage(modifier: Modifier = Modifier, maxWidth: Dp = Sizes.contentMax, content: LazyListScope.() -> Unit) {
+    Box(modifier.fillMaxSize().imePadding(), contentAlignment = Alignment.TopCenter) {
+        LazyColumn(
+            Modifier.widthIn(max = maxWidth).fillMaxWidth(),
+            contentPadding = PaddingValues(
+                start = Spacing.pageGutter,
+                end = Spacing.pageGutter,
+                top = Spacing.s4,
+                bottom = Spacing.s6,
+            ),
             verticalArrangement = Arrangement.spacedBy(Spacing.s4),
             content = content,
         )

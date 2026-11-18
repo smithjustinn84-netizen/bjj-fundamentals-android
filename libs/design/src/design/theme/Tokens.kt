@@ -71,6 +71,13 @@ object Sizes {
     /** The widest the page's content gets, and the widest a page of prose or a form gets. */
     val contentMax = 1200.dp
     val readingMax = 680.dp
+
+    /** How far a lane's heading on the across-the-page map sits left of its column's centre: half its width. */
+    val mapLaneLabelHalf = 40.dp
+
+    /** A line in the map's legend: its length and its weight. */
+    val legendLine = 22.dp
+    val legendWeight = 3.dp
 }
 
 /** The window widths a layout changes at. */
@@ -83,6 +90,9 @@ object Breakpoints {
 
     /** The rail widens to show the brand and labels. */
     val railWide: Dp = 1200.dp
+
+    /** The position map runs across the page instead of down it: about 1000dp of column keeps it readable. */
+    val mapAcross: Dp = 1280.dp
 }
 
 object TextSizes {
@@ -92,6 +102,11 @@ object TextSizes {
     val lg = 18.sp
     val xl = 32.sp
     val display = 34.sp
+
+    /** The position map's small print: a position's name in its box, a lane's heading, a count of submissions. */
+    val mapName = 13.sp
+    val mapLane = 11.sp
+    val mapCount = 10.5.sp
 }
 
 /** Durations in milliseconds. */

@@ -20,21 +20,21 @@ class VideosUiStateTest {
 
     @Test
     fun `bookmarks name what they are about and are found by title note or that name`() = runTest {
-        val starter = videosUiState(snapshot(), query = "").total
+        val starter = videosUiState(snapshot()).total
         val note = "frame the xiphoid"
         t.core.videos.add(VideoInput("Elbow escape details", "abcdefghijk", 0, LinkedKind.Position, "mount", note))
         t.core.videos.add(VideoInput("Open mat", "abcdefghijk", 0, LinkedKind.None, "", ""))
-        val all = videosUiState(snapshot(), query = "")
+        val all = videosUiState(snapshot())
         assertEquals(starter + 2, all.total)
         assertEquals(all.total, all.shown.size)
         assertNull(all.shown.first { it.video.title == "Open mat" }.about)
         assertTrue(all.about.any { it.item.kind == ItemKind.Transition })
 
-        val byNote = videosUiState(snapshot(), query = " XIPHOID ")
+        val byNote = videosUiState(snapshot()).matching(" XIPHOID ")
         assertEquals(listOf("Elbow escape details"), byNote.shown.map { it.video.title })
         assertEquals("Mount", byNote.shown.single().about?.name)
-        assertTrue(videosUiState(snapshot(), query = "mount").shown.any { it.video.title == "Elbow escape details" })
-        assertEquals(all.total, videosUiState(snapshot(), query = "zzzz").total)
-        assertTrue(videosUiState(snapshot(), query = "zzzz").shown.isEmpty())
+        assertTrue(videosUiState(snapshot()).matching("mount").shown.any { it.video.title == "Elbow escape details" })
+        assertEquals(all.total, videosUiState(snapshot()).matching("zzzz").total)
+        assertTrue(videosUiState(snapshot()).matching("zzzz").shown.isEmpty())
     }
 }

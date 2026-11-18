@@ -7,6 +7,7 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.key
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.rememberUpdatedState
 import androidx.compose.runtime.saveable.rememberSaveable
@@ -89,11 +90,14 @@ fun LibrarySearch(
         }
         if (hits.isNotEmpty()) {
             RowCard {
+                // Keyed, so a hit that stays as the search narrows keeps its row rather than taking a neighbour's.
                 hits.forEachIndexed { index, hit ->
-                    if (index > 0) Divider()
-                    RowLink(hit.name, { onOpen(hit.kind, hit.id) }, BjjIcons.Chevron) {
-                        Tag(hit.kind.label, BjjTheme.palette.typeTransition)
-                        BjjText(hit.detail, style = Type.small, color = BjjTheme.palette.muted, maxLines = 2)
+                    key(hit.kind, hit.id) {
+                        if (index > 0) Divider()
+                        RowLink(hit.name, { onOpen(hit.kind, hit.id) }, BjjIcons.Chevron) {
+                            Tag(hit.kind.label, BjjTheme.palette.typeTransition)
+                            BjjText(hit.detail, style = Type.small, color = BjjTheme.palette.muted, maxLines = 2)
+                        }
                     }
                 }
             }
@@ -128,10 +132,12 @@ private fun OtherEnd.text(): String = when (this) {
 fun TransitionList(rows: List<TechniqueRow>, onOpen: (String) -> Unit, modifier: Modifier = Modifier) {
     Column(modifier.fillMaxWidth()) {
         rows.forEachIndexed { index, technique ->
-            if (index > 0) Divider()
-            RowLink(technique.name, { onOpen(technique.id) }, BjjIcons.Chevron) {
-                Tag(technique.type.label, BjjTheme.palette.typeColor(technique.type))
-                BjjText(technique.otherEnd.text(), style = Type.small, color = BjjTheme.palette.muted)
+            key(technique.id) {
+                if (index > 0) Divider()
+                RowLink(technique.name, { onOpen(technique.id) }, BjjIcons.Chevron) {
+                    Tag(technique.type.label, BjjTheme.palette.typeColor(technique.type))
+                    BjjText(technique.otherEnd.text(), style = Type.small, color = BjjTheme.palette.muted)
+                }
             }
         }
     }
@@ -148,9 +154,11 @@ fun TechniqueLinks(links: TechniqueLinksUi, onOpen: (String) -> Unit, modifier: 
         if (links.followUps.isNotEmpty()) {
             Section(stringResource(Res.string.learn_links_follow_ups)) {
                 links.followUps.forEachIndexed { index, followUp ->
-                    if (index > 0) Divider()
-                    RowLink(followUp.name, { onOpen(followUp.id) }, BjjIcons.Chevron) {
-                        BjjText(followUp.whenText, style = Type.small, color = BjjTheme.palette.muted)
+                    key(followUp.id) {
+                        if (index > 0) Divider()
+                        RowLink(followUp.name, { onOpen(followUp.id) }, BjjIcons.Chevron) {
+                            BjjText(followUp.whenText, style = Type.small, color = BjjTheme.palette.muted)
+                        }
                     }
                 }
             }

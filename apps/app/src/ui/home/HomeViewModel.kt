@@ -28,8 +28,8 @@ import dev.justinsmith.bjj.core.pickDrill
 import dev.justinsmith.bjj.core.progressSummary
 import dev.justinsmith.bjj.core.recentlyStuck
 import dev.justinsmith.bjj.core.services.Snapshot
-import dev.justinsmith.bjj.core.services.studyStats
 import dev.justinsmith.bjj.core.stickingPoints
+import dev.justinsmith.bjj.core.streakDays
 import dev.justinsmith.bjj.core.studyFirst
 import dev.justinsmith.bjj.core.todaysPath
 import dev.justinsmith.bjj.core.trainingSummary
@@ -76,7 +76,8 @@ sealed interface HomeUiState {
         val training: TrainingSummary,
         /** Where the student got stuck in recent classes. */
         val stuck: List<Situation>,
-        val search: SearchUi,
+        /** What the search box found; nothing until something is typed. */
+        val search: SearchUi = SearchUi(),
         /** Null once every lesson is learned. */
         val lesson: LessonOffer?,
         val path: List<PathStep>,
@@ -87,8 +88,8 @@ sealed interface HomeUiState {
     ) : HomeUiState
 }
 
-/** Everything Today shows, from what is stored, at [now]. */
-fun homeUiState(snapshot: Snapshot, query: String, now: Long, zone: LocalZone): HomeUiState.Ready {
+/** Everything Today shows but the search, from what is stored, at [now]. */
+fun homeUiState(snapshot: Snapshot, now: Long, zone: LocalZone): HomeUiState.Ready {
     val lib = snapshot.library
     val log = snapshot.trainingLog
     val progress = progressSummary(lib)
@@ -96,7 +97,8 @@ fun homeUiState(snapshot: Snapshot, query: String, now: Long, zone: LocalZone): 
     val lesson = currentLesson(lib)
     return HomeUiState.Ready(
         dateLabel = todayLabel(now, zone),
-        streakDays = studyStats(snapshot, now, zone).streakDays,
+        // Not studyStats: its due count is a queue of its own, and this page has one already.
+        streakDays = streakDays(snapshot.recentReviews, now, zone, log.map { it.day }),
         review = ReviewOffer(
             ready = preview.queue.size,
             due = preview.due.size,
@@ -110,7 +112,6 @@ fun homeUiState(snapshot: Snapshot, query: String, now: Long, zone: LocalZone): 
         drill = pickDrill(lib, log),
         training = trainingSummary(log),
         stuck = recentlyStuck(log, RECENT_CLASS_COUNT).mapNotNull { findSituation(lib, it) },
-        search = searchUi(lib, query),
         lesson = lesson?.let {
             LessonOffer(it, FOUNDATION_LESSONS.indexOf(it) + 1, FOUNDATION_LESSONS.size, lessonProgress(lib, it))
         },
@@ -124,9 +125,18 @@ fun homeUiState(snapshot: Snapshot, query: String, now: Long, zone: LocalZone): 
 class HomeViewModel(appData: AppData, private val clock: Clock) : ViewModel() {
     private val query = MutableStateFlow("")
 
-    val uiState: StateFlow<HomeUiState> = screenState(appData, query) { snapshot, query ->
-        snapshot?.let { homeUiState(it, query, clock.now(), clock.zone) } ?: HomeUiState.Loading
-    }
+    val uiState: StateFlow<HomeUiState> = screenState(
+        appData,
+        query,
+        content = { snapshot -> snapshot?.let { homeUiState(it, clock.now(), clock.zone) } ?: HomeUiState.Loading },
+        withOwn = { state, snapshot, query ->
+            if (state is HomeUiState.Ready && snapshot != null) {
+                state.copy(search = searchUi(snapshot.library, query))
+            } else {
+                state
+            }
+        },
+    )
 
     fun search(text: String) {
         query.value = text

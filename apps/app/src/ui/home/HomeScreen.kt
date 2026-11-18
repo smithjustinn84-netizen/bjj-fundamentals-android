@@ -162,7 +162,7 @@ private fun Hero(dateLabel: String, streakDays: Int, review: ReviewOffer, onRevi
                 horizontalArrangement = Arrangement.spacedBy(Spacing.s3),
                 verticalAlignment = Alignment.CenterVertically,
             ) {
-                BjjText("${countUp(ready)}", style = Type.count)
+                CountUp(ready)
                 Column {
                     BjjText(pluralStringResource(Res.plurals.today_cards_ready, ready), style = Type.strong)
                     BjjText(reviewLine(review), style = Type.small, color = p.fillSoft)
@@ -184,6 +184,15 @@ private fun HeroContent(content: @Composable ColumnScope.() -> Unit) {
     CompositionLocalProvider(LocalContentColor provides BjjTheme.palette.onFill) {
         Column(Modifier.fillMaxWidth().padding(Spacing.cardPad), content = content)
     }
+}
+
+/**
+ * [target] in large figures, counting up to it as the page opens. A composable of its own, so each step of the
+ * count redraws the number and not the card round it.
+ */
+@Composable
+private fun CountUp(target: Int, modifier: Modifier = Modifier) {
+    BjjText("${countUp(target)}", modifier, style = Type.count)
 }
 
 /** A number counting up to [target] as the page opens, or simply [target] when animations are off. */

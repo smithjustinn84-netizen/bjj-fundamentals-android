@@ -15,6 +15,7 @@ import kotlinx.coroutines.test.runTest
 import kotlin.test.Test
 import kotlin.test.assertEquals
 import kotlin.test.assertIs
+import kotlin.test.assertSame
 import kotlin.test.assertTrue
 
 /** Today's ViewModel, and the frame's beside it, over the starter content. */
@@ -44,6 +45,10 @@ class HomeViewModelTest : ViewModelTest() {
         assertEquals(2, later.streakDays)
         assertEquals(1, later.training.classes)
         home.search("mount")
-        assertTrue(assertIs<HomeUiState.Ready>(state()).search.hits.isNotEmpty())
+        val searched = assertIs<HomeUiState.Ready>(state())
+        assertTrue(searched.search.hits.isNotEmpty())
+        // Typing works out the search again, not the rest of the page.
+        assertSame(later.path, searched.path)
+        assertSame(later.review, searched.review)
     }
 }

@@ -5,7 +5,6 @@ import androidx.compose.animation.core.animateFloat
 import androidx.compose.animation.core.infiniteRepeatable
 import androidx.compose.animation.core.rememberInfiniteTransition
 import androidx.compose.animation.core.tween
-import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.layout.Arrangement
@@ -13,6 +12,7 @@ import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.BoxWithConstraints
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.offset
@@ -29,6 +29,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.alpha
 import androidx.compose.ui.draw.drawBehind
+import androidx.compose.ui.draw.drawWithCache
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.Path
@@ -42,7 +43,6 @@ import androidx.compose.ui.semantics.selected
 import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
-import androidx.compose.ui.unit.sp
 import dev.justinsmith.bjj.core.MapEdge
 import dev.justinsmith.bjj.core.MapLayout
 import dev.justinsmith.bjj.core.MapNode
@@ -63,9 +63,12 @@ import dev.justinsmith.bjj.design.components.block
 import dev.justinsmith.bjj.design.components.pressShrink
 import dev.justinsmith.bjj.design.reducedMotion
 import dev.justinsmith.bjj.design.theme.BjjTheme
+import dev.justinsmith.bjj.design.theme.Breakpoints
 import dev.justinsmith.bjj.design.theme.Motion
 import dev.justinsmith.bjj.design.theme.Radius
+import dev.justinsmith.bjj.design.theme.Sizes
 import dev.justinsmith.bjj.design.theme.Spacing
+import dev.justinsmith.bjj.design.theme.TextSizes
 import dev.justinsmith.bjj.design.theme.Type
 import dev.justinsmith.bjj.design.theme.typeColor
 import dev.justinsmith.bjj.nav.Nav
@@ -89,12 +92,6 @@ import org.jetbrains.compose.resources.stringResource
 @Composable
 fun roomForMap(): Boolean = hasRail()
 
-/**
- * The across-the-page map needs a column about 1000dp wide to stay readable; narrower, the map runs down the
- * page instead.
- */
-private val MAP_ACROSS = 1280.dp
-
 /** Submissions are counted on the position instead of drawn, so they get no line in the legend. */
 private val ARROW_TYPES = TransitionType.entries.filterNot(::endsTheRoll)
 
@@ -105,7 +102,7 @@ private val ARROW_TYPES = TransitionType.entries.filterNot(::endsTheRoll)
  */
 @Composable
 fun PositionMap(map: MapUi, nav: Nav, modifier: Modifier = Modifier) {
-    val orientation = if (windowWidth() >= MAP_ACROSS) MapOrientation.Horizontal else MapOrientation.Vertical
+    val orientation = if (windowWidth() >= Breakpoints.mapAcross) MapOrientation.Horizontal else MapOrientation.Vertical
     val layout = map.layouts.getValue(orientation)
     var selectedId by rememberSaveable { mutableStateOf<String?>(null) }
     val selected = selectedId?.let { map.positions[it] }
@@ -145,29 +142,44 @@ private fun MapSheet(
     activeId: String?,
     onToggle: (String) -> Unit,
 ) {
-    val touches = { edge: MapEdge -> edge.fromId == activeId || edge.toId == activeId }
-    val neighbours = layout.edges.filter(touches).flatMap { listOf(it.fromId, it.toId) }.toSet()
+    val neighbours = remember(layout, activeId) {
+        layout.edges.filter { it.touches(activeId) }.flatMap { listOf(it.fromId, it.toId) }.toSet()
+    }
     val palette = BjjTheme.palette
-    val flow = flowPhase()
+    val flow = flowPhase(running = activeId != null)
     val description = stringResource(Res.string.map_description)
     BoxWithConstraints(Modifier.fillMaxWidth().semantics { contentDescription = description }) {
         // One of the map's own units, on this screen.
         val unit = maxWidth / layout.width.toFloat()
-        Canvas(Modifier.fillMaxWidth().height(unit * layout.height.toFloat())) {
-            val scale = unit.toPx()
-            for (edge in layout.edges) {
-                val active = activeId != null && touches(edge)
-                drawEdge(edge, palette.typeColor(edge.type), scale, active, dim = activeId != null && !active)
-                if (active) drawFlow(edge, palette.surface, scale, flow)
-            }
-        }
+        Spacer(
+            Modifier.fillMaxWidth().height(unit * layout.height.toFloat()).drawWithCache {
+                // The arrows' shapes are worked out once for this layout, size and selection, not on every frame
+                // the dashes move.
+                val scale = unit.toPx()
+                val arrows = layout.edges.map { edge ->
+                    val active = edge.touches(activeId)
+                    Arrow(edge, palette.typeColor(edge.type), scale, active, dim = activeId != null && !active)
+                }
+                val flowStroke = FLOW_WIDTH * scale
+                val dash = FLOW_DASH * scale
+                val gap = FLOW_GAP * scale
+                onDrawBehind {
+                    for (arrow in arrows) drawArrow(arrow)
+                    // Read here, while drawing, so the dashes moving redraw the map without recomposing it.
+                    val offset = -flow() * (dash + gap)
+                    val effect = PathEffect.dashPathEffect(floatArrayOf(dash, gap), offset)
+                    val style = Stroke(flowStroke, cap = StrokeCap.Round, pathEffect = effect)
+                    for (arrow in arrows) if (arrow.active) drawPath(arrow.line, palette.surface, style = style)
+                }
+            },
+        )
         // Across the page a lane's heading is centred over its column.
-        val nudge = if (orientation == MapOrientation.Horizontal) -LANE_LABEL_HALF else 0.dp
+        val nudge = if (orientation == MapOrientation.Horizontal) -Sizes.mapLaneLabelHalf else 0.dp
         for (lane in layout.lanes) {
             BjjText(
                 lane.category.label.uppercase(),
                 Modifier.offset(unit * lane.labelX.toFloat() + nudge, unit * lane.labelY.toFloat()),
-                style = Type.eyebrow.copy(fontSize = 11.sp),
+                style = Type.eyebrow.copy(fontSize = TextSizes.mapLane),
                 color = palette.muted,
             )
         }
@@ -199,7 +211,7 @@ private fun Legend(modifier: Modifier = Modifier) {
             ) {
                 val color = palette.typeColor(type)
                 Box(
-                    Modifier.width(LEGEND_LINE).height(LEGEND_WEIGHT).drawBehind {
+                    Modifier.width(Sizes.legendLine).height(Sizes.legendWeight).drawBehind {
                         block(color, color, Radius.pill, 0.dp)
                     },
                 )
@@ -209,18 +221,19 @@ private fun Legend(modifier: Modifier = Modifier) {
     }
 }
 
-private val LANE_LABEL_HALF = 40.dp
-private val LEGEND_LINE = 22.dp
-private val LEGEND_WEIGHT = 3.dp
-
-/** How far along its loop the dashes on a highlighted arrow are, from 0 to 1; still when animations are off. */
+/**
+ * How far along its loop the dashes on a highlighted arrow are, from 0 to 1, read while drawing so it does not
+ * recompose. It runs only while something is [running], and is still when animations are off.
+ */
 @Composable
-private fun flowPhase(): Float {
-    if (reducedMotion()) return 0f
-    val transition = rememberInfiniteTransition()
-    val phase by transition.animateFloat(0f, 1f, infiniteRepeatable(tween(Motion.FLOW, easing = LinearEasing)))
-    return phase
+private fun flowPhase(running: Boolean): () -> Float {
+    if (!running || reducedMotion()) return { 0f }
+    val phase = rememberInfiniteTransition()
+        .animateFloat(0f, 1f, infiniteRepeatable(tween(Motion.FLOW, easing = LinearEasing)))
+    return { phase.value }
 }
+
+private fun MapEdge.touches(positionId: String?) = positionId != null && (fromId == positionId || toId == positionId)
 
 private fun Point.at(scale: Float) = Offset((x * scale).toFloat(), (y * scale).toFloat())
 
@@ -230,28 +243,27 @@ private fun MapEdge.path(scale: Float) = Path().apply {
     quadraticTo(control.at(scale).x, control.at(scale).y, end.at(scale).x, end.at(scale).y)
 }
 
-/** An arrow for one technique, in its type's colour: heavier when its position is selected, faint when another is. */
-private fun DrawScope.drawEdge(edge: MapEdge, color: Color, scale: Float, active: Boolean, dim: Boolean) {
+/**
+ * An arrow for one technique, ready to draw, in its type's colour: heavier when its position is selected, faint
+ * when another is.
+ */
+private class Arrow(edge: MapEdge, color: Color, scale: Float, val active: Boolean, dim: Boolean) {
     val ink = if (dim) color.copy(alpha = DIM_EDGE) else color
-    val width = (if (active) ACTIVE_EDGE else EDGE) * scale
-    drawPath(edge.path(scale), ink, style = Stroke(width, cap = StrokeCap.Round))
-    val (left, right) = arrowHead(edge.curve.end, edge.curve.control)
+    val line = edge.path(scale)
+    val stroke = Stroke((if (active) ACTIVE_EDGE else EDGE) * scale, cap = StrokeCap.Round)
     val head = Path().apply {
+        val (left, right) = arrowHead(edge.curve.end, edge.curve.control)
         val tip = edge.curve.end.at(scale)
         moveTo(left.at(scale).x, left.at(scale).y)
         lineTo(tip.x, tip.y)
         lineTo(right.at(scale).x, right.at(scale).y)
         close()
     }
-    drawPath(head, ink)
 }
 
-/** Dashes running along a highlighted arrow, to show which way it flows. */
-private fun DrawScope.drawFlow(edge: MapEdge, color: Color, scale: Float, phase: Float) {
-    val dash = FLOW_DASH * scale
-    val gap = FLOW_GAP * scale
-    val effect = PathEffect.dashPathEffect(floatArrayOf(dash, gap), -phase * (dash + gap))
-    drawPath(edge.path(scale), color, style = Stroke(FLOW_WIDTH * scale, cap = StrokeCap.Round, pathEffect = effect))
+private fun DrawScope.drawArrow(arrow: Arrow) {
+    drawPath(arrow.line, arrow.ink, style = arrow.stroke)
+    drawPath(arrow.head, arrow.ink)
 }
 
 // Stroke widths and dashes in the map's own units, as the web app draws them.
@@ -291,14 +303,14 @@ private fun MapNodeButton(
             ProgressDot(position.progress)
             BjjText(
                 position.name,
-                style = Type.small.copy(fontSize = 13.sp, fontWeight = FontWeight.SemiBold),
+                style = Type.small.copy(fontSize = TextSizes.mapName, fontWeight = FontWeight.SemiBold),
                 maxLines = 2,
             )
         }
         if (node.submissions > 0) {
             BjjText(
                 pluralStringResource(Res.plurals.map_submissions, node.submissions, node.submissions),
-                style = Type.small.copy(fontSize = 10.5.sp, fontWeight = FontWeight.SemiBold),
+                style = Type.small.copy(fontSize = TextSizes.mapCount, fontWeight = FontWeight.SemiBold),
                 color = p.typeSubmission,
                 maxLines = 1,
             )

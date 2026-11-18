@@ -12,7 +12,7 @@ import dev.justinsmith.bjj.core.newReviewState
 import dev.justinsmith.bjj.core.reviewOf
 import dev.justinsmith.bjj.core.services.ReviewService
 import dev.justinsmith.bjj.core.services.Snapshot
-import dev.justinsmith.bjj.core.services.studyStats
+import dev.justinsmith.bjj.core.streakDays
 import dev.justinsmith.bjj.nav.ReviewSession
 import dev.justinsmith.bjj.ui.common.screenState
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -99,7 +99,7 @@ class ReviewSessionViewModel(
             ?: return ReviewSessionUiState.Complete(
                 doneCount = session.doneCount,
                 tally = session.tally,
-                streakDays = studyStats(snapshot, now, clock.zone).streakDays,
+                streakDays = streakDays(snapshot.recentReviews, now, clock.zone, snapshot.trainingLog.map { it.day }),
                 moreWaiting = queueNow(snapshot).size,
             )
         val lib = snapshot.library

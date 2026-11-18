@@ -1,5 +1,10 @@
 package dev.justinsmith.bjj.ui.videos
 
+import androidx.compose.foundation.background
+import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
@@ -17,7 +22,9 @@ import dev.justinsmith.bjj.design.components.Card
 import dev.justinsmith.bjj.design.components.SectionHead
 import dev.justinsmith.bjj.design.components.TextInput
 import dev.justinsmith.bjj.design.theme.BjjTheme
+import dev.justinsmith.bjj.design.theme.Radius
 import dev.justinsmith.bjj.design.theme.Sizes
+import dev.justinsmith.bjj.design.theme.Spacing
 import dev.justinsmith.bjj.nav.Nav
 import dev.justinsmith.bjj.nav.itemKey
 import dev.justinsmith.bjj.resources.Res
@@ -31,8 +38,8 @@ import dev.justinsmith.bjj.resources.videos_saved
 import dev.justinsmith.bjj.resources.videos_search
 import dev.justinsmith.bjj.resources.videos_search_placeholder
 import dev.justinsmith.bjj.ui.common.BackLink
+import dev.justinsmith.bjj.ui.common.LazyPage
 import dev.justinsmith.bjj.ui.common.Loading
-import dev.justinsmith.bjj.ui.common.Page
 import dev.justinsmith.bjj.ui.common.PageHead
 import dev.justinsmith.bjj.ui.common.VideoActions
 import dev.justinsmith.bjj.ui.common.VideoForm
@@ -68,40 +75,71 @@ fun VideosScreen(
     LaunchedEffect(Unit) { if (query.isNotEmpty()) currentOnSearch(query) }
     var adding by rememberSaveable { mutableStateOf(false) }
     val shown = state.shown
-    Page(modifier, maxWidth = Sizes.readingMax) {
-        BackLink(stringResource(Res.string.tab_more), nav.back)
-        PageHead(
-            stringResource(Res.string.videos_bookmarks),
-            about = stringResource(Res.string.videos_about),
-        )
-        Card {
-            SectionHead(stringResource(Res.string.videos_saved, state.total)) {
-                if (!adding) {
-                    Button(stringResource(Res.string.videos_add_bookmark), { adding = true }, size = ButtonSize.Small)
-                }
-            }
-            // Behind a button so the saved list, not an empty form, is what the page opens on.
-            if (adding) VideoForm(actions.add, onDone = { adding = false }, about = state.about)
-            if (state.total >= SEARCH_THRESHOLD) {
-                TextInput(
+    // Lazy: the starter content alone has nearly two hundred bookmarks, too many to lay out before the page shows.
+    LazyPage(modifier, maxWidth = Sizes.readingMax) {
+        item(key = HEAD_KEY) {
+            Column(verticalArrangement = Arrangement.spacedBy(Spacing.s4)) {
+                BackLink(stringResource(Res.string.tab_more), nav.back)
+                PageHead(
+                    stringResource(Res.string.videos_bookmarks),
+                    about = stringResource(Res.string.videos_about),
+                )
+                Head(
+                    state,
+                    actions,
                     query,
-                    {
+                    onQuery = {
                         query = it
                         onSearch(it)
                     },
-                    stringResource(Res.string.videos_search),
-                    placeholder = stringResource(Res.string.videos_search_placeholder),
-                    imeAction = ImeAction.Search,
+                    adding = adding,
+                    onAdding = { adding = it },
                 )
             }
-            if (shown.isEmpty()) {
-                val nothing = if (state.total == 0) Res.string.videos_none else Res.string.videos_no_matches
-                BjjText(stringResource(nothing), color = BjjTheme.palette.muted)
-            }
-            for ((video, about) in shown) {
-                val linked = about?.let { it.name to { nav.open(itemKey(it.item.kind, it.item.id)) } }
-                VideoRow(video, actions, linked = linked)
-            }
+        }
+        items(shown, key = { it.video.id }) { (video, about) ->
+            val linked = about?.let { it.name to { nav.open(itemKey(it.item.kind, it.item.id)) } }
+            // Off the card now, so each row brings its own paper.
+            val paper = Modifier.background(BjjTheme.palette.surface, RoundedCornerShape(Radius.md))
+            VideoRow(video, actions, paper, linked = linked)
         }
     }
 }
+
+/** The list's own card: how many there are, the way to add one, and the search. */
+@Composable
+private fun Head(
+    state: VideosUiState.Ready,
+    actions: VideoActions,
+    query: String,
+    onQuery: (String) -> Unit,
+    adding: Boolean,
+    onAdding: (Boolean) -> Unit,
+) {
+    val shown = state.shown
+    Card {
+        SectionHead(stringResource(Res.string.videos_saved, state.total)) {
+            if (!adding) {
+                Button(stringResource(Res.string.videos_add_bookmark), { onAdding(true) }, size = ButtonSize.Small)
+            }
+        }
+        // Behind a button so the saved list, not an empty form, is what the page opens on.
+        if (adding) VideoForm(actions.add, onDone = { onAdding(false) }, about = state.about)
+        if (state.total >= SEARCH_THRESHOLD) {
+            TextInput(
+                query,
+                onQuery,
+                stringResource(Res.string.videos_search),
+                placeholder = stringResource(Res.string.videos_search_placeholder),
+                imeAction = ImeAction.Search,
+            )
+        }
+        if (shown.isEmpty()) {
+            val nothing = if (state.total == 0) Res.string.videos_none else Res.string.videos_no_matches
+            BjjText(stringResource(nothing), color = BjjTheme.palette.muted)
+        }
+    }
+}
+
+/** The list's first item, so the rows' keys, which are bookmark ids, never meet it. */
+private const val HEAD_KEY = "head"

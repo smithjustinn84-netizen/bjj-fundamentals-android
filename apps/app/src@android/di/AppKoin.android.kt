@@ -22,7 +22,7 @@ private fun androidModule(context: Context) = module {
     // The one line that picks the storage engine.
     single {
         CoreEnv(
-            storage = roomStorage(bjjDatabaseBuilder(context), starterContent(System.currentTimeMillis())),
+            storage = roomStorage(bjjDatabaseBuilder(context)) { starterContent(System.currentTimeMillis()) },
             newId = { UUID.randomUUID().toString() },
             now = System::currentTimeMillis,
             // Asked each time, so a trip across time zones is followed without a restart.

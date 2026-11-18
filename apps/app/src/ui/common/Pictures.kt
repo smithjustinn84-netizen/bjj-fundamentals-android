@@ -26,9 +26,9 @@ import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.draw.alpha
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.draw.drawBehind
+import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.semantics.ProgressBarRangeInfo
 import androidx.compose.ui.semantics.progressBarRangeInfo
 import androidx.compose.ui.semantics.semantics
@@ -111,13 +111,13 @@ internal fun VideoOnPaper(video: VideoBookmark, title: String) {
                 settled = true
             }
         }
-        val shown by animateFloatAsState(if (ready) 1f else 0f, if (still) snap() else tween(Motion.BASE))
+        val shown = animateFloatAsState(if (ready) 1f else 0f, if (still) snap() else tween(Motion.BASE))
         Box(Modifier.fillMaxWidth().aspectRatio(VIDEO_ASPECT)) {
             ArtworkFrame(Modifier.fillMaxSize()) { if (!ready) LoadingPulse() }
             if (settled) {
                 // Inside the paper's ink line, which stays as the player's frame.
                 val inside = RoundedCornerShape(Radius.md)
-                Box(Modifier.fillMaxSize().padding(Sizes.line).clip(inside).alpha(shown)) {
+                Box(Modifier.fillMaxSize().padding(Sizes.line).clip(inside).graphicsLayer { alpha = shown.value }) {
                     VideoPlayer(video.youtubeId, video.startSeconds, title, onReady = { ready = true })
                 }
             }

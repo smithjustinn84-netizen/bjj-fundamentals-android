@@ -36,11 +36,13 @@ sealed interface PositionsUiState {
         val map: MapUi,
         /** Techniques whose starting position is gone. */
         val orphans: List<TechniqueRow>,
-        val search: SearchUi,
+        /** What the search box found; nothing until something is typed. */
+        val search: SearchUi = SearchUi(),
     ) : PositionsUiState
 }
 
-fun positionsUiState(snapshot: Snapshot, query: String): PositionsUiState.Ready {
+/** Everything Positions shows but the search, from what is stored. */
+fun positionsUiState(snapshot: Snapshot): PositionsUiState.Ready {
     val lib = snapshot.library
     val tiles = lib.positions.associate { position ->
         val progress = positionProgress(lib, position.id)
@@ -59,16 +61,24 @@ fun positionsUiState(snapshot: Snapshot, query: String): PositionsUiState.Ready 
         },
         map = mapUi(lib),
         orphans = techniqueRows(lib, lib.transitions.filter { it.fromId !in lib.positionById }, Direction.Out),
-        search = searchUi(lib, query),
     )
 }
 
 class PositionsViewModel(appData: AppData) : ViewModel() {
     private val query = MutableStateFlow("")
 
-    val uiState: StateFlow<PositionsUiState> = screenState(appData, query) { snapshot, query ->
-        snapshot?.let { positionsUiState(it, query) } ?: PositionsUiState.Loading
-    }
+    val uiState: StateFlow<PositionsUiState> = screenState(
+        appData,
+        query,
+        content = { snapshot -> snapshot?.let(::positionsUiState) ?: PositionsUiState.Loading },
+        withOwn = { state, snapshot, query ->
+            if (state is PositionsUiState.Ready && snapshot != null) {
+                state.copy(search = searchUi(snapshot.library, query))
+            } else {
+                state
+            }
+        },
+    )
 
     fun search(text: String) {
         query.value = text

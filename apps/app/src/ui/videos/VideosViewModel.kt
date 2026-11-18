@@ -22,7 +22,7 @@ sealed interface VideosUiState {
     data object Loading : VideosUiState
 
     data class Ready(
-        /** The bookmarks that match what was searched for, newest first. */
+        /** The bookmarks that match what was searched for, newest first: all of them until something is. */
         val shown: List<VideoListRow>,
         /** How many bookmarks there are in all. */
         val total: Int,
@@ -31,7 +31,8 @@ sealed interface VideosUiState {
     ) : VideosUiState
 }
 
-fun videosUiState(snapshot: Snapshot, query: String): VideosUiState.Ready {
+/** Every bookmark, from what is stored, before any search. */
+fun videosUiState(snapshot: Snapshot): VideosUiState.Ready {
     val lib = snapshot.library
     val rows = snapshot.videos.map { video ->
         val kind = video.linkedKind.itemKind
@@ -47,23 +48,29 @@ fun videosUiState(snapshot: Snapshot, query: String): VideosUiState.Ready {
             },
         )
     }
+    return VideosUiState.Ready(shown = rows, total = rows.size, about = aboutOptions(lib))
+}
+
+/** Only the bookmarks whose title, note or item has [query] in it. */
+fun VideosUiState.Ready.matching(query: String): VideosUiState.Ready {
     val needle = query.trim().lowercase()
-    return VideosUiState.Ready(
-        shown = rows.filter { (video, about) ->
-            needle.isEmpty() ||
-                listOf(video.title, video.note, about?.name.orEmpty()).any { needle in it.lowercase() }
+    if (needle.isEmpty()) return this
+    return copy(
+        shown = shown.filter { (video, about) ->
+            listOf(video.title, video.note, about?.name.orEmpty()).any { needle in it.lowercase() }
         },
-        total = rows.size,
-        about = aboutOptions(lib),
     )
 }
 
 class VideosViewModel(appData: AppData, videos: VideoCommands) : ViewModel() {
     private val query = MutableStateFlow("")
 
-    val uiState: StateFlow<VideosUiState> = screenState(appData, query) { snapshot, query ->
-        snapshot?.let { videosUiState(it, query) } ?: VideosUiState.Loading
-    }
+    val uiState: StateFlow<VideosUiState> = screenState(
+        appData,
+        query,
+        content = { snapshot -> snapshot?.let(::videosUiState) ?: VideosUiState.Loading },
+        withOwn = { state, _, query -> if (state is VideosUiState.Ready) state.matching(query) else state },
+    )
 
     val videoActions: VideoActions = videos.actions(viewModelScope)
 

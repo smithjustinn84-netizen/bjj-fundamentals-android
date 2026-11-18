@@ -55,7 +55,7 @@ class LearnUiStatesTest {
 
     @Test
     fun `positions come grouped by category with a map for either way the window runs`() = runTest {
-        val state = positionsUiState(snapshot(), query = "")
+        val state = positionsUiState(snapshot())
         val listed = state.groups.flatMap { it.positions }
         assertEquals(snapshot().library.positions.map { it.id }.toSet(), listed.map { it.id }.toSet())
         assertTrue(state.groups.all { it.positions.isNotEmpty() })
@@ -69,7 +69,7 @@ class LearnUiStatesTest {
 
         // A technique whose starting position is deleted with it is gone too; one left behind is an orphan.
         t.storage.positions.remove("mount")
-        val orphaned = positionsUiState(snapshot(), query = "mount")
+        val orphaned = positionsUiState(snapshot())
         assertEquals(mount.outgoing.map { it.id }.toSet(), orphaned.orphans.map { it.id }.toSet())
         assertFalse(orphaned.groups.flatMap { it.positions }.any { it.id == "mount" })
     }

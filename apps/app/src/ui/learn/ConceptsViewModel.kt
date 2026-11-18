@@ -28,27 +28,37 @@ sealed interface ConceptsUiState {
         val concepts: List<ConceptTile>,
         /** Names of starter concepts the library does not hold and has not dismissed. */
         val missingStarter: List<String>,
-        val search: SearchUi,
+        /** What the search box found; nothing until something is typed. */
+        val search: SearchUi = SearchUi(),
     ) : ConceptsUiState
 }
 
-fun conceptsUiState(snapshot: Snapshot, query: String): ConceptsUiState.Ready {
+/** Everything Concepts shows but the search, from what is stored. */
+fun conceptsUiState(snapshot: Snapshot): ConceptsUiState.Ready {
     val lib = snapshot.library
     return ConceptsUiState.Ready(
         concepts = lib.concepts.map {
             ConceptTile(it.id, it.name, it.summary, progressOf(reviewOf(lib, CardKind.Concept, it.id)))
         },
         missingStarter = snapshot.missingStarterConcepts.map { it.name },
-        search = searchUi(lib, query),
     )
 }
 
 class ConceptsViewModel(appData: AppData, private val items: ItemService) : ViewModel() {
     private val query = MutableStateFlow("")
 
-    val uiState: StateFlow<ConceptsUiState> = screenState(appData, query) { snapshot, query ->
-        snapshot?.let { conceptsUiState(it, query) } ?: ConceptsUiState.Loading
-    }
+    val uiState: StateFlow<ConceptsUiState> = screenState(
+        appData,
+        query,
+        content = { snapshot -> snapshot?.let(::conceptsUiState) ?: ConceptsUiState.Loading },
+        withOwn = { state, snapshot, query ->
+            if (state is ConceptsUiState.Ready && snapshot != null) {
+                state.copy(search = searchUi(snapshot.library, query))
+            } else {
+                state
+            }
+        },
+    )
 
     fun search(text: String) {
         query.value = text

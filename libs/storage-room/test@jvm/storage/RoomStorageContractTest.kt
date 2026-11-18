@@ -22,13 +22,14 @@ class RoomStorageContractTest : StorageContract() {
     private val directory: File = Files.createTempDirectory("bjj-storage").toFile()
     private var open: RoomStorage? = null
 
-    private fun open(initialData: BackupData): RoomStorage {
+    private fun open(initialData: () -> BackupData): RoomStorage {
         open?.close()
         return roomStorage(bjjDatabaseBuilder(directory.resolve(DATABASE_NAME).absolutePath), initialData).also {
-            open =
-                it
+            open = it
         }
     }
+
+    private fun open(initialData: BackupData): RoomStorage = open { initialData }
 
     @AfterTest
     fun cleanUp() {
@@ -50,5 +51,14 @@ class RoomStorageContractTest : StorageContract() {
         assertEquals(starter.videos.size, exported.data.videos.size)
         core.backups.importBackup(parseBackup(encodeBackup(exported)))
         assertEquals(exported.data, core.backups.exportBackup().data)
+    }
+
+    @Test
+    fun `builds the initial data only for a new database`() = runTest {
+        var built = 0
+        val starter = { starterContent(TEST_NOW).also { built++ } }
+        open(starter).concepts.count()
+        open(starter).concepts.count()
+        assertEquals(1, built)
     }
 }

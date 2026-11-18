@@ -35,9 +35,10 @@ import kotlin.coroutines.CoroutineContext
 
 /**
  * Opens the app's storage on the database [builder] names: the bundled SQLite, its queries on IO. [initialData]
- * is inserted once, as part of creating the database, and again only by [AppStorage.reset].
+ * is inserted once, as part of creating the database, and again only by [AppStorage.reset]. It is asked for only
+ * then: building and encoding every starter row on each launch would hold up the app's first frame.
  */
-fun roomStorage(builder: RoomDatabase.Builder<BjjDatabase>, initialData: BackupData): RoomStorage {
+fun roomStorage(builder: RoomDatabase.Builder<BjjDatabase>, initialData: () -> BackupData): RoomStorage {
     val seed = SeedRows(initialData)
     val database = builder
         .setDriver(BundledSQLiteDriver())
@@ -53,9 +54,11 @@ fun roomStorage(builder: RoomDatabase.Builder<BjjDatabase>, initialData: BackupD
     return RoomStorage(database, seed)
 }
 
-/** The initial data as the rows the database holds. */
-internal class SeedRows(data: BackupData) {
-    val rows: List<RowEntity> =
+/** The initial data as the rows the database holds, built the first time they are needed. */
+internal class SeedRows(data: () -> BackupData) {
+    private val source by lazy(data)
+    val rows: List<RowEntity> by lazy {
+        val data = source
         table(BackupTable.Concepts, Concept.serializer(), data.concepts) +
             table(BackupTable.Positions, Position.serializer(), data.positions) +
             table(BackupTable.Transitions, Transition.serializer(), data.transitions) +
@@ -64,7 +67,8 @@ internal class SeedRows(data: BackupData) {
             table(BackupTable.StarterDismissals, StarterDismissal.serializer(), data.starterDismissals) +
             table(BackupTable.TrainingLog, TrainingEntry.serializer(), data.trainingLog) +
             table(BackupTable.Settings, Setting.serializer(), data.settings)
-    val reviewLog: List<ReviewLogEntity> = data.reviewLog.map { it.entity() }
+    }
+    val reviewLog: List<ReviewLogEntity> by lazy { source.reviewLog.map { it.entity() } }
 
     private fun <T : HasId> table(table: BackupTable, serializer: KSerializer<T>, rows: List<T>) =
         rows.map { RowEntity(table.key, it.id, CoreJson.encodeToString(serializer, it)) }

@@ -10,9 +10,12 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.key
+import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberUpdatedState
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.viewinterop.AndroidView
+import androidx.lifecycle.Lifecycle
+import androidx.lifecycle.compose.LifecycleEventEffect
 import dev.justinsmith.bjj.core.embedUrl
 
 /**
@@ -26,6 +29,10 @@ import dev.justinsmith.bjj.core.embedUrl
 actual fun VideoPlayer(youtubeId: String, startSeconds: Int, title: String, onReady: () -> Unit, modifier: Modifier) {
     val ready by rememberUpdatedState(onReady)
     key(youtubeId, startSeconds) {
+        val player = remember { Player() }
+        // A WebView plays on behind the app unless told otherwise: it pauses with the app and goes on with it.
+        LifecycleEventEffect(Lifecycle.Event.ON_PAUSE) { player.view?.onPause() }
+        LifecycleEventEffect(Lifecycle.Event.ON_RESUME) { player.view?.onResume() }
         AndroidView(
             modifier = modifier.fillMaxWidth().aspectRatio(VIDEO_ASPECT),
             factory = { context ->
@@ -49,11 +56,19 @@ actual fun VideoPlayer(youtubeId: String, startSeconds: Int, title: String, onRe
                         "utf-8",
                         null,
                     )
-                }
+                }.also { player.view = it }
             },
-            onRelease = { it.destroy() },
+            onRelease = {
+                player.view = null
+                it.destroy()
+            },
         )
     }
+}
+
+/** The player's view, once it is made, for the app's lifecycle to pause and resume. */
+private class Player {
+    var view: WebView? = null
 }
 
 private fun playerPage(src: String): String =

@@ -173,10 +173,13 @@ fun LogScreen(
                         )
                     } else {
                         entries.forEachIndexed { index, row ->
-                            if (index > 0) Divider()
-                            EntryRow(row, nav, onEdit = {
-                                editingId = row.entry.id
-                            }, onRemove = { onRemove(row.entry.id) })
+                            // Keyed, so removing a class leaves each other row its own state.
+                            key(row.entry.id) {
+                                if (index > 0) Divider()
+                                EntryRow(row, nav, onEdit = {
+                                    editingId = row.entry.id
+                                }, onRemove = { onRemove(row.entry.id) })
+                            }
                         }
                     }
                 }
