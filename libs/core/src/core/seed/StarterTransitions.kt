@@ -28,6 +28,7 @@ internal val STARTER_TRANSITIONS: List<StarterTransition> = listOf(
             "Jumping into closed guard, which is dangerous for your partner’s knees and illegal for white belts",
         ),
         drill = "With a standing partner, take collar and sleeve grips, place your foot in their hip, and sit smoothly to closed guard. 10 slow reps on each side while your partner stays balanced.",
+        blueBeltTest = true,
     ),
     StarterTransition(
         id = "double-leg",
@@ -50,6 +51,7 @@ internal val STARTER_TRANSITIONS: List<StarterTransition> = listOf(
             "Stopping on both knees after contact instead of stepping the trail leg up to drive across",
         ),
         drill = "Solo: 10 penetration steps on each side down the mat with back straight and head up. Then 10 entries on a partner, stepping the trail leg up and stopping before the takedown.",
+        blueBeltTest = true,
     ),
     StarterTransition(
         id = "hip-throw",
@@ -72,6 +74,7 @@ internal val STARTER_TRANSITIONS: List<StarterTransition> = listOf(
             "Letting go of the sleeve as they fall, which loses control of their landing and your top position",
         ),
         drill = "10 fit-ins (uchikomi) on each side: pull, step in with knees bent, turn your hips all the way across, load your partner lightly onto your hips, and set them back down.",
+        blueBeltTest = true,
     ),
     StarterTransition(
         id = "wrist-grab-release",
@@ -94,6 +97,7 @@ internal val STARTER_TRANSITIONS: List<StarterTransition> = listOf(
             "Dropping your hands after the release instead of making distance",
         ),
         drill = "Your partner grabs your wrist at half strength (same-side and cross-wrist). 10 releases with each hand, stepping in and levering cleanly through the thumb gap.",
+        blueBeltTest = false,
     ),
     StarterTransition(
         id = "front-choke-defence",
@@ -116,6 +120,7 @@ internal val STARTER_TRANSITIONS: List<StarterTransition> = listOf(
             "Leaving your chin up where your windpipe is exposed",
         ),
         drill = "Your partner places both hands firmly on your collarbones. 10 reps on each side: tuck the chin, step into base, raise the arm beside your ear, and pivot to clear the arms.",
+        blueBeltTest = false,
     ),
     StarterTransition(
         id = "bear-hug-escape",
@@ -138,6 +143,7 @@ internal val STARTER_TRANSITIONS: List<StarterTransition> = listOf(
             "Reaching for their legs with your back instead of stepping your hips behind theirs first",
         ),
         drill = "Your partner locks a rear bear hug over your arms at half strength. 10 reps on each side: drop into base, step behind their leg, and tap the backs of their knees without lifting.",
+        blueBeltTest = false,
     ),
     StarterTransition(
         id = "standing-headlock-escape",
@@ -160,6 +166,7 @@ internal val STARTER_TRANSITIONS: List<StarterTransition> = listOf(
             "Turning your chin away from their body, which exposes your carotid artery to the squeeze",
         ),
         drill = "Your partner holds a light standing side headlock. 10 reps: step your hips underneath you, frame under the nose, hook the near knee, and guide them gently down.",
+        blueBeltTest = false,
     ),
     StarterTransition(
         id = "sprawl",
@@ -182,6 +189,7 @@ internal val STARTER_TRANSITIONS: List<StarterTransition> = listOf(
             "Staying draped over their back after sprawling instead of immediately spinning behind their elbows",
         ),
         drill = "Solo: 3 sets of 10 sprawls, dropping one hip to the mat with laces up and popping right back into stance. Then 10 partner reps: partner shoots slowly, you sprawl and spin behind to turtle.",
+        blueBeltTest = true,
     ),
     StarterTransition(
         id = "single-leg",
@@ -204,6 +212,7 @@ internal val STARTER_TRANSITIONS: List<StarterTransition> = listOf(
             "Diving for the ankle from far away without a penetration step",
         ),
         drill = "Solo: 10 level changes and inside penetration steps per side. Then 10 partner entries: snatch the single leg, pinch the knees with forehead in their chest, and circle them until they hop.",
+        blueBeltTest = true,
     ),
     StarterTransition(
         id = "break-closed-guard",
@@ -226,6 +235,30 @@ internal val STARTER_TRANSITIONS: List<StarterTransition> = listOf(
             "Opening the ankles and then dropping both knees back down, letting them lock closed guard right back up",
         ),
         drill = "Inside your partner's closed guard: build tall posture, pin the hips with elbows tucked in, wedge the tailbone, pop the ankles open, and bring a knee shield up. 5 reps per side against 30% leg resistance.",
+        blueBeltTest = true,
+    ),
+    StarterTransition(
+        id = "standing-guard-break",
+        name = "Standing closed guard break",
+        type = TransitionType.Transition,
+        fromId = "closed-guard",
+        toId = "open-guard",
+        role = PositionRole.Top,
+        endRole = PositionRole.Top,
+        steps = listOf(
+            "Establish tall posture inside their closed guard and control one of their sleeves (or wrists) with two hands, pinning it firmly against their hip or stomach so they cannot grab your ankle",
+            "Step the foot on the controlled-arm side up flat on the mat beside their hip, then immediately bring your second foot up to stand in a wide, athletic stance",
+            "Keep your hips forward and your spine upright so their weight hangs down off your hips rather than pulling your head forward",
+            "Release one hand to grip the inside of their knee (or pants at the knee) and push their knee straight down toward the mat while keeping your hips pressed forward",
+            "As their ankles pop open, drop one knee immediately into the space between their legs to establish combat base and begin your pass",
+        ),
+        commonMistakes = listOf(
+            "Standing up without controlling an arm first, which lets them grab both ankles for a lumberjack sweep",
+            "Bending forward at the waist while standing, which hands them easy armbars and overhead sweeps",
+            "Standing with your feet too narrow or stepping back too far, letting them drop underneath your hips",
+        ),
+        drill = "Inside your partner's closed guard: pin one sleeve to their hip, step up on that side first, stand tall with hips forward, push the knee down to pop the ankles open, and drop into combat base. 5 reps per side.",
+        blueBeltTest = true,
     ),
     StarterTransition(
         id = "scissor-sweep",
@@ -249,6 +282,7 @@ internal val STARTER_TRANSITIONS: List<StarterTransition> = listOf(
             "Letting your top knee sag down to their belly, where they can easily push it to the mat and pass",
         ),
         drill = "10 reps on each side: grip, shrimp to your side, load their weight forward onto your top shin until their knees get light, then 5 reps per side finishing all the way into mount.",
+        blueBeltTest = true,
     ),
     StarterTransition(
         id = "hip-bump-sweep",
@@ -271,6 +305,7 @@ internal val STARTER_TRANSITIONS: List<StarterTransition> = listOf(
             "Trying the sweep while their weight is driving heavy forward onto your chest — wait until they sit back to posture",
         ),
         drill = "Solo: 10 sit-ups from your back onto your elbow, then hand, lifting your hips high on each side. Then 10 sweeps on a partner as they posture back, finishing in mount.",
+        blueBeltTest = true,
     ),
     StarterTransition(
         id = "armbar-guard",
@@ -294,6 +329,7 @@ internal val STARTER_TRANSITIONS: List<StarterTransition> = listOf(
             "Letting your heels float up instead of curling your hamstrings down to keep their head and posture pinned",
         ),
         drill = "10 slow reps on each side: two-on-one grip, foot on hip, pivot 90 degrees, bite the back of the neck with your first leg, step over the face, and pinch the knees with thumb up. Do not lift your hips.",
+        blueBeltTest = true,
     ),
     StarterTransition(
         id = "triangle-choke",
@@ -317,6 +353,7 @@ internal val STARTER_TRANSITIONS: List<StarterTransition> = listOf(
             "Opening your legs to adjust the lock without holding the crown of their head down first",
         ),
         drill = "Solo: 20 hip-ups into a triangle lock in the air, flexing your ankles. Then 10 setups per side on a partner: shoot the legs, control the head, pass the arm across, pivot on the hip foot, and lock over the shin without squeezing.",
+        blueBeltTest = true,
     ),
     StarterTransition(
         id = "kimura-guard",
@@ -340,6 +377,7 @@ internal val STARTER_TRANSITIONS: List<StarterTransition> = listOf(
             "Forgetting to clamp your top leg across their back, letting them somersault over the shoulder to escape",
         ),
         drill = "10 reps on each side: control the wrist, sit up over the shoulder, lock the thumbless figure-four, hip out to a 90-degree angle, and clamp the back with your top leg. Stop before rotating the shoulder.",
+        blueBeltTest = true,
     ),
     StarterTransition(
         id = "guillotine-guard",
@@ -362,6 +400,7 @@ internal val STARTER_TRANSITIONS: List<StarterTransition> = listOf(
             "Leaving your legs unlocked so they hop over to side control on the side opposite your choking arm (Von Flue defence)",
         ),
         drill = "10 reps on each side: sit up over their head, wrap the chin cleanly, lock the grip with the high elbow, and pull them into closed guard with a gentle crunch — release at the first tap.",
+        blueBeltTest = true,
     ),
     StarterTransition(
         id = "pendulum-sweep",
@@ -385,6 +424,7 @@ internal val STARTER_TRANSITIONS: List<StarterTransition> = listOf(
             "Kicking the top leg straight up in the air instead of swinging it in a wide arc into their armpit",
         ),
         drill = "Solo: lie on your back and do 10 wide pendulum leg swings with a 90-degree hip pivot on each side. Then 10 sweeps on each side with a partner, finishing in mount.",
+        blueBeltTest = true,
     ),
     StarterTransition(
         id = "armbar-defence",
@@ -407,6 +447,7 @@ internal val STARTER_TRANSITIONS: List<StarterTransition> = listOf(
             "Leaving your elbow flared after freeing it so they immediately switch to a triangle choke",
         ),
         drill = "Your partner pivots into an armbar from closed guard and pauses before extending. Lock the bicep-clasp defence, stack their knees over their shoulders, and work the elbow free. 5 reps per side.",
+        blueBeltTest = true,
     ),
     StarterTransition(
         id = "triangle-defence",
@@ -430,6 +471,7 @@ internal val STARTER_TRANSITIONS: List<StarterTransition> = listOf(
             "Looking down at them instead of keeping your chin and eyes high toward the ceiling",
         ),
         drill = "Your partner shoots their legs up into an unlocked triangle without squeezing. Immediately look up, posture tall, pin your trapped elbow to your hip, and stack to clear the legs. 5 reps per side.",
+        blueBeltTest = true,
     ),
     StarterTransition(
         id = "guillotine-defence",
@@ -452,6 +494,7 @@ internal val STARTER_TRANSITIONS: List<StarterTransition> = listOf(
             "Refusing to tap if they have already locked a high-elbow guillotine inside closed guard",
         ),
         drill = "Your partner wraps a light guillotine from open or half guard. Control the choking wrist, reach your far arm over their shoulder, hop to the safe side into side control, and apply gentle shoulder pressure until they release. 5 reps per side.",
+        blueBeltTest = true,
     ),
     StarterTransition(
         id = "kimura-defence",
@@ -474,6 +517,7 @@ internal val STARTER_TRANSITIONS: List<StarterTransition> = listOf(
             "Trying to straighten your arm out to the side, which gives them an even longer lever on your shoulder",
         ),
         drill = "Your partner sits up and locks a slow kimura grip from guard without rotating the shoulder. Anchor your hand to your belt or thigh, drive forward to flatten them, square your hips, and posture the elbow free. 5 reps per side.",
+        blueBeltTest = true,
     ),
     StarterTransition(
         id = "cross-collar-guard",
@@ -497,6 +541,7 @@ internal val STARTER_TRANSITIONS: List<StarterTransition> = listOf(
             "Letting them sit back up to posture before the second hand is in",
         ),
         drill = "10 reps each side on a partner giving light posture resistance: deep first grip, hip turn, second grip, then close slowly to a count of three and release.",
+        blueBeltTest = true,
     ),
     StarterTransition(
         id = "omoplata-guard",
@@ -520,6 +565,7 @@ internal val STARTER_TRANSITIONS: List<StarterTransition> = listOf(
             "Leaning forward fast: a shoulder lock gives very little warning before it injures",
         ),
         drill = "10 slow entries each side from closed guard, stopping once you are sitting up beside your partner with the far hip held. Add the finish only at walking pace.",
+        blueBeltTest = false,
     ),
     StarterTransition(
         id = "toreando-pass",
@@ -542,6 +588,7 @@ internal val STARTER_TRANSITIONS: List<StarterTransition> = listOf(
             "Driving your weight straight into the soles of their feet instead of steering the knees aside first",
         ),
         drill = "10 reps on each side: grip inside the knees, steer the legs to one side, step laterally around with a low level, and pin hip-to-hip before settling chest-to-chest.",
+        blueBeltTest = true,
     ),
     StarterTransition(
         id = "double-under-pass",
@@ -565,6 +612,7 @@ internal val STARTER_TRANSITIONS: List<StarterTransition> = listOf(
             "Driving their weight onto their cervical spine instead of stacking onto the flat of their shoulders",
         ),
         drill = "5 slow reps on each side: scoop both legs onto your lap, stack gently onto their shoulders (partner gives verbal feedback on neck comfort), grip the far collar, and walk around to side control.",
+        blueBeltTest = true,
     ),
     StarterTransition(
         id = "butterfly-sweep",
@@ -588,6 +636,7 @@ internal val STARTER_TRANSITIONS: List<StarterTransition> = listOf(
             "Sitting with your shoulders behind your hips before starting the sweep",
         ),
         drill = "Solo: seated butterfly rockers — rock onto one shoulder while lifting the opposite hook and posting the bottom toes, 10 per side. Then 10 butterfly sweeps per side with a partner.",
+        blueBeltTest = true,
     ),
     StarterTransition(
         id = "tripod-sweep",
@@ -611,6 +660,7 @@ internal val STARTER_TRANSITIONS: List<StarterTransition> = listOf(
             "Admiring the sweep from your back instead of coming straight up via technical stand-up while holding the ankle",
         ),
         drill = "Your partner stands in your open guard. 10 reps on each side: set the ankle grip, same-side hip foot, and far-ankle hook; sit them down gently and immediately technical stand-up to passing position.",
+        blueBeltTest = true,
     ),
     StarterTransition(
         id = "guard-retention",
@@ -633,6 +683,7 @@ internal val STARTER_TRANSITIONS: List<StarterTransition> = listOf(
             "Throwing your top leg wildly over their back without shrimping your hips out first, which gets your legs stacked",
         ),
         drill = "For 2-minute rounds, your partner steps around your legs left and right at 30% speed without dropping chest weight. Each time they pass your feet, turn on your side, frame, shrimp, insert the bottom knee shield, and re-square.",
+        blueBeltTest = true,
     ),
     StarterTransition(
         id = "technical-stand-up",
@@ -655,6 +706,7 @@ internal val STARTER_TRANSITIONS: List<StarterTransition> = listOf(
             "Standing your back foot right next to your front foot instead of stepping back into a wide base",
         ),
         drill = "Solo: 10 technical stand-ups on each side in place, pausing for 1 second with hips lifted before sweeping the leg back, then 10 reps moving backward down the mat.",
+        blueBeltTest = true,
     ),
     StarterTransition(
         id = "knee-slice",
@@ -678,6 +730,7 @@ internal val STARTER_TRANSITIONS: List<StarterTransition> = listOf(
             "Leaving a gap between your slicing knee and your elbow, letting them slide a knee shield right back across your chest",
         ),
         drill = "From top half guard: pummel to win the far underhook and crossface, flatten their shoulders, connect your elbow to your hip, and slide the knee slowly across to side control. 10 reps per side.",
+        blueBeltTest = true,
     ),
     StarterTransition(
         id = "half-to-full-guard",
@@ -700,6 +753,7 @@ internal val STARTER_TRANSITIONS: List<StarterTransition> = listOf(
             "Pushing their chest with extended arms instead of moving your own hips back",
         ),
         drill = "From bottom half guard: block the crossface, build frames, shrimp out to insert a knee shield, and recover closed guard. 10 reps on each side against light top pressure.",
+        blueBeltTest = true,
     ),
     StarterTransition(
         id = "half-guard-underhook-sweep",
@@ -723,6 +777,7 @@ internal val STARTER_TRANSITIONS: List<StarterTransition> = listOf(
             "Leaving your head high above their shoulder in the dogfight, letting them whizzer and drive your face back into the mat",
         ),
         drill = "10 reps on each side: from knee-shield half guard, shoot the deep low underhook, scoot your hips out, come up to your knees with your ear glued to their chest, and tap the far knee to sweep.",
+        blueBeltTest = true,
     ),
     StarterTransition(
         id = "knee-shield-sweep",
@@ -746,6 +801,7 @@ internal val STARTER_TRANSITIONS: List<StarterTransition> = listOf(
             "Lying flat on your back, which lets them crush the knee shield down and pass",
         ),
         drill = "10 reps each side: build the shield and grips, have your partner lean in, and sweep. The partner should feel weightless on your shin just before going over.",
+        blueBeltTest = true,
     ),
     StarterTransition(
         id = "half-guard-to-mount",
@@ -768,6 +824,7 @@ internal val STARTER_TRANSITIONS: List<StarterTransition> = listOf(
             "Leaving the freed foot behind where they can catch it again in half guard",
         ),
         drill = "5 reps each side with your partner holding half guard at half strength: crossface, underhook, knee to the mat, free the foot, mount. Hold mount for 3 seconds each time.",
+        blueBeltTest = true,
     ),
     StarterTransition(
         id = "side-control-escape",
@@ -790,6 +847,7 @@ internal val STARTER_TRANSITIONS: List<StarterTransition> = listOf(
             "Trying to jam your knee in without shrimping your hips back first to create the space for it",
         ),
         drill = "Your partner holds side control at 30% weight. Build the neck and hip frames, bridge into them, shrimp your hips back, thread the bottom knee shield in, and recover guard. 10 reps on each side.",
+        blueBeltTest = true,
     ),
     StarterTransition(
         id = "side-to-mount",
@@ -812,6 +870,7 @@ internal val STARTER_TRANSITIONS: List<StarterTransition> = listOf(
             "Trying to mount while they are turned up on their side with strong frames — flatten them or clear the near elbow first",
         ),
         drill = "10 reps on each side: from side control, block their near hip, slide your shin low across their belt line with heel glued to their hip, and settle into mount while your partner lightly fishes for half guard.",
+        blueBeltTest = true,
     ),
     StarterTransition(
         id = "americana",
@@ -834,6 +893,7 @@ internal val STARTER_TRANSITIONS: List<StarterTransition> = listOf(
             "Using thumbs around the wrists, which weakens your grip and lets them roll their wrist out",
         ),
         drill = "10 slow reps on each side: pin the wrist with bodyweight, lock thumbless figure-four grips, drag their elbow down toward their ribs while keeping the knuckles on the mat, and pause before lifting.",
+        blueBeltTest = true,
     ),
     StarterTransition(
         id = "ground-headlock-escape",
@@ -844,18 +904,19 @@ internal val STARTER_TRANSITIONS: List<StarterTransition> = listOf(
         role = PositionRole.Bottom,
         endRole = PositionRole.Top,
         steps = listOf(
-            "Turn immediately onto your side facing them and tuck your bottom elbow into your ribs so they cannot flatten your shoulders",
-            "Bring both hands together to build a reinforced forearm frame right across the point of their jaw or throat (outer hand reinforce-gripping the framing wrist)",
-            "Walk your hips back slightly while extending the forearm frame to push their head away from yours and break their headlock alignment",
-            "Swing your top leg up and hook the back of your calf across the front of their throat and face",
-            "Extend your leg to drive their head to the mat as you rock up into side control on top",
+            "Turn immediately onto your side facing them, tuck your bottom elbow tight to your ribs, and lock a reinforced forearm frame across the point of their jaw or throat",
+            "Extend the rigid bone of your forearm frame to pry their chin away from your head and break their headlock alignment so they cannot crank your neck",
+            "Walk your hips close to theirs, trapping their near arm tight against your chest so they cannot post it on the mat",
+            "Plant both feet flat and bridge explosively up and over your far shoulder to roll them through into top side control — or if they base wide to stop the roll, slip your head out and take their back",
+            "Keep your chest heavy as you settle on top so they cannot re-wrap your head",
         ),
         commonMistakes = listOf(
-            "Staying flat on your back and trying to bridge them over while their legs are posted wide in front of you",
+            "Staying flat on your back and trying to bridge while their hips are far away and their legs are posted wide",
             "Pushing on their face with an open palm (which bends at the wrist) instead of the rigid bone of your forearm",
             "Yanking your head backward before your frame has pried their chin away",
         ),
-        drill = "Your partner holds a firm kesa-gatame (scarf-hold) headlock. 5 reps on each side: get on your side, build the two-handed forearm frame on the jaw, make space, hook the leg over the face, and come up on top.",
+        drill = "Your partner holds a firm kesa-gatame (scarf-hold) headlock. 5 reps on each side: get on your side, build the forearm frame on the jaw, walk your hips in close, and bridge them over into top side control (or slip out to their back when they base wide).",
+        blueBeltTest = false,
     ),
     StarterTransition(
         id = "side-control-escape-knees",
@@ -878,6 +939,7 @@ internal val STARTER_TRANSITIONS: List<StarterTransition> = listOf(
             "Coming to your knees and pausing with your head down while they spin behind you to take your back",
         ),
         drill = "10 reps on each side: frame, bridge, pummel the far arm for an underhook as your partner blocks your bottom knee, shrimp out to your knees, and drive through their near knee.",
+        blueBeltTest = true,
     ),
     StarterTransition(
         id = "americana-defence",
@@ -900,6 +962,7 @@ internal val STARTER_TRANSITIONS: List<StarterTransition> = listOf(
             "Rolling all the way onto your belly toward the trapped arm and staying there, giving up your back or a gift-wrap",
         ),
         drill = "Your partner pins your wrist from side control and pauses before locking the figure-four. Grab your own hand, turn slightly toward the pinned arm to suck the elbow down to your ribs, then turn back in to frame. 5 reps per side.",
+        blueBeltTest = true,
     ),
     StarterTransition(
         id = "kimura-side-control",
@@ -923,6 +986,7 @@ internal val STARTER_TRANSITIONS: List<StarterTransition> = listOf(
             "Cranking fast: shoulders give little warning, so take it to the first resistance and wait for the tap",
         ),
         drill = "10 reps each side at walking pace: wrap the far arm, walk to north-south, lock the figure-four, lift the elbow, and stop at the first resistance.",
+        blueBeltTest = true,
     ),
     StarterTransition(
         id = "side-control-to-back",
@@ -946,6 +1010,7 @@ internal val STARTER_TRANSITIONS: List<StarterTransition> = listOf(
             "Crossing your feet in front of them instead of hooking inside the thighs",
         ),
         drill = "5 reps each side: partner gives the near arm, wrap it, turn them, knee behind the back, and take both hooks with the seatbelt. Pause 3 seconds in back control.",
+        blueBeltTest = true,
     ),
     StarterTransition(
         id = "upa-escape",
@@ -968,6 +1033,7 @@ internal val STARTER_TRANSITIONS: List<StarterTransition> = listOf(
             "Bridging straight up toward the ceiling and dropping back down instead of driving over the corner of your shoulder",
         ),
         drill = "Solo: 10 high bridges over alternating shoulders, looking at the mat behind your shoulder. Then 10 partner reps per side under mount: trap the elbow and wrist, trap the foot, bridge 45 degrees over the shoulder, and posture in their guard.",
+        blueBeltTest = true,
     ),
     StarterTransition(
         id = "elbow-knee-escape",
@@ -990,6 +1056,7 @@ internal val STARTER_TRANSITIONS: List<StarterTransition> = listOf(
             "Stopping flat on your back once you reach half guard instead of staying on your side or continuing to full guard",
         ),
         drill = "Solo: 10 flat-leg mount shrimps per side down the mat. Then 10 escapes per side under a partner's mount: bridge, turn to your side with hip frames, shrimp the bottom knee inside to half guard, and recover closed guard.",
+        blueBeltTest = true,
     ),
     StarterTransition(
         id = "cross-collar-choke",
@@ -1012,6 +1079,7 @@ internal val STARTER_TRANSITIONS: List<StarterTransition> = listOf(
             "Flaring your elbows wide up toward the ears instead of pulling your elbows down toward your own hips while dropping your chest weight",
         ),
         drill = "From mount: 10 reps on each side of opening the lapel, feeding the first thumb all the way to the back of the neck, shifting your head low to that side for base, setting the second grip, and applying a slow, gentle finish.",
+        blueBeltTest = true,
     ),
     StarterTransition(
         id = "armbar-mount",
@@ -1034,6 +1102,7 @@ internal val STARTER_TRANSITIONS: List<StarterTransition> = listOf(
             "Slamming your hips down onto the mat instead of sitting down with control attached to the arm",
         ),
         drill = "10 slow reps on each side: trap the arm from mount, climb into S-mount with weight on their chest, lean toward the legs to step over the face, and sit back with knees pinched and heels curled in. Stop before extending.",
+        blueBeltTest = true,
     ),
     StarterTransition(
         id = "mount-to-back",
@@ -1056,6 +1125,7 @@ internal val STARTER_TRANSITIONS: List<StarterTransition> = listOf(
             "Crossing your feet between their legs, which exposes you to a straight ankle lock if your feet sit below their hips",
         ),
         drill = "Your partner turns onto their side under your mount. Clear the top elbow across, slide your knee behind their head, lock the seatbelt, sit to the bottom-hook side, and insert the second hook. 10 reps per side.",
+        blueBeltTest = true,
     ),
     StarterTransition(
         id = "americana-mount",
@@ -1079,6 +1149,7 @@ internal val STARTER_TRANSITIONS: List<StarterTransition> = listOf(
             "Lifting the elbow while it is still high beside the shoulder, where the shoulder has room to turn",
         ),
         drill = "10 slow reps each side from mount: two-handed pin, elbow by the ear, figure-four, drag the elbow down, then lift two inches and stop.",
+        blueBeltTest = true,
     ),
     StarterTransition(
         id = "ezekiel-mount",
@@ -1102,6 +1173,30 @@ internal val STARTER_TRANSITIONS: List<StarterTransition> = listOf(
             "A loose sleeve grip that lets the two arms come apart",
         ),
         drill = "10 reps each side from low mount: crossface, sleeve grip, hand across, forehead down, and close slowly. Your partner tries one bridge on each rep to test your base.",
+        blueBeltTest = true,
+    ),
+    StarterTransition(
+        id = "arm-triangle-mount",
+        name = "Arm triangle choke from mount",
+        type = TransitionType.Submission,
+        fromId = "mount",
+        toId = "",
+        role = PositionRole.Top,
+        endRole = null,
+        steps = listOf(
+            "From a heavy mount, wait for or guide one of their arms across their own centerline (for example, as they frame against your chest) and pin their tricep tight against the side of their neck with your chest",
+            "Slide your arm on the trapped side deep underneath their neck with your palm facing up, and press the side of your head tight against their shoulder so their arm cannot slip back",
+            "Lock a palm-to-palm gable grip (or grab your own bicep) and drop your forehead toward the mat on the opposite side to take out all slack",
+            "Step your leg on the choking side off mount into side control on that side, sprawling your hips low to the mat with your weight driving forward through your shoulder",
+            "Walk your hips slightly toward their head and drive your shoulder steadily into the side of their neck until they tap, then release immediately",
+        ),
+        commonMistakes = listOf(
+            "Trying to finish straight from mount with your hips high, where you have less leverage and risk being bridged over",
+            "Squeezing wildly with your arms instead of dropping your shoulder and chest weight low to the mat",
+            "Leaving space between your ear and their shoulder so they can pull their trapped elbow back in",
+        ),
+        drill = "From mount: guide one arm across their neck, lock the head-and-arm with ear-to-shoulder pressure, step off to side control on the trapped-arm side, sprawl low, and apply slow shoulder pressure until the tap. 5 reps per side.",
+        blueBeltTest = true,
     ),
     StarterTransition(
         id = "rear-naked-choke",
@@ -1123,6 +1218,7 @@ internal val STARTER_TRANSITIONS: List<StarterTransition> = listOf(
             "Abandoning your hooks and chest-to-back pressure while squeezing with all your arm strength",
         ),
         drill = "From back control with a seatbelt: clear a defending hand, slide the thumb edge cleanly under the chin, hide the rear hand into the bicep lock, and take out the slack without squeezing hard. 10 reps per side.",
+        blueBeltTest = true,
     ),
     StarterTransition(
         id = "back-escape",
@@ -1145,6 +1241,7 @@ internal val STARTER_TRANSITIONS: List<StarterTransition> = listOf(
             "Turning into them while your shoulders are still sitting in their lap instead of getting your upper back flat to the mat first",
         ),
         drill = "Your partner takes your back with a seatbelt and hooks. Control the choking wrist two-on-one, tip to the underhook side, walk your shoulders flat to the mat, clear the bottom hook, and turn into their guard. 5 reps per side.",
+        blueBeltTest = true,
     ),
     StarterTransition(
         id = "rear-naked-choke-defence",
@@ -1167,6 +1264,7 @@ internal val STARTER_TRANSITIONS: List<StarterTransition> = listOf(
             "Refusing to tap once the elbow crook is locked under your chin and their rear hand is hidden behind your neck",
         ),
         drill = "Your partner works at 30% strength from back control to slide an arm under your chin. Hand-fight with a two-on-one grip and chin tucked for 1-minute rounds, tapping immediately if the lock closes.",
+        blueBeltTest = true,
     ),
     StarterTransition(
         id = "sliding-collar-choke",
@@ -1190,6 +1288,7 @@ internal val STARTER_TRANSITIONS: List<StarterTransition> = listOf(
             "Losing the hooks while concentrating on the grip, so they slide their back to the mat and escape",
         ),
         drill = "10 reps each side from back control: open the collar, feed it, set the low lapel grip, lean, and tighten slowly until your partner taps early.",
+        blueBeltTest = true,
     ),
     StarterTransition(
         id = "turtle-to-back",
@@ -1212,6 +1311,7 @@ internal val STARTER_TRANSITIONS: List<StarterTransition> = listOf(
             "Pulling them straight backward over your knees and ankles instead of diagonally across your hip",
         ),
         drill = "Your partner holds turtle. Establish chest-on-back weight and a seatbelt grip, wedge the bottom hook in, sit to that hip to diagonal-roll them, and insert the second hook. 10 reps per side.",
+        blueBeltTest = true,
     ),
     StarterTransition(
         id = "turtle-breakdown",
@@ -1234,6 +1334,7 @@ internal val STARTER_TRANSITIONS: List<StarterTransition> = listOf(
             "Pulling their far hip while leaving your own knee wedged underneath them so they have nowhere to fall",
         ),
         drill = "Your partner holds turtle at 30% resistance. Block the near knee, cup the far hip, pull them into the space you vacate, and settle cleanly in side control. 10 reps on each side.",
+        blueBeltTest = true,
     ),
     StarterTransition(
         id = "turtle-recover-guard",
@@ -1256,6 +1357,7 @@ internal val STARTER_TRANSITIONS: List<StarterTransition> = listOf(
             "Rolling flat onto your back with your legs extended away from them instead of bringing your knees to your chest",
         ),
         drill = "Solo: 10 turtle sit-throughs and 10 tucked-knee shoulder rolls per side into open guard. Then 10 partner reps: partner pressures into your turtle from the side and you sit through or roll to put both feet on their hips.",
+        blueBeltTest = true,
     ),
     StarterTransition(
         id = "turtle-sit-out",
@@ -1279,5 +1381,6 @@ internal val STARTER_TRANSITIONS: List<StarterTransition> = listOf(
             "Letting go of their wrist, so the arm stays around your waist and follows you through",
         ),
         drill = "10 reps each side: partner rides your turtle with one arm round the waist and no hooks. Step, sit through, head back, turn in, and finish behind them.",
+        blueBeltTest = true,
     ),
 )

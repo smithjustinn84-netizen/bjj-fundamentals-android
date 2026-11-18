@@ -1,5 +1,6 @@
 package dev.justinsmith.bjj.core
 
+import dev.justinsmith.bjj.core.seed.STARTER_BLUE_BELT_TEST_IDS
 import dev.justinsmith.bjj.core.seed.starterContent
 import dev.justinsmith.bjj.core.testing.position
 import dev.justinsmith.bjj.core.testing.review
@@ -25,10 +26,22 @@ class BeltTestTest {
     }
 
     @Test
-    fun `is on for every starter technique in a fresh installation`() {
+    fun `matches starter blue belt test ids in a fresh installation excluding self-defense and omoplata`() {
         val transitions = starterContent(0).transitions
         assertTrue(transitions.isNotEmpty())
-        assertTrue(transitions.all { it.blueBeltTest == true })
+        assertTrue(transitions.all { it.blueBeltTest == (it.id in STARTER_BLUE_BELT_TEST_IDS) })
+        val off = transitions.filter { it.blueBeltTest != true }.map { it.id }
+        assertEquals(
+            listOf(
+                "wrist-grab-release",
+                "front-choke-defence",
+                "bear-hug-escape",
+                "standing-headlock-escape",
+                "omoplata-guard",
+                "ground-headlock-escape",
+            ),
+            off,
+        )
     }
 
     private val lib = buildLibrary(

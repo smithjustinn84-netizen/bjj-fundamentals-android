@@ -32,7 +32,7 @@ internal val MAP_HORIZONTAL = MapGolden(
         "half-guard" to listOf(232.0, 242.0, 132.0, 58.0, 0.0),
         "turtle" to listOf(432.0, 150.0, 132.0, 58.0, 0.0),
         "side-control" to listOf(632.0, 104.0, 132.0, 58.0, 2.0),
-        "mount" to listOf(632.0, 196.0, 132.0, 58.0, 4.0),
+        "mount" to listOf(632.0, 196.0, 132.0, 58.0, 5.0),
         "back-control" to listOf(832.0, 150.0, 132.0, 58.0, 2.0),
     ),
     edges = listOf(
@@ -47,6 +47,7 @@ internal val MAP_HORIZONTAL = MapGolden(
         "break-closed-guard" to listOf(16.0, 274.3, 121.0, 266.0, 133.0, 274.3, 145.0),
         "pendulum-sweep" to listOf(-40.0, 369.0, 84.9, 524.1, 80.4, 657.1, 191.0),
         "scissor-sweep" to listOf(-48.0, 369.0, 80.3, 529.3, 65.2, 662.1, 191.0),
+        "standing-guard-break" to listOf(-16.0, 321.7, 121.0, 330.0, 133.0, 321.7, 145.0),
         "butterfly-sweep" to listOf(24.0, 369.0, 204.8, 492.5, 249.7, 627.0, 233.5),
         "double-under-pass" to listOf(-24.0, 369.0, 153.2, 492.5, 108.3, 627.0, 124.5),
         "technical-stand-up" to listOf(16.0, 227.0, 156.3, 198.0, 147.0, 169.0, 156.3),
@@ -87,7 +88,7 @@ internal val MAP_VERTICAL = MapGolden(
         "half-guard" to listOf(250.0, 170.0, 108.0, 60.0, 0.0),
         "turtle" to listOf(132.0, 304.0, 108.0, 60.0, 0.0),
         "side-control" to listOf(73.0, 438.0, 108.0, 60.0, 2.0),
-        "mount" to listOf(191.0, 438.0, 108.0, 60.0, 4.0),
+        "mount" to listOf(191.0, 438.0, 108.0, 60.0, 5.0),
         "back-control" to listOf(132.0, 572.0, 108.0, 60.0, 2.0),
     ),
     edges = listOf(
@@ -102,6 +103,7 @@ internal val MAP_VERTICAL = MapGolden(
         "break-closed-guard" to listOf(16.0, 127.0, 232.0, 127.0, 232.0, 127.0, 232.0),
         "pendulum-sweep" to listOf(40.0, 72.3, 235.0, 89.7, 378.1, 186.0, 433.8),
         "scissor-sweep" to listOf(48.0, 69.6, 235.0, 76.4, 386.9, 186.0, 439.6),
+        "standing-guard-break" to listOf(-16.0, 127.0, 168.0, 127.0, 168.0, 127.0, 168.0),
         "butterfly-sweep" to listOf(-32.0, 212.8, 235.0, 278.0, 320.2, 252.8, 433.0),
         "double-under-pass" to listOf(32.0, 159.2, 235.0, 94.0, 320.2, 119.2, 433.0),
         "technical-stand-up" to listOf(16.0, 202.7, 165.0, 218.0, 133.0, 202.7, 101.0),

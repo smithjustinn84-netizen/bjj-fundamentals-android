@@ -10,6 +10,7 @@ private val STARTER_DEFENCES: List<Pair<String, String>> = listOf(
     "guillotine-guard" to "guillotine-defence",
     "kimura-guard" to "kimura-defence",
     "americana" to "americana-defence",
+    "americana-mount" to "americana-defence",
     "rear-naked-choke" to "rear-naked-choke-defence",
     "double-leg" to "sprawl",
     "single-leg" to "sprawl",
@@ -43,6 +44,10 @@ private val STARTER_DILEMMAS: List<List<Member>> = listOf(
         Member("side-control-escape-knees", "when they block your bottom knee"),
     ),
     listOf(
+        Member("break-closed-guard", "when their hips stay flat and you can wedge from your knees"),
+        Member("standing-guard-break", "when their ankles stay locked tight against the kneeling break"),
+    ),
+    listOf(
         Member("cross-collar-guard", "when they keep both hands low on your hips or belt"),
         Member("armbar-guard", "when they bring a hand up to strip the collar grip"),
         Member("scissor-sweep", "when they posture up away from the collar grip"),
@@ -51,6 +56,7 @@ private val STARTER_DILEMMAS: List<List<Member>> = listOf(
         Member("cross-collar-choke", "when they keep their elbows tight to their ribs"),
         Member("ezekiel-mount", "when they hand-fight your collar grips"),
         Member("americana-mount", "when a wrist comes up beside their head to frame"),
+        Member("arm-triangle-mount", "when an arm crosses their centerline to frame or push your shoulder"),
         Member("armbar-mount", "when they push your chest with a straight arm"),
         Member("mount-to-back", "when they turn onto their side to escape"),
     ),
@@ -63,6 +69,13 @@ private val STARTER_DILEMMAS: List<List<Member>> = listOf(
     listOf(
         Member("rear-naked-choke", "when they fight your lapel grips and leave the neck open"),
         Member("sliding-collar-choke", "when they tuck their chin against the bare-arm choke"),
+    ),
+    listOf(
+        Member("rear-naked-choke-defence", "when their choking arm is already threatening your neck"),
+        Member(
+            "back-escape",
+            "when your hands control the choking wrist and you can clear your shoulders to the mat",
+        ),
     ),
     listOf(
         Member("half-guard-underhook-sweep", "when they press their weight in and leave the far armpit open"),
@@ -82,6 +95,10 @@ private val STARTER_DILEMMAS: List<List<Member>> = listOf(
         Member("tripod-sweep", "when they stand up in your guard"),
     ),
     listOf(
+        Member("guard-retention", "when they pressure in close and you need to keep your legs in front"),
+        Member("technical-stand-up", "when they back away and leave space to get back to your feet"),
+    ),
+    listOf(
         Member("turtle-to-back", "when a gap opens between their elbow and knee"),
         Member("turtle-breakdown", "when they seal their elbows to their knees"),
     ),
@@ -93,6 +110,7 @@ private val STARTER_DILEMMAS: List<List<Member>> = listOf(
         Member("double-leg", "when they stand square with their feet level"),
         Member("single-leg", "when one foot steps out in front"),
         Member("hip-throw", "when they lean in and push forward"),
+        Member("pull-guard", "when they stall or win the wrestling exchange"),
     ),
 )
 

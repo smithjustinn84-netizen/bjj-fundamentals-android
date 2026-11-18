@@ -62,7 +62,7 @@ internal val STARTER_LESSONS: List<Lesson> = listOf(
     Lesson(
         id = "inside-the-closed-guard",
         title = "Inside the closed guard",
-        summary = "Posture and base on top, and the first two sweeps from the bottom.",
+        summary = "Posture and base on top, kneeling and standing guard breaks, and the first two sweeps from the bottom.",
         conceptIds = listOf(
             "posture",
             "base",
@@ -73,10 +73,11 @@ internal val STARTER_LESSONS: List<Lesson> = listOf(
         ),
         transitionIds = listOf(
             "break-closed-guard",
+            "standing-guard-break",
             "scissor-sweep",
             "hip-bump-sweep",
         ),
-        practice = "3 minutes: hold posture inside the guard while your partner tries to pull you down. 4 minutes: 5 guard breaks each. 4 minutes: 10 scissor sweeps each. 4 minutes: 10 hip bump sweeps each, partner sitting back on their heels.",
+        practice = "3 minutes: hold posture inside the guard while your partner tries to pull you down. 4 minutes: 3 kneeling guard breaks and 3 standing guard breaks each. 4 minutes: 10 scissor sweeps each. 4 minutes: 10 hip bump sweeps each, partner sitting back on their heels.",
     ),
     Lesson(
         id = "closed-guard-sit-up-attacks",
@@ -197,12 +198,13 @@ internal val STARTER_LESSONS: List<Lesson> = listOf(
             "cross-collar-choke",
             "armbar-mount",
             "mount-to-back",
+            "arm-triangle-mount",
             "kimura-side-control",
             "side-control-to-back",
             "americana-mount",
             "ezekiel-mount",
         ),
-        practice = "3 minutes: hold side control, then mount, for 30 seconds each against half-strength escapes. 6 minutes from mount, slowly and stopping at the first resistance: 5 cross collar chokes, 5 armbars, 5 back takes as they turn, plus 3 americanas and 3 Ezekiel chokes. 6 minutes from side control: 5 kimuras and 5 gift wraps to the back.",
+        practice = "3 minutes: hold side control, then mount, for 30 seconds each against half-strength escapes. 6 minutes from mount, slowly and stopping at the first resistance: 4 cross collar chokes, 4 armbars, 4 arm triangles, 4 back takes as they turn, plus 3 americanas and 3 Ezekiel chokes. 6 minutes from side control: 5 kimuras and 5 gift wraps to the back.",
     ),
     Lesson(
         id = "back-control",
@@ -261,5 +263,26 @@ internal val STARTER_LESSONS: List<Lesson> = listOf(
             "sprawl",
         ),
         practice = "3 minutes: grip fight standing and off-balance your partner without throwing. 4 minutes: 5 guard pulls each and 10 sprawls against slow shots. 8 minutes at walking pace: 5 double legs, 5 single legs, and 5 hip throw fit-ins on each side.",
+    ),
+    Lesson(
+        id = "self-defense",
+        title = "Self-defense fundamentals",
+        summary = "Break common grabs, chokes, bear hugs, and headlocks using posture, base, and frames.",
+        conceptIds = listOf(
+            "base",
+            "frames",
+            "distance",
+        ),
+        positionIds = listOf(
+            "standing",
+        ),
+        transitionIds = listOf(
+            "wrist-grab-release",
+            "front-choke-defence",
+            "bear-hug-escape",
+            "standing-headlock-escape",
+            "ground-headlock-escape",
+        ),
+        practice = "3 minutes each at controlled speed: 5 wrist grab releases, 5 front choke defences, 5 bear hug escapes, 5 standing headlock escapes, and 5 ground headlock escapes per side. Focus on dropping into base and building rigid frames before escaping.",
     ),
 )

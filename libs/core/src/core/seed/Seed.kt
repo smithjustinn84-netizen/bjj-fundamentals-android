@@ -45,6 +45,7 @@ internal data class StarterTransition(
     val steps: List<String>,
     val commonMistakes: List<String>,
     val drill: String,
+    val blueBeltTest: Boolean,
 )
 
 internal data class StarterVideo(
@@ -57,11 +58,12 @@ internal data class StarterVideo(
 )
 
 /**
- * Deliberately every starter technique: each is a fundamental that blue belt tests commonly ask for, so a
- * technique added to the starter content lands on the list too. Kept as a set of ids so techniques stored
- * before the blue belt list existed get the same default as new ones (see `isOnBlueBeltTest`).
+ * Core live-rolling fundamentals that blue belt tests commonly ask for — every starter technique except the
+ * standalone self-defense drills and the omoplata transition. Kept as a set of ids so techniques stored before
+ * the blue belt list existed get the same default as new ones (see `isOnBlueBeltTest`).
  */
-val STARTER_BLUE_BELT_TEST_IDS: Set<String> = STARTER_TRANSITIONS.mapTo(LinkedHashSet()) { it.id }
+val STARTER_BLUE_BELT_TEST_IDS: Set<String> =
+    STARTER_TRANSITIONS.filter { it.blueBeltTest }.mapTo(LinkedHashSet()) { it.id }
 
 /** Who performs each starter technique, for copies stored before techniques had a role (see `performerRole`). */
 val STARTER_ROLES: Map<String, PositionRole> = STARTER_TRANSITIONS.associate { it.id to it.role }
@@ -105,7 +107,7 @@ fun starterContent(now: Long): BackupData = BackupData(
             steps = it.steps,
             commonMistakes = it.commonMistakes,
             drill = it.drill,
-            blueBeltTest = true,
+            blueBeltTest = it.blueBeltTest,
             notes = "",
             createdAt = now,
             updatedAt = now,

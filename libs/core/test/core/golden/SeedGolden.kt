@@ -7,6 +7,6 @@ package dev.justinsmith.bjj.core.golden
 internal val SEED_GOLDEN: Map<String, Pair<Int, Int>> = mapOf(
     "concepts" to (28 to 103017727),
     "positions" to (8 to 1137477407),
-    "transitions" to (57 to 1466075383),
-    "videos" to (186 to -294607676),
+    "transitions" to (59 to 1359009867),
+    "videos" to (188 to 154013305),
 )

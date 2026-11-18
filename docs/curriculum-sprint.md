@@ -39,23 +39,23 @@ Reorganize `STARTER_LESSONS` so the foundation syllabus matches how beginners ar
 ## Item 3 — Self-Defense & Blue Belt List Curation
 Decide how the 5 self-defense techniques (`wrist-grab-release`, `front-choke-defence`, `bear-hug-escape`, `standing-headlock-escape`, `ground-headlock-escape`) fit the syllabus.
 
-- [ ] Either group them into a dedicated optional **Self-Defense** lesson (and revisit `ground-headlock-escape` to emphasize the higher-percentage frame/bridge-to-back escape alongside or instead of leg-over-face), **or** trim the standing grab/choke/bear-hug drills to keep the curriculum focused on live rolling.
-- [ ] Review whether all 57 starter techniques should default onto `STARTER_BLUE_BELT_TEST_IDS`, or whether self-defense / advanced transitions (e.g., `omoplata-guard`) should be excluded by default.
+- [x] Either group them into a dedicated optional **Self-Defense** lesson (and revisit `ground-headlock-escape` to emphasize the higher-percentage frame/bridge-to-back escape alongside or instead of leg-over-face), **or** trim the standing grab/choke/bear-hug drills to keep the curriculum focused on live rolling.
+- [x] Review whether all 57 starter techniques should default onto `STARTER_BLUE_BELT_TEST_IDS`, or whether self-defense / advanced transitions (e.g., `omoplata-guard`) should be excluded by default.
 
 ---
 
 ## Item 4 — High-Value Fundamental Additions
 Fill the two biggest white-belt gaps (each new technique also needs a curated video bookmark in `StarterVideos`).
 
-- [ ] **Standing closed-guard break:** Add a standing guard break paired with the kneeling break in `break-closed-guard` (and link them as a dilemma in `Chains`).
-- [ ] **Arm triangle (head-and-arm) choke:** Add from mount or side control as a safe, high-percentage gi + no-gi pin submission.
+- [x] **Standing closed-guard break:** Add a standing guard break paired with the kneeling break in `break-closed-guard` (and link them as a dilemma in `Chains`).
+- [x] **Arm triangle (head-and-arm) choke:** Add from mount or side control as a safe, high-percentage gi + no-gi pin submission.
 
 ---
 
 ## Item 5 — Tighten Chains & Defences (`Chains.kt` / `chains.ts`)
 Strengthen the action–reaction graph for existing techniques.
 
-- [ ] Link `americana-mount` → `americana-defence` in `STARTER_DEFENCES`.
-- [ ] Add `pull-guard` to the standing dilemma (when they stall or win the wrestling exchange).
-- [ ] Pair `guard-retention` and `technical-stand-up` in open guard.
-- [ ] Pair `rear-naked-choke-defence` and `back-escape` as a defensive sequence.
+- [x] Link `americana-mount` → `americana-defence` in `STARTER_DEFENCES`.
+- [x] Add `pull-guard` to the standing dilemma (when they stall or win the wrestling exchange).
+- [x] Pair `guard-retention` and `technical-stand-up` in open guard.
+- [x] Pair `rear-naked-choke-defence` and `back-escape` as a defensive sequence.

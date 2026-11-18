@@ -158,6 +158,7 @@ write(
           ['steps', strings(t.steps)],
           ['commonMistakes', strings(t.commonMistakes)],
           ['drill', str(t.drill)],
+          ['blueBeltTest', String(t.blueBeltTest)],
         ],
         4,
       ),

@@ -1494,4 +1494,20 @@ internal val STARTER_VIDEOS: List<StarterVideo> = listOf(
         linkedId = "turtle-sit-out",
         note = "A short demonstration of the sit-out from the bottom of turtle.",
     ),
+    StarterVideo(
+        id = "video-standing-guard-break",
+        title = "How to Break Closed Guard | Posture, Hip Control & Standing Setup (10th Planet Colorado Springs)",
+        youtubeId = "_Cv1jqqSLu4",
+        linkedKind = LinkedKind.Transition,
+        linkedId = "standing-guard-break",
+        note = "Holding posture and controlling the hips as you step up to stand and pop the ankles open.",
+    ),
+    StarterVideo(
+        id = "video-arm-triangle-mount",
+        title = "Fundamentals: Arm Triangle From Mount (Bellingham BJJ)",
+        youtubeId = "A3q4YQQJKXs",
+        linkedKind = LinkedKind.Transition,
+        linkedId = "arm-triangle-mount",
+        note = "Isolating the arm across the neck from mount, stepping off to the side, and finishing with low shoulder pressure.",
+    ),
 )
