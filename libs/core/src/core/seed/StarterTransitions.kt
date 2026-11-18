@@ -106,7 +106,7 @@ internal val STARTER_TRANSITIONS: List<StarterTransition> = listOf(
         steps = listOf(
             "Tuck your chin to your collarbone and step one foot back into a solid stance so you cannot be pushed backward",
             "Raise one arm straight up beside your ear until your bicep touches your cheek",
-            "Pivot 180 degrees on your feet away from the raised arm, swinging your elbow down Heavy across both of their forearms",
+            "Pivot 180 degrees on your feet away from the raised arm, swinging your elbow down heavy across both of their forearms",
             "Use the turn of your shoulders and hips — not just your arm — to shear their grip off your throat",
             "Step back out of reach with both hands up facing them",
         ),
@@ -285,7 +285,7 @@ internal val STARTER_TRANSITIONS: List<StarterTransition> = listOf(
             "Grip their opposite collar or shoulder to keep their posture broken",
             "Place your foot on their hip on the same side as the trapped arm, clamping that knee tight against their shoulder",
             "Pivot your torso 90 degrees toward the other side and swing your outside leg high up into their armpit, clamping the back of your heel heavy across their upper back and neck",
-            "Pass your top leg over the front of their face without lifting the pressure of your back leg, and cross nothing: pinch both knees together and pull both heels down toward the mat",
+            "Pass your top leg over the front of their face without lifting the pressure of your back leg, and do not cross your ankles: pinch both knees together and pull both heels down toward the mat",
             "Hug their wrist to your chest with their thumb pointing at the ceiling, and slowly raise your hips until they tap",
         ),
         commonMistakes = listOf(
@@ -331,7 +331,7 @@ internal val STARTER_TRANSITIONS: List<StarterTransition> = listOf(
             "Uncross your ankles, plant your foot, and sit all the way up over your hip toward that trapped arm",
             "Wrap your other arm over the top of their shoulder, thread it behind their bent elbow, and lock a thumbless grip on your own wrist (the figure-four)",
             "Glue their bent elbow tight to your chest as you lie back down",
-            "Shrimp your hips out to the side of the trapped arm so you are angled 90 degrees to them, and clamp your top leg heavy over their lower back so they cannot roll forward",
+            "Shrimp your hips out to the side of the trapped arm so you are angled 90 degrees to them, and clamp your top leg heavy over their upper back so they cannot posture up or roll forward",
             "Keep their elbow at 90 degrees and rotate your whole torso to guide the back of their hand slowly toward the back of their head",
         ),
         commonMistakes = listOf(
@@ -1134,7 +1134,7 @@ internal val STARTER_TRANSITIONS: List<StarterTransition> = listOf(
         endRole = PositionRole.Top,
         steps = listOf(
             "Tuck your chin immediately and control their choking wrist (the over-the-shoulder arm) with a two-on-one grip, pulling it down onto your chest",
-            "Tip onto the side of their underhook arm (away from the choking arm) so their choking elbow is pinned toward the mat",
+            "Tip onto the side of their underhook arm (away from the choking arm) so their underhook is trapped under you while your two-on-one keeps the top choking arm off your neck",
             "Bridge slightly on your feet to walk your head and both shoulders out past their chest until the back of your shoulders lies flat on the mat beside their head",
             "Use your outside foot or elbow to peel their bottom hook off your thigh and step your hips over that leg",
             "Swim an underhook on their near side, turn inward onto your knees, and come up on top in their closed or half guard",

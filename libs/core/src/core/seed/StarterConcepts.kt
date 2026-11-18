@@ -230,7 +230,7 @@ internal val STARTER_CONCEPTS: List<StarterConcept> = listOf(
         name = "The positional hierarchy",
         summary = "Positions rank from least to most dominant: guard (neutral), half guard, side control, mount, and back control. Climb or escape one rung at a time.",
         keyPoints = listOf(
-            "As Positions advance (guard → half guard → side control → mount → back), the top player gains gravity and attacks while the bottom player loses frames and mobility.",
+            "As positions advance (guard → half guard → side control → mount → back), the top player gains gravity and attacks while the bottom player loses frames and mobility.",
             "On top, consolidate each step up before hunting the next — do not dive for a low-percentage choke that puts you back on the bottom.",
             "On the bottom, escape one rung at a time like a ratchet: from back control get your shoulders to the mat; from mount recover half guard; from half guard or side control recover full guard.",
             "Every time you get a knee or foot back inside, you have improved your position.",

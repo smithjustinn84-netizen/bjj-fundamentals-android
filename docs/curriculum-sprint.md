@@ -17,10 +17,10 @@ Changes to `Chains.kt` must be kept in sync with `../bjj/src/core/chains.ts`.
 ## Item 1 — Technical & Prose Corrections
 Fix technical inaccuracies and copy issues in existing starter content without changing IDs or adding new items.
 
-- [ ] **`back-escape`:** Fix step 2, which currently says tipping to the underhook side pins the *choking* elbow to the mat. Tipping to the underhook side pins the *underhook* arm to the mat while putting the choking arm on top (which is why two-on-one hand control on the choking wrist is mandatory while sliding your shoulders to the mat).
-- [ ] **`kimura-guard`:** Fix step 5 to clamp the top leg heavy over their *upper* back / shoulder blade (not lower back), so they cannot posture or roll through.
-- [ ] **`armbar-guard`:** Clarify step 5 wording (*"cross nothing"* → *"do not cross your ankles"*).
-- [ ] **Typos:** Fix mid-sentence capitals in `front-choke-defence` (*"down Heavy"*) and `positional-hierarchy` (*"As Positions advance"*).
+- [x] **`back-escape`:** Fix step 2, which currently says tipping to the underhook side pins the *choking* elbow to the mat. Tipping to the underhook side pins the *underhook* arm to the mat while putting the choking arm on top (which is why two-on-one hand control on the choking wrist is mandatory while sliding your shoulders to the mat).
+- [x] **`kimura-guard`:** Fix step 5 to clamp the top leg heavy over their *upper* back / shoulder blade (not lower back), so they cannot posture or roll through.
+- [x] **`armbar-guard`:** Clarify step 5 wording (*"cross nothing"* → *"do not cross your ankles"*).
+- [x] **Typos:** Fix mid-sentence capitals in `front-choke-defence` (*"down Heavy"*) and `positional-hierarchy` (*"As Positions advance"*).
 
 ---
 
