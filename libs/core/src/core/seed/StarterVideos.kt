@@ -1079,6 +1079,14 @@ internal val STARTER_VIDEOS: List<StarterVideo> = listOf(
         note = "Staying on your side, managing distance with a knee shield, and building underhook attacks.",
     ),
     StarterVideo(
+        id = "video-half-guard-saunders",
+        title = "How to delete every frame in half guard (Josh Saunders)",
+        youtubeId = "pIVNgcJWj2I",
+        linkedKind = LinkedKind.Position,
+        linkedId = "half-guard",
+        note = "Clearing knee shields, hooks, and upper-body frames systematically to get chest-to-chest and pass.",
+    ),
+    StarterVideo(
         id = "video-side-control-roger",
         title = "How to maintain and attack from side control (Roger Gracie)",
         youtubeId = "kWxijyG-6BE",

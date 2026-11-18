@@ -665,13 +665,14 @@ internal val STARTER_TRANSITIONS: List<StarterTransition> = listOf(
         role = PositionRole.Top,
         endRole = PositionRole.Top,
         steps = listOf(
-            "Inside their half guard, pummel your far arm under their top armpit to win the far-side underhook (or control their far lapel and near elbow) before trying to pull your leg out",
+            "Clear their lower- and upper-body frames first: angle your chest inside or around their knee shield and pummel past their stiff arms to win the far-side underhook before trying to pull your leg out",
             "Drop your head low beside their jaw or apply a crossface so both of their shoulders are pinned flat to the mat",
             "Point your trapped knee diagonally across their bottom thigh toward the mat, keeping your near elbow connected to your hip so their knee shield cannot come back in",
             "Slide your shin across their thigh until your knee touches the mat while keeping your chest glued heavy to theirs",
             "Post your free foot wide for base, pull your trapped ankle free (using your free foot to wipe off their top hook if needed), and settle in side control",
         ),
         commonMistakes = listOf(
+            "Forcing your trapped leg out or muscling straight into their knee shield and stiff arms while they are still angled on their side",
             "Trying to slice your knee through while they still have the far-side underhook, which hands them your back",
             "Popping your chest and hips up high to yank your foot out, giving them space to get onto their side and sweep",
             "Leaving a gap between your slicing knee and your elbow, letting them slide a knee shield right back across your chest",

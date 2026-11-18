@@ -97,7 +97,7 @@ internal val STARTER_POSITIONS: List<StarterPosition> = listOf(
         category = PositionCategory.Guard,
         summary = "The bottom player traps one of the top player's legs between both of theirs. Who wins the position depends on who wins the crossface and far-side underhook.",
         topGoals = listOf(
-            "Win the crossface (shoulder under their jaw) and far-side underhook to flatten their shoulders to the mat",
+            "Clear their knee shield and upper-body frames to get chest-to-chest, winning the crossface and far-side underhook to flatten their shoulders to the mat",
             "Keep your head low and weight heavy on their chest so they cannot get onto their side",
             "Walk your trapped foot up toward their hips or slice your knee across their thigh to free your leg",
             "Settle into side control or mount once your knee and ankle clear their legs",
