@@ -12,6 +12,7 @@ private const val NOW = 1_000_000_000_000
 class LessonsTest {
     private val starter = starterContent(0)
     private val first = FOUNDATION_LESSONS.first()
+    private val surviving = FOUNDATION_LESSONS[1]
 
     private fun library(reviews: List<ReviewState> = emptyList()) =
         buildLibrary(starter.concepts, starter.positions, starter.transitions, reviews)
@@ -41,17 +42,17 @@ class LessonsTest {
     @Test
     fun `leave out what the library no longer has`() {
         val lib = buildLibrary(starter.concepts, starter.positions, emptyList(), emptyList())
-        val kinds = listOf(CardKind.Concept, CardKind.Position, CardKind.Concept, CardKind.Concept, CardKind.Concept)
-        assertEquals(kinds, lessonCards(lib, first).map { it.kind })
-        assertEquals(emptyList(), lessonCards(empty, first))
+        val kinds = listOf(CardKind.Concept, CardKind.Position, CardKind.Concept, CardKind.Concept)
+        assertEquals(kinds, lessonCards(lib, surviving).map { it.kind })
+        assertEquals(emptyList(), lessonCards(empty, surviving))
     }
 
     @Test
     fun `count progress from the review state of the cards and move on once a lesson is learned`() {
-        assertEquals(LessonProgress(total = 8, started = 0, learned = 0), lessonProgress(library(), first))
+        assertEquals(LessonProgress(total = 5, started = 0, learned = 0), lessonProgress(library(), first))
         assertEquals(first.id, currentLesson(library())?.id)
         val reviews = lessonCards(library(), first).map { review(it.kind, it.id, intervalDays = 8) }
-        assertEquals(LessonProgress(8, started = 3, learned = 3), lessonProgress(library(reviews.take(3)), first))
+        assertEquals(LessonProgress(5, started = 3, learned = 3), lessonProgress(library(reviews.take(3)), first))
         assertEquals(FOUNDATION_LESSONS[1].id, currentLesson(library(reviews))?.id)
         assertNull(currentLesson(empty))
     }
@@ -68,12 +69,12 @@ class LessonsTest {
         val lib = library(
             listOf(
                 review(CardKind.Position, "side-control", due = NOW - 1),
-                review(CardKind.Concept, "safety", due = NOW + 1), // not due
+                review(CardKind.Concept, "breathing", due = NOW + 1), // not due
                 review(CardKind.Concept, "posture", due = NOW - 1), // due, but in another lesson
             ),
         )
-        val result = buildLessonQueue(lib, first, 2, NOW)
-        assertEquals(listOf("side-control", "side-control-escape", "breathing"), result.queue.map { it.id })
+        val result = buildLessonQueue(lib, surviving, 2, NOW)
+        assertEquals(listOf("side-control", "side-control-escape", "frames"), result.queue.map { it.id })
         assertEquals(6, result.fresh.size)
     }
 }

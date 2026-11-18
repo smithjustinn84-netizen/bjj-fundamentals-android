@@ -27,12 +27,12 @@ Fix technical inaccuracies and copy issues in existing starter content without c
 ## Item 2 — Lesson Sequencing & Coverage
 Reorganize `STARTER_LESSONS` so the foundation syllabus matches how beginners are actually taught on the mat.
 
-- [ ] **Move Day-1 habits to Lesson 1:** Bring `breakfalls`, `training-partner`, and `roll-to-learn` forward out of Lesson 10 (`turtle-and-standing`) so beginners learn safe falling, hygiene/etiquette, and rolling pace alongside `safety` (*Tap early, tap often*).
-- [ ] **Fix Lesson 8 (`attacking-from-the-pins`):** Include the core mount triad (`cross-collar-choke`, `armbar-mount`, `mount-to-back`), which are currently omitted from all lessons, ahead of `ezekiel-mount`.
-- [ ] **Split Lesson 4 (`closed-guard-attacks`):** Break the 6-submission overload into two natural dilemma-based lessons:
+- [x] **Move Day-1 habits to Lesson 1:** Bring `breakfalls`, `training-partner`, and `roll-to-learn` forward out of Lesson 10 (`turtle-and-standing`) so beginners learn safe falling, hygiene/etiquette, and rolling pace alongside `safety` (*Tap early, tap often*).
+- [x] **Fix Lesson 8 (`attacking-from-the-pins`):** Include the core mount triad (`cross-collar-choke`, `armbar-mount`, `mount-to-back`), which are currently omitted from all lessons, ahead of `ezekiel-mount`.
+- [x] **Split Lesson 4 (`closed-guard-attacks`):** Break the 6-submission overload into two natural dilemma-based lessons:
   1. Sit-up triad: `hip-bump-sweep`, `kimura-guard`, `guillotine-guard`
   2. Angle triad: `armbar-guard`, `triangle-choke`, `pendulum-sweep` (and `cross-collar-guard` / `omoplata-guard` as follow-ons or separate gi/transition focus)
-- [ ] **Adopt orphaned core techniques into lessons:** Fold `side-control-escape-knees`, `technical-stand-up`, `pendulum-sweep`, `single-leg`, `hip-throw`, and `turtle-breakdown` into their appropriate lessons so they aren't left out of the guided syllabus.
+- [x] **Adopt orphaned core techniques into lessons:** Fold `side-control-escape-knees`, `technical-stand-up`, `pendulum-sweep`, `single-leg`, `hip-throw`, and `turtle-breakdown` into their appropriate lessons so they aren't left out of the guided syllabus.
 
 ---
 

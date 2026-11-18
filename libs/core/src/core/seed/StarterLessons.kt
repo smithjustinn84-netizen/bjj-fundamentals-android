@@ -7,11 +7,26 @@ import dev.justinsmith.bjj.core.Lesson
 
 internal val STARTER_LESSONS: List<Lesson> = listOf(
     Lesson(
-        id = "surviving-underneath",
-        title = "Surviving underneath",
-        summary = "Stay calm and safe under side control, build frames, and get back to guard.",
+        id = "first-day-on-the-mat",
+        title = "First day on the mat",
+        summary = "Tap early, fall safely, stand up in base, and be the kind of training partner people trust.",
         conceptIds = listOf(
             "safety",
+            "breakfalls",
+            "training-partner",
+            "roll-to-learn",
+        ),
+        positionIds = emptyList(),
+        transitionIds = listOf(
+            "technical-stand-up",
+        ),
+        practice = "3 minutes: tap-and-release drill on a slow armbar, stopping before the hips lift. 4 minutes: 10 back breakfalls and 10 side breakfalls on each side. 4 minutes: 10 technical stand-ups on each side. 4 minutes: flow-roll at 40% pace, agreeing on pace and any sore joints before you start.",
+    ),
+    Lesson(
+        id = "surviving-underneath",
+        title = "Surviving underneath",
+        summary = "Stay calm under side control, build frames, and escape to guard or your knees.",
+        conceptIds = listOf(
             "breathing",
             "frames",
             "elbows-in",
@@ -21,9 +36,10 @@ internal val STARTER_LESSONS: List<Lesson> = listOf(
         ),
         transitionIds = listOf(
             "side-control-escape",
+            "side-control-escape-knees",
             "americana-defence",
         ),
-        practice = "3 minutes: partner holds side control at 30% weight while you only breathe slowly and build both frames. 6 minutes: 10 escapes to guard on each side. 3 minutes: 5 americana defences on each side. 3 minutes: partner holds at 50% and you escape however you can, tapping early to anything caught.",
+        practice = "3 minutes: partner holds side control at 30% weight while you only breathe slowly and build both frames. 5 minutes: 10 escapes to guard on each side. 4 minutes: partner blocks your bottom knee, 5 escapes to your knees on each side. 3 minutes: 5 americana defences on each side, tapping early to anything caught.",
     ),
     Lesson(
         id = "escaping-the-mount",
@@ -63,13 +79,30 @@ internal val STARTER_LESSONS: List<Lesson> = listOf(
         practice = "3 minutes: hold posture inside the guard while your partner tries to pull you down. 4 minutes: 5 guard breaks each. 4 minutes: 10 scissor sweeps each. 4 minutes: 10 hip bump sweeps each, partner sitting back on their heels.",
     ),
     Lesson(
-        id = "closed-guard-attacks",
-        title = "Attacking from the closed guard",
-        summary = "Six submissions that feed each other once you have an angle and two hands on one arm.",
+        id = "closed-guard-sit-up-attacks",
+        title = "Closed guard: sit-up and collar attacks",
+        summary = "Chain the hip bump reaction into the kimura and guillotine, and threaten the cross collar choke when they stay low.",
+        conceptIds = listOf(
+            "action-reaction",
+            "two-on-one",
+        ),
+        positionIds = listOf(
+            "closed-guard",
+        ),
+        transitionIds = listOf(
+            "kimura-guard",
+            "guillotine-guard",
+            "cross-collar-guard",
+        ),
+        practice = "3 minutes each, slowly and pausing for the tap: 5 kimuras, 5 guillotines, and 5 cross collar chokes per side. Last 6 minutes: run the hip-bump to kimura to guillotine chain at half speed as your partner posts or pulls back.",
+    ),
+    Lesson(
+        id = "closed-guard-angle-attacks",
+        title = "Closed guard: cutting an angle",
+        summary = "Pivot off the centre line to chain the armbar, triangle, pendulum sweep, and omoplata.",
         conceptIds = listOf(
             "angles",
-            "two-on-one",
-            "action-reaction",
+            "off-balancing",
         ),
         positionIds = listOf(
             "closed-guard",
@@ -77,12 +110,10 @@ internal val STARTER_LESSONS: List<Lesson> = listOf(
         transitionIds = listOf(
             "armbar-guard",
             "triangle-choke",
-            "kimura-guard",
-            "guillotine-guard",
-            "cross-collar-guard",
+            "pendulum-sweep",
             "omoplata-guard",
         ),
-        practice = "2 minutes each, slowly, pausing for the tap: armbar, triangle, kimura, guillotine, cross collar choke, omoplata. Last 3 minutes: partner defends the first attack at half speed and you switch to the one their reaction opens.",
+        practice = "3 minutes each, slowly and pausing for the tap: 5 armbars, 5 triangles, 5 pendulum sweeps, and 5 omoplatas per side. Last 3 minutes: partner stacks or pulls an arm out at half speed and you switch to the follow-up their reaction opens.",
     ),
     Lesson(
         id = "defending-inside-the-guard",
@@ -154,7 +185,7 @@ internal val STARTER_LESSONS: List<Lesson> = listOf(
     Lesson(
         id = "attacking-from-the-pins",
         title = "Attacking from the pins",
-        summary = "Settle the pin first, then attack an arm or the neck, or follow them to the back when they turn.",
+        summary = "Settle the pin first, then attack the neck and arms or take the back when they turn to escape.",
         conceptIds = listOf(
             "position-before-submission",
         ),
@@ -163,12 +194,15 @@ internal val STARTER_LESSONS: List<Lesson> = listOf(
             "mount",
         ),
         transitionIds = listOf(
+            "cross-collar-choke",
+            "armbar-mount",
+            "mount-to-back",
             "kimura-side-control",
             "side-control-to-back",
             "americana-mount",
             "ezekiel-mount",
         ),
-        practice = "3 minutes: hold side control, then mount, for 30 seconds each against a partner trying to escape at half strength. 3 minutes each, at walking pace and stopping at the first resistance: 5 kimuras from side control, 5 gift wraps to the back, 5 americanas from mount, 5 Ezekiel chokes from mount.",
+        practice = "3 minutes: hold side control, then mount, for 30 seconds each against half-strength escapes. 6 minutes from mount, slowly and stopping at the first resistance: 5 cross collar chokes, 5 armbars, 5 back takes as they turn, plus 3 americanas and 3 Ezekiel chokes. 6 minutes from side control: 5 kimuras and 5 gift wraps to the back.",
     ),
     Lesson(
         id = "back-control",
@@ -190,27 +224,42 @@ internal val STARTER_LESSONS: List<Lesson> = listOf(
         practice = "3 minutes: partner on your back with a seatbelt tries only to get a hand to your neck while you win the hand fight with two hands on one. 4 minutes: 5 choke defences and 5 back escapes each. 4 minutes each, slowly and tapping early: 5 rear naked chokes, then 5 sliding collar chokes.",
     ),
     Lesson(
-        id = "turtle-and-standing",
-        title = "Turtle and standing safely",
-        summary = "Get out of turtle or take the back from it, and get the fight to the ground without getting hurt.",
+        id = "turtle-basics",
+        title = "Turtle",
+        summary = "Seal your elbows to your knees and get out underneath; break them down or take the back on top.",
         conceptIds = listOf(
-            "breakfalls",
-            "off-balancing",
-            "training-partner",
-            "roll-to-learn",
+            "elbows-in",
+            "base",
         ),
         positionIds = listOf(
             "turtle",
-            "standing",
         ),
         transitionIds = listOf(
             "turtle-recover-guard",
             "turtle-sit-out",
             "turtle-to-back",
+            "turtle-breakdown",
+        ),
+        practice = "4 minutes underneath: 5 guard recoveries and 5 sit-outs on each side. 4 minutes on top: 5 back takes and 5 breakdowns to side control on each side. 7 minutes: positional rounds from turtle, resetting when bottom recovers guard or top secures side control or hooks.",
+    ),
+    Lesson(
+        id = "standing-and-takedowns",
+        title = "Standing and takedowns",
+        summary = "Win grips and off-balance first, defend leg shots with a sprawl, and take the fight to the mat cleanly.",
+        conceptIds = listOf(
+            "off-balancing",
+            "grips",
+        ),
+        positionIds = listOf(
+            "standing",
+        ),
+        transitionIds = listOf(
             "pull-guard",
             "double-leg",
+            "single-leg",
+            "hip-throw",
             "sprawl",
         ),
-        practice = "2 minutes: breakfalls. 6 minutes: 5 guard recoveries, 5 sit-outs and 5 back takes from turtle each. 2 minutes: grip up standing and take turns moving your partner off balance without throwing. 5 minutes: 5 guard pulls, then 5 double legs against 5 sprawls each, at walking pace.",
+        practice = "3 minutes: grip fight standing and off-balance your partner without throwing. 4 minutes: 5 guard pulls each and 10 sprawls against slow shots. 8 minutes at walking pace: 5 double legs, 5 single legs, and 5 hip throw fit-ins on each side.",
     ),
 )
