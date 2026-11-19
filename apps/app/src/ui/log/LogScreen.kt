@@ -5,7 +5,6 @@ import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.ColumnScope
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.layout.width
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
@@ -15,10 +14,8 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
-import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.input.KeyboardType
-import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import dev.justinsmith.bjj.core.TrainingEntry
 import dev.justinsmith.bjj.core.formatClassCount
@@ -34,6 +31,7 @@ import dev.justinsmith.bjj.core.stuckSituationIds
 import dev.justinsmith.bjj.design.components.BjjText
 import dev.justinsmith.bjj.design.components.Button
 import dev.justinsmith.bjj.design.components.ButtonKind
+import dev.justinsmith.bjj.design.components.ButtonSize
 import dev.justinsmith.bjj.design.components.Card
 import dev.justinsmith.bjj.design.components.Chip
 import dev.justinsmith.bjj.design.components.ConfirmDialog
@@ -195,11 +193,15 @@ private val LogError.message: StringResource
         LogError.Remove -> Res.string.log_error_remove
     }
 
-/** A group of chips that stays folded away under a link until asked for. */
+/** A group of chips that stays folded away under a button until asked for. */
 @Composable
 private fun Folded(closedLabel: String, startOpen: Boolean, content: @Composable () -> Unit) {
     var open by rememberSaveable { mutableStateOf(startOpen) }
-    if (open) content() else LinkButton(closedLabel, { open = true })
+    if (open) {
+        content()
+    } else {
+        Button(closedLabel, { open = true }, size = ButtonSize.Small, icon = BjjIcons.Plus)
+    }
 }
 
 /** A class write-up's working copy: what the form shows and changes until it is saved. */
@@ -251,26 +253,21 @@ private fun ColumnScope.EntryForm(
     onCancel: () -> Unit,
 ) {
     val draft = remember { EntryDraft(entry, today) }
-    val muted = BjjTheme.palette.muted
-    Row(horizontalArrangement = Arrangement.spacedBy(Spacing.s3), verticalAlignment = Alignment.Bottom) {
-        BjjText(
-            if (entry != null) {
-                stringResource(Res.string.log_form_edit, formatDay(entry.day))
-            } else {
-                stringResource(Res.string.log_form_new)
-            },
-            Modifier.weight(1f),
-            style = Type.h2,
-        )
-        TextField(
-            stringResource(Res.string.log_day),
-            draft.day,
-            { draft.day = it },
-            Modifier.width(DAY_WIDTH),
-            keyboardType = KeyboardType.Number,
-        )
-    }
-    BjjText(stringResource(Res.string.log_day_hint, formatDay(draft.day), today), style = Type.small, color = muted)
+    BjjText(
+        if (entry != null) {
+            stringResource(Res.string.log_form_edit, formatDay(entry.day))
+        } else {
+            stringResource(Res.string.log_form_new)
+        },
+        style = Type.h2,
+    )
+    TextField(
+        stringResource(Res.string.log_day),
+        draft.day,
+        { draft.day = it },
+        hint = stringResource(Res.string.log_day_hint, formatDay(draft.day), today),
+        keyboardType = KeyboardType.Number,
+    )
     MinutesField(draft)
     StuckField(choices, draft)
     TechniquesField(choices, draft)
@@ -388,8 +385,6 @@ private fun ColumnScope.TechniquesField(choices: LogChoices, draft: EntryDraft) 
         }
     }
 }
-
-private val DAY_WIDTH = 132.dp
 
 @Composable
 private fun EntryRow(row: LogEntryUi, nav: Nav, onEdit: () -> Unit, onRemove: () -> Unit) {

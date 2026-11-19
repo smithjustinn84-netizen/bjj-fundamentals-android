@@ -104,5 +104,8 @@ object BjjIcons {
     val Close: ImageVector by lazy { icon("Close", "M6 6l12 12M18 6 6 18") }
     val Chevron: ImageVector by lazy { icon("Chevron", "m9 6 6 6-6 6") }
     val Plus: ImageVector by lazy { icon("Plus", "M12 5v14M5 12h14") }
+    val Search: ImageVector by lazy {
+        icon("Search", circlePathData(cx = 11f, cy = 11f, r = 6.5f), "m15.8 15.8 4.2 4.2")
+    }
     val List: ImageVector by lazy { icon("List", "M9 6h11M9 12h11M9 18h11", "M4.5 6h.01M4.5 12h.01M4.5 18h.01") }
 }

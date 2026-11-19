@@ -131,7 +131,7 @@ fun Tile(
             .pressBlock(interactions, outline = BjjTheme.palette.outline, radius = Radius.lg)
             .clickable(interactions, indication = null, role = Role.Button, onClick = onClick)
             .defaultMinSize(minHeight = TILE_HEIGHT)
-            .padding(Spacing.s2),
+            .padding(horizontal = Spacing.s3, vertical = Spacing.s2),
         horizontalArrangement = Arrangement.spacedBy(Spacing.s3),
         verticalAlignment = Alignment.CenterVertically,
     ) {

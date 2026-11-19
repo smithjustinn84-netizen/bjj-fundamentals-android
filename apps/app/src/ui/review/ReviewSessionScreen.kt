@@ -58,6 +58,7 @@ import dev.justinsmith.bjj.design.components.Button
 import dev.justinsmith.bjj.design.components.ButtonKind
 import dev.justinsmith.bjj.design.components.ButtonSize
 import dev.justinsmith.bjj.design.components.Card
+import dev.justinsmith.bjj.design.components.Divider
 import dev.justinsmith.bjj.design.components.Eyebrow
 import dev.justinsmith.bjj.design.components.Icon
 import dev.justinsmith.bjj.design.components.LinkButton
@@ -192,7 +193,13 @@ private fun ActiveSession(
                 },
             ) { (card, _) ->
                 // The side showing is read live, so revealing the answer turns this card over, not a new one in.
-                FlashCard(card, revealed = state.revealed && card.item == state.card.item, onOpen, still)
+                FlashCard(
+                    card = card,
+                    revealed = state.revealed && card.item == state.card.item,
+                    onReveal = onReveal,
+                    onOpen = onOpen,
+                    still = still,
+                )
             }
         }
         // Pinned to the bottom of the screen, under the thumb, however long the card is.
@@ -204,6 +211,7 @@ private fun ActiveSession(
 private fun FlashCard(
     card: CardFace,
     revealed: Boolean,
+    onReveal: () -> Unit,
     onOpen: (androidx.navigation3.runtime.NavKey) -> Unit,
     still: Boolean,
     modifier: Modifier = Modifier,
@@ -217,12 +225,26 @@ private fun FlashCard(
             turn.animateTo(0f, tween(Motion.SLOW))
         }
     }
-    Card(
-        modifier.graphicsLayer {
+    val cardModifier = modifier
+        .graphicsLayer {
             rotationY = turn.value
             cameraDistance = FLIP_DISTANCE * density
-        },
-    ) {
+        }
+        .then(
+            if (revealed) {
+                Modifier
+            } else {
+                Modifier
+                    .defaultMinSize(minHeight = CARD_MIN_HEIGHT)
+                    .clickable(
+                        interactionSource = remember { MutableInteractionSource() },
+                        indication = null,
+                        role = Role.Button,
+                        onClick = onReveal,
+                    )
+            },
+        )
+    Card(cardModifier) {
         Eyebrow(prompt.eyebrow)
         BjjText(
             prompt.question,
@@ -233,6 +255,7 @@ private fun FlashCard(
             ),
         )
         if (revealed) {
+            Divider()
             CardAnswer(
                 card,
                 { onOpen(TransitionDetail(it)) },
@@ -245,6 +268,8 @@ private fun FlashCard(
         }
     }
 }
+
+private val CARD_MIN_HEIGHT = 200.dp
 
 // The card starts a quarter turn away, seen from far enough that it does not loom as it comes round.
 private const val FLIP_FROM = -90f
@@ -308,11 +333,17 @@ private fun GradeButton(
         horizontalAlignment = Alignment.CenterHorizontally,
     ) {
         BjjText(grade.label, style = Type.button, color = p.onGradeColor(grade), maxLines = 1)
-        BjjText(interval, style = Type.small, color = p.onGradeColor(grade), maxLines = 1)
+        BjjText(
+            interval,
+            style = Type.small,
+            color = p.onGradeColor(grade).copy(alpha = INTERVAL_ALPHA),
+            maxLines = 1,
+        )
     }
 }
 
 private val GRADE_HEIGHT = 56.dp
+private const val INTERVAL_ALPHA = 0.85f
 
 /** How the session's answers split across the four grades, as one stacked bar with a legend. */
 @Composable

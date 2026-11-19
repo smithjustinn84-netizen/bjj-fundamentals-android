@@ -1,6 +1,9 @@
 package dev.justinsmith.bjj.ui.common
 
+import androidx.compose.foundation.clickable
+import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
@@ -9,11 +12,15 @@ import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.key
 import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberUpdatedState
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.semantics.LiveRegionMode
+import androidx.compose.ui.semantics.Role
+import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.ui.semantics.liveRegion
 import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.text.input.ImeAction
@@ -23,13 +30,16 @@ import dev.justinsmith.bjj.core.label
 import dev.justinsmith.bjj.design.components.BjjText
 import dev.justinsmith.bjj.design.components.Bullets
 import dev.justinsmith.bjj.design.components.Divider
+import dev.justinsmith.bjj.design.components.Icon
 import dev.justinsmith.bjj.design.components.RowLink
 import dev.justinsmith.bjj.design.components.Section
 import dev.justinsmith.bjj.design.components.Tag
 import dev.justinsmith.bjj.design.components.TextInput
+import dev.justinsmith.bjj.design.components.pressShrink
 import dev.justinsmith.bjj.design.components.woodblock
 import dev.justinsmith.bjj.design.icons.BjjIcons
 import dev.justinsmith.bjj.design.theme.BjjTheme
+import dev.justinsmith.bjj.design.theme.Sizes
 import dev.justinsmith.bjj.design.theme.Spacing
 import dev.justinsmith.bjj.design.theme.Type
 import dev.justinsmith.bjj.design.theme.typeColor
@@ -42,6 +52,7 @@ import dev.justinsmith.bjj.resources.learn_links_answers
 import dev.justinsmith.bjj.resources.learn_links_defences
 import dev.justinsmith.bjj.resources.learn_links_follow_ups
 import dev.justinsmith.bjj.resources.learn_nothing_here
+import dev.justinsmith.bjj.resources.learn_search_clear
 import dev.justinsmith.bjj.resources.learn_search_label
 import dev.justinsmith.bjj.resources.learn_search_no_match
 import dev.justinsmith.bjj.resources.learn_search_placeholder
@@ -64,6 +75,7 @@ fun LibrarySearch(
     LaunchedEffect(Unit) { if (query != search.query) currentOnSearch(query) }
     val hits = search.hits
     Column(modifier.fillMaxWidth(), verticalArrangement = Arrangement.spacedBy(Spacing.s3)) {
+        val clearLabel = stringResource(Res.string.learn_search_clear)
         TextInput(
             value = query,
             onValueChange = {
@@ -71,14 +83,30 @@ fun LibrarySearch(
                 onSearch(it)
             },
             label = stringResource(Res.string.learn_search_label),
-            modifier = Modifier.woodblock(
-                fill = BjjTheme.palette.surface,
-                outline = BjjTheme.palette.borderControl,
-                radius = dev.justinsmith.bjj.design.theme.Radius.md,
-            ),
             placeholder = stringResource(Res.string.learn_search_placeholder),
             imeAction = ImeAction.Search,
             onSurface = true,
+            leading = { Icon(BjjIcons.Search, description = null, tint = BjjTheme.palette.muted, size = Sizes.icon) },
+            trailing = if (query.isNotEmpty()) {
+                {
+                    val interactions = remember { MutableInteractionSource() }
+                    Box(
+                        Modifier
+                            .pressShrink(interactions)
+                            .clickable(interactions, indication = null, role = Role.Button) {
+                                query = ""
+                                onSearch("")
+                            }
+                            .padding(Spacing.s1)
+                            .semantics { contentDescription = clearLabel },
+                        contentAlignment = Alignment.Center,
+                    ) {
+                        Icon(BjjIcons.Close, description = null, tint = BjjTheme.palette.muted, size = Sizes.iconSmall)
+                    }
+                }
+            } else {
+                null
+            },
         )
         if (search.query.isNotBlank() && hits.isEmpty()) {
             // Said aloud as it changes, so a screen reader hears that nothing matched.

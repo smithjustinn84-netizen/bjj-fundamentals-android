@@ -28,9 +28,7 @@
     <string name="review_what_to_study">What to study</string>
     <!-- A chip for the lesson being studied. %1$d is the lesson's number, %2$s its title. -->
     <string name="review_lesson_chip">Lesson %1$d: %2$s</string>
-    <!-- Above the slider. %1$d is the number chosen. -->
-    <string name="review_new_cards_value">New cards this session: %1$d</string>
-    <!-- What a screen reader calls the slider. -->
+    <!-- Above the slider, and what a screen reader calls the slider. -->
     <string name="review_new_cards">New cards this session</string>
     <string name="review_how_to">Read the question, answer it in your head (or out loud), then reveal and rate how well you knew it. Cards you know well come back less often.</string>
 

@@ -3,9 +3,12 @@ package dev.justinsmith.bjj.ui.learn
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.ColumnScope
+import androidx.compose.foundation.layout.IntrinsicSize
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.RowScope
+import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
@@ -159,14 +162,17 @@ class PagerTarget(val label: String, val onClick: () -> Unit)
 @Composable
 fun Pager(previous: PagerTarget?, next: PagerTarget?, modifier: Modifier = Modifier) {
     if (previous == null && next == null) return
-    Column(modifier.fillMaxWidth(), verticalArrangement = Arrangement.spacedBy(Spacing.s2)) {
+    Row(
+        modifier.fillMaxWidth().height(IntrinsicSize.Max),
+        horizontalArrangement = Arrangement.spacedBy(Spacing.s2),
+    ) {
         if (previous != null) {
             val label = stringResource(Res.string.page_previous)
-            PagerLink(label, previous.label, previous.onClick, Modifier.fillMaxWidth())
+            PagerLink(label, previous.label, previous.onClick, Modifier.weight(1f).fillMaxHeight())
         }
         if (next != null) {
             val label = stringResource(Res.string.page_next)
-            PagerLink(label, next.label, next.onClick, Modifier.fillMaxWidth(), alignEnd = true)
+            PagerLink(label, next.label, next.onClick, Modifier.weight(1f).fillMaxHeight(), alignEnd = true)
         }
     }
 }

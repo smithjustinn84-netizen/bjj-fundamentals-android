@@ -8,6 +8,7 @@ import androidx.compose.foundation.interaction.collectIsFocusedAsState
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.defaultMinSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
@@ -30,6 +31,7 @@ import androidx.compose.ui.graphics.drawscope.Stroke
 import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.layout.onSizeChanged
 import androidx.compose.ui.semantics.ProgressBarRangeInfo
+import androidx.compose.ui.semantics.clearAndSetSemantics
 import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.ui.semantics.progressBarRangeInfo
 import androidx.compose.ui.semantics.semantics
@@ -67,6 +69,8 @@ fun TextInput(
     keyboardType: KeyboardType = KeyboardType.Text,
     imeAction: ImeAction = if (lines > 1) ImeAction.Default else ImeAction.Next,
     onSurface: Boolean = false,
+    leading: (@Composable () -> Unit)? = null,
+    trailing: (@Composable () -> Unit)? = null,
 ) {
     val p = BjjTheme.palette
     val interactions = remember { MutableInteractionSource() }
@@ -101,9 +105,20 @@ fun TextInput(
         interactionSource = interactions,
         cursorBrush = SolidColor(p.accent),
         decorationBox = { field ->
-            Box(contentAlignment = if (lines == 1) Alignment.CenterStart else Alignment.TopStart) {
-                if (value.isEmpty() && placeholder.isNotEmpty()) BjjText(placeholder, color = p.muted)
-                field()
+            Row(
+                Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.spacedBy(Spacing.s2),
+                verticalAlignment = if (lines == 1) Alignment.CenterVertically else Alignment.Top,
+            ) {
+                leading?.invoke()
+                Box(
+                    Modifier.weight(1f),
+                    contentAlignment = if (lines == 1) Alignment.CenterStart else Alignment.TopStart,
+                ) {
+                    if (value.isEmpty() && placeholder.isNotEmpty()) BjjText(placeholder, color = p.muted)
+                    field()
+                }
+                trailing?.invoke()
             }
         },
     )
@@ -135,6 +150,7 @@ fun NumberSlider(
     max: Int,
     label: String,
     modifier: Modifier = Modifier,
+    showBounds: Boolean = false,
 ) {
     val p = BjjTheme.palette
     val current by rememberUpdatedState(value)
@@ -151,48 +167,60 @@ fun NumberSlider(
         (min + jsRoundToInt((x / width * span).toDouble())).coerceIn(min, max)
     }
 
-    Box(
-        modifier
-            .fillMaxWidth()
-            .height(Sizes.tap)
-            .onSizeChanged { width = it.width.toFloat() }
-            .pointerInput(min, max) { detectTapGestures { change(valueAt(it.x)) } }
-            .draggable(
-                state = rememberDraggableState { delta ->
-                    dragAt += delta
-                    change(valueAt(dragAt))
-                },
-                orientation = androidx.compose.foundation.gestures.Orientation.Horizontal,
-                onDragStarted = { dragAt = it.x },
-            )
-            .semantics {
-                contentDescription = label
-                progressBarRangeInfo = ProgressBarRangeInfo(current.toFloat(), min.toFloat()..max.toFloat(), span - 1)
-                setProgress { target ->
-                    change(jsRoundToInt(target.toDouble()).coerceIn(min, max))
-                    true
-                }
-            }
-            .drawBehind {
-                val track = SLIDER_TRACK.toPx()
-                val knob = SLIDER_KNOB.toPx()
-                val line = Sizes.line.toPx()
-                val y = size.height / 2
-                val x = knob / 2 + (size.width - knob) * (current - min) / span
-                val round = androidx.compose.ui.geometry.CornerRadius(track)
-                drawRoundRect(p.well, Offset(0f, y - track / 2), Size(size.width, track), round)
-                drawRoundRect(p.fill, Offset(0f, y - track / 2), Size(x, track), round)
-                drawRoundRect(
-                    p.outline,
-                    Offset(0f, y - track / 2),
-                    Size(size.width, track),
-                    round,
-                    style = Stroke(line),
+    Column(modifier.fillMaxWidth()) {
+        Box(
+            Modifier
+                .fillMaxWidth()
+                .height(Sizes.tap)
+                .onSizeChanged { width = it.width.toFloat() }
+                .pointerInput(min, max) { detectTapGestures { change(valueAt(it.x)) } }
+                .draggable(
+                    state = rememberDraggableState { delta ->
+                        dragAt += delta
+                        change(valueAt(dragAt))
+                    },
+                    orientation = androidx.compose.foundation.gestures.Orientation.Horizontal,
+                    onDragStarted = { dragAt = it.x },
                 )
-                drawCircle(p.raised, knob / 2, Offset(x, y))
-                drawCircle(p.outline, knob / 2 - line / 2, Offset(x, y), style = Stroke(line))
-            },
-    )
+                .semantics {
+                    contentDescription = label
+                    progressBarRangeInfo =
+                        ProgressBarRangeInfo(current.toFloat(), min.toFloat()..max.toFloat(), span - 1)
+                    setProgress { target ->
+                        change(jsRoundToInt(target.toDouble()).coerceIn(min, max))
+                        true
+                    }
+                }
+                .drawBehind {
+                    val track = SLIDER_TRACK.toPx()
+                    val knob = SLIDER_KNOB.toPx()
+                    val line = Sizes.line.toPx()
+                    val y = size.height / 2
+                    val x = knob / 2 + (size.width - knob) * (current - min) / span
+                    val round = androidx.compose.ui.geometry.CornerRadius(track)
+                    drawRoundRect(p.well, Offset(0f, y - track / 2), Size(size.width, track), round)
+                    drawRoundRect(p.fill, Offset(0f, y - track / 2), Size(x, track), round)
+                    drawRoundRect(
+                        p.outline,
+                        Offset(0f, y - track / 2),
+                        Size(size.width, track),
+                        round,
+                        style = Stroke(line),
+                    )
+                    drawCircle(p.raised, knob / 2, Offset(x, y))
+                    drawCircle(p.outline, knob / 2 - line / 2, Offset(x, y), style = Stroke(line))
+                },
+        )
+        if (showBounds) {
+            Row(
+                Modifier.fillMaxWidth().clearAndSetSemantics {},
+                horizontalArrangement = Arrangement.SpaceBetween,
+            ) {
+                BjjText("$min", style = Type.small, color = p.muted)
+                BjjText("$max", style = Type.small, color = p.muted)
+            }
+        }
+    }
 }
 
 private val SLIDER_TRACK = 10.dp

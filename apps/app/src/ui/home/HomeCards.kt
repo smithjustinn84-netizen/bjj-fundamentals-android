@@ -35,6 +35,7 @@ import dev.justinsmith.bjj.design.components.Button
 import dev.justinsmith.bjj.design.components.ButtonSize
 import dev.justinsmith.bjj.design.components.Card
 import dev.justinsmith.bjj.design.components.Chip
+import dev.justinsmith.bjj.design.components.Divider
 import dev.justinsmith.bjj.design.components.Eyebrow
 import dev.justinsmith.bjj.design.components.Icon
 import dev.justinsmith.bjj.design.components.LinkButton
@@ -113,27 +114,33 @@ private val DrillReason.text: StringResource
 @Composable
 internal fun DrillCard(drill: DrillPick, nav: Nav, modifier: Modifier = Modifier) {
     val interactions = remember { MutableInteractionSource() }
-    Row(
+    Column(
         modifier
             .fillMaxWidth()
             .pressBlock(interactions, outline = BjjTheme.palette.outline, radius = Radius.lg)
             .clickable(interactions, indication = null, role = Role.Button) {
                 nav.open(TransitionDetail(drill.technique.id))
             }
-            .padding(Spacing.s3),
-        horizontalArrangement = Arrangement.spacedBy(Spacing.s3),
-        verticalAlignment = Alignment.CenterVertically,
+            .padding(Spacing.cardPad),
+        verticalArrangement = Arrangement.spacedBy(Spacing.s3),
     ) {
-        if (hasPositionArtwork(drill.technique.fromId)) {
-            PositionArtwork(drill.technique.fromId, Modifier.width(Sizes.thumb))
+        Row(
+            Modifier.fillMaxWidth(),
+            horizontalArrangement = Arrangement.spacedBy(Spacing.s3),
+            verticalAlignment = Alignment.CenterVertically,
+        ) {
+            if (hasPositionArtwork(drill.technique.fromId)) {
+                PositionArtwork(drill.technique.fromId, Modifier.width(Sizes.thumb))
+            }
+            Column(Modifier.weight(1f), verticalArrangement = Arrangement.spacedBy(2.dp)) {
+                Eyebrow(stringResource(Res.string.today_drill_eyebrow))
+                BjjText(drill.technique.name, style = Type.strong)
+                BjjText(stringResource(drill.reason.text), style = Type.small, color = BjjTheme.palette.muted)
+            }
+            Icon(BjjIcons.Chevron, description = null, tint = BjjTheme.palette.muted)
         }
-        Column(Modifier.weight(1f), verticalArrangement = Arrangement.spacedBy(2.dp)) {
-            Eyebrow(stringResource(Res.string.today_drill_eyebrow))
-            BjjText(drill.technique.name, style = Type.strong)
-            BjjText(stringResource(drill.reason.text), style = Type.small, color = BjjTheme.palette.muted)
-            BjjText(drill.drill, style = Type.small)
-        }
-        Icon(BjjIcons.Chevron, description = null, tint = BjjTheme.palette.muted)
+        Divider()
+        BjjText(drill.drill, style = Type.small)
     }
 }
 
@@ -147,8 +154,25 @@ internal fun TrainingCard(training: TrainingSummary, stuck: List<Situation>, nav
             Button(stringResource(Res.string.today_log_a_class), { nav.selectTab(LogTab) })
         } else {
             val hasFocus = training.focus.isNotEmpty()
-            Eyebrow(stringResource(if (hasFocus) Res.string.today_focus_eyebrow else Res.string.common_training_log))
-            if (hasFocus) BjjText(training.focus, style = Type.h2)
+            Row(
+                Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.spacedBy(Spacing.s2),
+                verticalAlignment = Alignment.CenterVertically,
+            ) {
+                Column(Modifier.weight(1f), verticalArrangement = Arrangement.spacedBy(Spacing.s1)) {
+                    Eyebrow(
+                        stringResource(
+                            if (hasFocus) Res.string.today_focus_eyebrow else Res.string.common_training_log,
+                        ),
+                    )
+                    if (hasFocus) BjjText(training.focus, style = Type.h2)
+                }
+                Button(
+                    stringResource(Res.string.today_log_a_class),
+                    { nav.selectTab(LogTab) },
+                    size = ButtonSize.Small,
+                )
+            }
             val line = stringResource(
                 Res.string.today_training_line,
                 formatClassCount(training.classes),

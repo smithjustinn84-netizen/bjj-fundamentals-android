@@ -1,15 +1,15 @@
 package dev.justinsmith.bjj.ui.review
 
-import androidx.compose.foundation.horizontalScroll
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.layout.padding
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
-import androidx.compose.runtime.setValue
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.drawBehind
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import dev.justinsmith.bjj.core.Deck
 import dev.justinsmith.bjj.design.components.BjjText
@@ -21,8 +21,11 @@ import dev.justinsmith.bjj.design.components.Divider
 import dev.justinsmith.bjj.design.components.NumberSlider
 import dev.justinsmith.bjj.design.components.PageTitle
 import dev.justinsmith.bjj.design.components.ToggleChip
+import dev.justinsmith.bjj.design.components.Wrap
+import dev.justinsmith.bjj.design.components.block
 import dev.justinsmith.bjj.design.icons.BjjIcons
 import dev.justinsmith.bjj.design.theme.BjjTheme
+import dev.justinsmith.bjj.design.theme.Radius
 import dev.justinsmith.bjj.design.theme.Sizes
 import dev.justinsmith.bjj.design.theme.Spacing
 import dev.justinsmith.bjj.design.theme.Type
@@ -44,7 +47,6 @@ import dev.justinsmith.bjj.resources.review_from_class
 import dev.justinsmith.bjj.resources.review_how_to
 import dev.justinsmith.bjj.resources.review_lesson_chip
 import dev.justinsmith.bjj.resources.review_new_cards
-import dev.justinsmith.bjj.resources.review_new_cards_value
 import dev.justinsmith.bjj.resources.review_split
 import dev.justinsmith.bjj.resources.review_split_more
 import dev.justinsmith.bjj.resources.review_start_session
@@ -142,17 +144,12 @@ fun ReviewScreen(
             }
             Divider()
             BjjText(stringResource(Res.string.review_what_to_study), style = Type.label)
-            // One row at every width: on a phone it scrolls sideways instead of wrapping.
-            Row(
-                Modifier.horizontalScroll(rememberScrollState()),
-                horizontalArrangement = Arrangement.spacedBy(Spacing.s2),
-            ) {
+            Wrap {
                 if (lesson != null) {
                     ToggleChip(
                         stringResource(Res.string.review_lesson_chip, lesson.number, lesson.title),
                         checked = true,
-                        onChange = {
-                        },
+                        onChange = {},
                     )
                 }
                 for (option in Deck.entries) {
@@ -163,9 +160,23 @@ fun ReviewScreen(
                     )
                 }
             }
-            BjjText(stringResource(Res.string.review_new_cards_value, newLimit), style = Type.label)
             val slider = stringResource(Res.string.review_new_cards)
-            NumberSlider(newLimit, onNewLimit, min = 0, max = MAX_NEW_CARDS, label = slider)
+            val p = BjjTheme.palette
+            Row(
+                Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.SpaceBetween,
+                verticalAlignment = Alignment.CenterVertically,
+            ) {
+                BjjText(slider, style = Type.label)
+                BjjText(
+                    "$newLimit",
+                    Modifier
+                        .drawBehind { block(p.well, p.outline, Radius.pill, line = Sizes.hairline) }
+                        .padding(horizontal = Spacing.s3, vertical = Spacing.s1),
+                    style = Type.strong,
+                )
+            }
+            NumberSlider(newLimit, onNewLimit, min = 0, max = MAX_NEW_CARDS, label = slider, showBounds = true)
         }
         BjjText(stringResource(Res.string.review_how_to), style = Type.small, color = muted)
     }

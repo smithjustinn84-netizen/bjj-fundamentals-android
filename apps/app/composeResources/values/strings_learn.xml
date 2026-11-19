@@ -7,6 +7,7 @@
     <!-- The library search box. -->
     <string name="learn_search_label">Search your library</string>
     <string name="learn_search_placeholder">Find a concept, position or technique…</string>
+    <string name="learn_search_clear">Clear search</string>
     <!-- %1$s is what the user typed. -->
     <string name="learn_search_no_match">Nothing matches “%1$s”.</string>
 

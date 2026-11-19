@@ -13,10 +13,12 @@ import dev.justinsmith.bjj.core.ItemKind
 import dev.justinsmith.bjj.design.components.BjjText
 import dev.justinsmith.bjj.design.components.Button
 import dev.justinsmith.bjj.design.components.ButtonKind
+import dev.justinsmith.bjj.design.components.Icon
 import dev.justinsmith.bjj.design.components.ProgressDot
 import dev.justinsmith.bjj.design.components.Tile
 import dev.justinsmith.bjj.design.graphics.ConceptArtwork
 import dev.justinsmith.bjj.design.graphics.hasConceptArtwork
+import dev.justinsmith.bjj.design.icons.BjjIcons
 import dev.justinsmith.bjj.design.theme.BjjTheme
 import dev.justinsmith.bjj.design.theme.Spacing
 import dev.justinsmith.bjj.nav.ConceptDetail
@@ -102,7 +104,10 @@ fun ConceptsScreen(
                     onClick = { nav.open(ConceptDetail(concept.id)) },
                     detail = concept.summary,
                     picture = if (hasConceptArtwork(concept.id)) ({ ConceptArtwork(concept.id) }) else null,
-                ) { ProgressDot(concept.progress) }
+                ) {
+                    ProgressDot(concept.progress)
+                    Icon(BjjIcons.Chevron, description = null, tint = BjjTheme.palette.muted)
+                }
             }
         }
     }
