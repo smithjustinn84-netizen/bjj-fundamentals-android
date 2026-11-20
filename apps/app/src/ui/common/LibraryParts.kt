@@ -7,6 +7,7 @@ import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
@@ -97,7 +98,7 @@ fun LibrarySearch(
                                 query = ""
                                 onSearch("")
                             }
-                            .padding(Spacing.s1)
+                            .size(Sizes.tap)
                             .semantics { contentDescription = clearLabel },
                         contentAlignment = Alignment.Center,
                     ) {

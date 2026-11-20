@@ -85,7 +85,7 @@ fun TextInput(
                 if (focused) focusRing(p.accent, Radius.md)
             }
             .defaultMinSize(minHeight = Sizes.tap)
-            .padding(horizontal = Spacing.s3, vertical = Spacing.s3)
+            .padding(horizontal = Spacing.s3)
             .semantics { contentDescription = label },
         textStyle = Type.body.copy(color = p.text),
         singleLine = lines == 1,
@@ -111,8 +111,10 @@ fun TextInput(
                 verticalAlignment = if (lines == 1) Alignment.CenterVertically else Alignment.Top,
             ) {
                 leading?.invoke()
+                // The text keeps the field's vertical padding to itself, so a button beside it can be a full
+                // Sizes.tap tall without making the field taller.
                 Box(
-                    Modifier.weight(1f),
+                    Modifier.weight(1f).padding(vertical = Spacing.s3),
                     contentAlignment = if (lines == 1) Alignment.CenterStart else Alignment.TopStart,
                 ) {
                     if (value.isEmpty() && placeholder.isNotEmpty()) BjjText(placeholder, color = p.muted)

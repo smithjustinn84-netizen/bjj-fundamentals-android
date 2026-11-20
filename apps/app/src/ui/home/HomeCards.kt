@@ -132,7 +132,7 @@ internal fun DrillCard(drill: DrillPick, nav: Nav, modifier: Modifier = Modifier
             if (hasPositionArtwork(drill.technique.fromId)) {
                 PositionArtwork(drill.technique.fromId, Modifier.width(Sizes.thumb))
             }
-            Column(Modifier.weight(1f), verticalArrangement = Arrangement.spacedBy(2.dp)) {
+            Column(Modifier.weight(1f), verticalArrangement = Arrangement.spacedBy(Spacing.s1)) {
                 Eyebrow(stringResource(Res.string.today_drill_eyebrow))
                 BjjText(drill.technique.name, style = Type.strong)
                 BjjText(stringResource(drill.reason.text), style = Type.small, color = BjjTheme.palette.muted)
