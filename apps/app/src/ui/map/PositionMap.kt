@@ -37,11 +37,14 @@ import androidx.compose.ui.graphics.PathEffect
 import androidx.compose.ui.graphics.StrokeCap
 import androidx.compose.ui.graphics.drawscope.DrawScope
 import androidx.compose.ui.graphics.drawscope.Stroke
+import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.ui.semantics.selected
 import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.unit.Dp
+import androidx.compose.ui.unit.TextUnit
 import androidx.compose.ui.unit.dp
 import dev.justinsmith.bjj.core.MapEdge
 import dev.justinsmith.bjj.core.MapLayout
@@ -191,6 +194,7 @@ private fun MapSheet(
                 selected = node.id == activeId,
                 dimmed = activeId != null && node.id != activeId && node.id !in neighbours,
                 onToggle = { onToggle(node.id) },
+                unit = unit,
                 modifier = Modifier
                     .offset(unit * node.x.toFloat(), unit * node.y.toFloat())
                     .size(unit * node.width.toFloat(), unit * node.height.toFloat()),
@@ -275,6 +279,9 @@ private const val FLOW_DASH = 2f
 private const val FLOW_GAP = 14f
 private const val DIM_NODE = 0.35f
 
+/** A box's lines, as a multiple of their text size: the web app's map, so two lines and a count fit its height. */
+private const val MAP_LINE_HEIGHT = 1.2f
+
 @Composable
 private fun MapNodeButton(
     node: MapNode,
@@ -282,10 +289,17 @@ private fun MapNodeButton(
     selected: Boolean,
     dimmed: Boolean,
     onToggle: () -> Unit,
+    unit: Dp,
     modifier: Modifier = Modifier,
 ) {
     val interactions = remember { MutableInteractionSource() }
     val p = BjjTheme.palette
+    // A box's text and padding are in the map's own units, as in the web app's drawing, so they grow and shrink
+    // with the box. Sized in sp, two lines of name and a count overflow a box drawn below its full size.
+    val density = LocalDensity.current
+    val onMap = { size: TextUnit -> with(density) { (unit * size.value).toSp() } }
+    val nameSize = onMap(TextSizes.mapName)
+    val countSize = onMap(TextSizes.mapCount)
     Column(
         modifier
             .alpha(if (dimmed) DIM_NODE else 1f)
@@ -295,7 +309,7 @@ private fun MapNodeButton(
             }
             .clickable(interactions, indication = null, role = Role.Button, onClick = onToggle)
             .semantics { this.selected = selected }
-            .padding(horizontal = Spacing.s2, vertical = Spacing.s1),
+            .padding(horizontal = unit * Spacing.s2.value, vertical = unit * Spacing.s1.value),
         verticalArrangement = Arrangement.Center,
         horizontalAlignment = Alignment.CenterHorizontally,
     ) {
@@ -303,14 +317,22 @@ private fun MapNodeButton(
             ProgressDot(position.progress)
             BjjText(
                 position.name,
-                style = Type.small.copy(fontSize = TextSizes.mapName, fontWeight = FontWeight.SemiBold),
+                style = Type.small.copy(
+                    fontSize = nameSize,
+                    lineHeight = nameSize * MAP_LINE_HEIGHT,
+                    fontWeight = FontWeight.SemiBold,
+                ),
                 maxLines = 2,
             )
         }
         if (node.submissions > 0) {
             BjjText(
                 pluralStringResource(Res.plurals.map_submissions, node.submissions, node.submissions),
-                style = Type.small.copy(fontSize = TextSizes.mapCount, fontWeight = FontWeight.SemiBold),
+                style = Type.small.copy(
+                    fontSize = countSize,
+                    lineHeight = countSize * MAP_LINE_HEIGHT,
+                    fontWeight = FontWeight.SemiBold,
+                ),
                 color = p.typeSubmission,
                 maxLines = 1,
             )
