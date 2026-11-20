@@ -37,6 +37,7 @@ import androidx.compose.ui.graphics.PathEffect
 import androidx.compose.ui.graphics.StrokeCap
 import androidx.compose.ui.graphics.drawscope.DrawScope
 import androidx.compose.ui.graphics.drawscope.Stroke
+import androidx.compose.ui.layout.layout
 import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.semantics.contentDescription
@@ -176,13 +177,19 @@ private fun MapSheet(
                 }
             },
         )
-        // Across the page a lane's heading is centred over its column.
-        val nudge = if (orientation == MapOrientation.Horizontal) -Sizes.mapLaneLabelHalf else 0.dp
+        // Across the page a lane's heading is centred over its column; down it, it starts at the lane's edge.
+        val centred = orientation == MapOrientation.Horizontal
+        val laneStyle = Type.eyebrow.copy(fontSize = mapSp(unit, TextSizes.mapLane))
         for (lane in layout.lanes) {
             BjjText(
                 lane.category.label.uppercase(),
-                Modifier.offset(unit * lane.labelX.toFloat() + nudge, unit * lane.labelY.toFloat()),
-                style = Type.eyebrow.copy(fontSize = TextSizes.mapLane),
+                Modifier.layout { measurable, constraints ->
+                    val label = measurable.measure(constraints)
+                    val x = (unit * lane.labelX.toFloat()).roundToPx() - if (centred) label.width / 2 else 0
+                    val y = (unit * lane.labelY.toFloat()).roundToPx()
+                    layout(label.width, label.height) { label.place(x, y) }
+                },
+                style = laneStyle,
                 color = palette.muted,
             )
         }
@@ -279,6 +286,14 @@ private const val FLOW_DASH = 2f
 private const val FLOW_GAP = 14f
 private const val DIM_NODE = 0.35f
 
+/**
+ * A text size on the map, where [unit] is one of the map's units on screen: the map's text is in its own units, as
+ * in the web app's drawing, so it grows and shrinks with the boxes and arrows instead of following the system's
+ * font size and overflowing a box drawn below its full size.
+ */
+@Composable
+private fun mapSp(unit: Dp, size: TextUnit): TextUnit = with(LocalDensity.current) { (unit * size.value).toSp() }
+
 /** A box's lines, as a multiple of their text size: the web app's map, so two lines and a count fit its height. */
 private const val MAP_LINE_HEIGHT = 1.2f
 
@@ -294,12 +309,9 @@ private fun MapNodeButton(
 ) {
     val interactions = remember { MutableInteractionSource() }
     val p = BjjTheme.palette
-    // A box's text and padding are in the map's own units, as in the web app's drawing, so they grow and shrink
-    // with the box. Sized in sp, two lines of name and a count overflow a box drawn below its full size.
-    val density = LocalDensity.current
-    val onMap = { size: TextUnit -> with(density) { (unit * size.value).toSp() } }
-    val nameSize = onMap(TextSizes.mapName)
-    val countSize = onMap(TextSizes.mapCount)
+    // Padding is in the map's units too, so two lines of name and a count fit the box at any size.
+    val nameSize = mapSp(unit, TextSizes.mapName)
+    val countSize = mapSp(unit, TextSizes.mapCount)
     Column(
         modifier
             .alpha(if (dimmed) DIM_NODE else 1f)

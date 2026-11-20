@@ -72,9 +72,6 @@ object Sizes {
     val contentMax = 1200.dp
     val readingMax = 680.dp
 
-    /** How far a lane's heading on the across-the-page map sits left of its column's centre: half its width. */
-    val mapLaneLabelHalf = 40.dp
-
     /** A line in the map's legend: its length and its weight. */
     val legendLine = 22.dp
     val legendWeight = 3.dp
