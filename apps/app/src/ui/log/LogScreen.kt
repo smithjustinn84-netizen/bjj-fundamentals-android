@@ -377,10 +377,12 @@ private fun ColumnScope.MinutesField(draft: EntryDraft) {
 private fun ColumnScope.StuckField(choices: LogChoices, draft: EntryDraft) {
     val situations = choices.situations
     if (situations.isEmpty()) return
-    // Offered up front; remembered so the row does not reshuffle as chips are toggled.
-    val quickIds = remember {
+    // Offered up front; saved, so the row does not reshuffle as chips are toggled or when the page comes back after
+    // the window turns, which would move a chip picked from the folded group up into the row. An ArrayList, which an
+    // Android Bundle holds.
+    val quickIds = rememberSaveable {
         val known = situations.map { it.id }.toSet()
-        quickPicks(draft.stuckIds, choices.recentlyStuck) { it in known }
+        ArrayList(quickPicks(draft.stuckIds, choices.recentlyStuck) { it in known })
     }
     val (quick, others) = situations.partition { it.id in quickIds }
     BjjText(stringResource(Res.string.log_stuck), style = Type.label)
@@ -406,8 +408,9 @@ private fun ColumnScope.StuckField(choices: LogChoices, draft: EntryDraft) {
 private fun ColumnScope.TechniquesField(choices: LogChoices, draft: EntryDraft) {
     val groups = choices.techniqueGroups
     if (groups.isEmpty()) return
-    val quick = remember {
-        quickPicks(draft.techniqueIds, choices.recentlyPractised) { it in choices.techniqueNames }
+    // Saved, like the situations' row above.
+    val quick = rememberSaveable {
+        ArrayList(quickPicks(draft.techniqueIds, choices.recentlyPractised) { it in choices.techniqueNames })
     }
     BjjText(stringResource(Res.string.log_techniques), style = Type.label)
     if (quick.isNotEmpty()) {
