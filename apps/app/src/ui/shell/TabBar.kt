@@ -256,8 +256,8 @@ private fun DueBadge(count: Int, modifier: Modifier = Modifier) {
     Box(
         modifier
             .defaultMinSize(minWidth = BADGE_SIZE, minHeight = BADGE_SIZE)
-            .drawBehind { block(p.belt, p.belt, Radius.pill, 0.dp) }
-            .padding(horizontal = 5.dp)
+            .drawBehind { block(p.belt, p.belt, Radius.pill, line = BADGE_LINE) }
+            .padding(horizontal = BADGE_PAD)
             .clearAndSetSemantics {},
         contentAlignment = Alignment.Center,
     ) {
@@ -266,4 +266,10 @@ private fun DueBadge(count: Int, modifier: Modifier = Modifier) {
 }
 
 private val BADGE_SIZE = 18.dp
+
+/** A badge is a solid dot of belt red with no ink line round it, so it reads as a mark on the icon, not a control. */
+private val BADGE_LINE = 0.dp
+
+/** Either side of the number, so "99+" still sits inside the pill. */
+private val BADGE_PAD = 5.dp
 private const val MAX_BADGE = 99
