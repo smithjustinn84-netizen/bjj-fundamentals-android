@@ -12,8 +12,6 @@ import androidx.compose.animation.togetherWith
 import androidx.compose.foundation.background
 import androidx.compose.foundation.isSystemInDarkTheme
 import androidx.compose.foundation.layout.Box
-import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.WindowInsets
 import androidx.compose.foundation.layout.WindowInsetsSides
 import androidx.compose.foundation.layout.fillMaxSize
@@ -24,6 +22,8 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.layout.Layout
+import androidx.compose.ui.unit.Constraints
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.viewmodel.navigation3.rememberViewModelStoreNavEntryDecorator
 import androidx.navigation3.runtime.NavBackStack
@@ -128,17 +128,50 @@ fun App(modifier: Modifier = Modifier) {
         val showBar = backStack.lastOrNull() !is ReviewSession
         val rail = hasRail()
         val insets = WindowInsets.safeDrawing.only(WindowInsetsSides.Top + WindowInsetsSides.Horizontal)
-        Box(modifier.fillMaxSize().background(BjjTheme.palette.bg).windowInsetsPadding(insets)) {
-            if (rail) {
-                Row(Modifier.fillMaxSize()) {
-                    if (showBar) TabRail(current, dueCount, hasWideRail(), nav.selectTab)
-                    Pages(backStack, nav, Modifier.weight(1f))
+        val ground = modifier.fillMaxSize().background(BjjTheme.palette.bg).windowInsetsPadding(insets)
+        Shell(rail, ground) {
+            Pages(backStack, nav)
+            if (showBar) {
+                if (rail) {
+                    TabRail(
+                        current,
+                        dueCount,
+                        hasWideRail(),
+                        nav.selectTab,
+                    )
+                } else {
+                    TabBar(current, dueCount, nav.selectTab)
                 }
-            } else {
-                Column(Modifier.fillMaxSize()) {
-                    Pages(backStack, nav, Modifier.weight(1f))
-                    if (showBar) TabBar(current, dueCount, nav.selectTab)
-                }
+            }
+        }
+    }
+}
+
+/**
+ * The pages and, when there is one, the bar under them or the rail to their left. The pages come first in the tree
+ * whichever it is, so what they save (a half-filled form, an open picker) is found again after the window turns
+ * and the bar becomes the rail: a page's saved values are found by their place in the tree.
+ */
+@Composable
+private fun Shell(rail: Boolean, modifier: Modifier = Modifier, content: @Composable () -> Unit) {
+    Layout(content, modifier) { measurables, constraints ->
+        val width = constraints.maxWidth
+        val height = constraints.maxHeight
+        val pages = measurables.first()
+        val bar = measurables.getOrNull(1)?.measure(constraints.copy(minWidth = 0, minHeight = 0))
+        if (rail) {
+            val side = bar?.width ?: 0
+            val shown = pages.measure(Constraints.fixed(width - side, height))
+            layout(width, height) {
+                bar?.place(0, 0)
+                shown.place(side, 0)
+            }
+        } else {
+            val under = bar?.height ?: 0
+            val shown = pages.measure(Constraints.fixed(width, height - under))
+            layout(width, height) {
+                shown.place(0, 0)
+                bar?.place(0, height - under)
             }
         }
     }

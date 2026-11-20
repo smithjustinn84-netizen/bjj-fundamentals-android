@@ -93,6 +93,7 @@ Where does new code go?
 - Drawings share one sheet of paper: they use only the art palette, which has one value for both themes; the dark theme dims it as a whole.
 - People in diagrams are `Figure`s posed by joint positions; a scene is poses and a draw order, not hand-drawn body shapes. Anything a drawing has to calculate is a pure function in core with a test; composables only draw the result.
 - Anything tapped is at least `Sizes.tap` tall. Layout changes at the widths in `Breakpoints` only: use `Columns` and `SideBySide` (`ui/common/Window.kt`) so a list or a pair of cards follows the window.
+- A layout that follows the width places the same children differently; it never composes different ones (`if (wide) Row … else Column …`) round anything that saves state. `rememberSaveable` finds what it saved by its place in the tree, so a tree that changes shape when the window turns brings a half-filled form back empty. The shell (`Shell` in `App.kt`) and `SideBySide` are each one `Layout` for this reason.
 - Motion respects the system's "remove animations" setting.
 
 ## Keeping in step with the web app

@@ -64,7 +64,7 @@ A page is a scrolling column (`Page`). A page whose list can run to hundreds of 
 
 Data flows down as state and up as calls. A screen calls a function on its ViewModel (`grade`, `search`, `saveConcept`); the ViewModel calls one core service; the write changes what is stored; a new snapshot arrives; the state changes. A ViewModel never calls its screen back: when the editor has saved, its state says so (`outcome`), and the route leaves.
 
-What stays in a composable is what only that composable knows: the draft of a form before it is saved, the text in a search box, which side of a position is showing, which map box is selected.
+What stays in a composable is what only that composable knows: the draft of a form before it is saved, the text in a search box, which side of a position is showing, which map box is selected. What should outlive a turn of the window or the app being stopped in the background is kept with `rememberSaveable` (the log form's draft has a `Saver`). That state is found again by its place in the tree, so the shell and `SideBySide` compose the same tree at every width and only place it differently.
 
 A ViewModel takes only what it uses. The container (`di/AppKoin.kt`) offers each core service by itself, `Clock` for the time and time zone, and `VideoCommands` for the pages that list bookmarks; a page about one thing gets its `NavKey` as a parameter.
 

@@ -12,6 +12,8 @@ import androidx.compose.runtime.key
 import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.saveable.Saver
+import androidx.compose.runtime.saveable.mapSaver
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
@@ -241,6 +243,53 @@ private class EntryDraft(entry: TrainingEntry?, today: String) {
         techniqueIds = techniqueIds,
         stuckIds = stuckIds,
     )
+
+    companion object {
+        /**
+         * Kept as strings, booleans and lists of strings, which an Android Bundle holds, so a half-written class
+         * survives the window turning, the theme changing and the system stopping the app in the background.
+         */
+        val Saver: Saver<EntryDraft, Any> = mapSaver(
+            save = {
+                mapOf(
+                    DAY to it.day,
+                    MINUTES to it.minutes,
+                    OTHER_MINUTES to it.otherMinutes,
+                    TAUGHT to it.taught,
+                    WORKED to it.worked,
+                    STRUGGLED to it.struggled,
+                    FOCUS to it.focus,
+                    TECHNIQUES to ArrayList(it.techniqueIds),
+                    STUCK to ArrayList(it.stuckIds),
+                    DAY_ERROR to it.dayError,
+                )
+            },
+            restore = { saved ->
+                EntryDraft(entry = null, today = saved[DAY] as String).apply {
+                    minutes = saved[MINUTES] as String
+                    otherMinutes = saved[OTHER_MINUTES] as Boolean
+                    taught = saved[TAUGHT] as String
+                    worked = saved[WORKED] as String
+                    struggled = saved[STRUGGLED] as String
+                    focus = saved[FOCUS] as String
+                    techniqueIds = (saved[TECHNIQUES] as List<*>).filterIsInstance<String>()
+                    stuckIds = (saved[STUCK] as List<*>).filterIsInstance<String>()
+                    dayError = saved[DAY_ERROR] as Boolean
+                }
+            },
+        )
+
+        private const val DAY = "day"
+        private const val MINUTES = "minutes"
+        private const val OTHER_MINUTES = "otherMinutes"
+        private const val TAUGHT = "taught"
+        private const val WORKED = "worked"
+        private const val STRUGGLED = "struggled"
+        private const val FOCUS = "focus"
+        private const val TECHNIQUES = "techniqueIds"
+        private const val STUCK = "stuckIds"
+        private const val DAY_ERROR = "dayError"
+    }
 }
 
 @Composable
@@ -252,7 +301,7 @@ private fun ColumnScope.EntryForm(
     onSave: (String?, TrainingEntryInput) -> Unit,
     onCancel: () -> Unit,
 ) {
-    val draft = remember { EntryDraft(entry, today) }
+    val draft = rememberSaveable(saver = EntryDraft.Saver) { EntryDraft(entry, today) }
     BjjText(
         if (entry != null) {
             stringResource(Res.string.log_form_edit, formatDay(entry.day))
