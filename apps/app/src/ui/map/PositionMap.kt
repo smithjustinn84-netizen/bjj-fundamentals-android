@@ -35,11 +35,13 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.Path
 import androidx.compose.ui.graphics.PathEffect
 import androidx.compose.ui.graphics.StrokeCap
+import androidx.compose.ui.graphics.StrokeJoin
 import androidx.compose.ui.graphics.drawscope.DrawScope
 import androidx.compose.ui.graphics.drawscope.Stroke
 import androidx.compose.ui.layout.layout
 import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.semantics.Role
+import androidx.compose.ui.semantics.clearAndSetSemantics
 import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.ui.semantics.selected
 import androidx.compose.ui.semantics.semantics
@@ -180,18 +182,24 @@ private fun MapSheet(
         // Across the page a lane's heading is centred over its column; down it, it starts at the lane's edge.
         val centred = orientation == MapOrientation.Horizontal
         val laneStyle = Type.eyebrow.copy(fontSize = mapSp(unit, TextSizes.mapLane))
+        // A halo in the card's colour round each heading keeps it readable where an arrow passes behind it.
+        val haloStyle = laneStyle.copy(
+            drawStyle = Stroke(with(LocalDensity.current) { (unit * LANE_HALO).toPx() }, join = StrokeJoin.Round),
+        )
         for (lane in layout.lanes) {
-            BjjText(
-                lane.category.label.uppercase(),
+            val heading = lane.category.label.uppercase()
+            Box(
                 Modifier.layout { measurable, constraints ->
                     val label = measurable.measure(constraints)
                     val x = (unit * lane.labelX.toFloat()).roundToPx() - if (centred) label.width / 2 else 0
                     val y = (unit * lane.labelY.toFloat()).roundToPx()
                     layout(label.width, label.height) { label.place(x, y) }
                 },
-                style = laneStyle,
-                color = palette.muted,
-            )
+            ) {
+                // The halo is drawing only: the heading is said once, by the text on top of it.
+                BjjText(heading, Modifier.clearAndSetSemantics {}, style = haloStyle, color = palette.surface)
+                BjjText(heading, style = laneStyle, color = palette.muted)
+            }
         }
         for (node in layout.nodes) {
             val position = map.positions[node.id] ?: continue
@@ -293,6 +301,9 @@ private const val DIM_NODE = 0.35f
  */
 @Composable
 private fun mapSp(unit: Dp, size: TextUnit): TextUnit = with(LocalDensity.current) { (unit * size.value).toSp() }
+
+/** The width of the halo round a lane's heading, in the map's units: the web app's. */
+private const val LANE_HALO = 5f
 
 /** A box's lines, as a multiple of their text size: the web app's map, so two lines and a count fit its height. */
 private const val MAP_LINE_HEIGHT = 1.2f
