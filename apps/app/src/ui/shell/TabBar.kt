@@ -218,7 +218,10 @@ private fun TabItem(
                     .background(p.belt),
             )
         }
-        Column(horizontalAlignment = Alignment.CenterHorizontally, verticalArrangement = Arrangement.spacedBy(2.dp)) {
+        Column(
+            horizontalAlignment = Alignment.CenterHorizontally,
+            verticalArrangement = Arrangement.spacedBy(TAB_LABEL_GAP),
+        ) {
             Box {
                 Icon(tab.icon, description = null, tint = color, size = TAB_ICON)
                 if (due > 0) DueBadge(due, Modifier.align(Alignment.TopEnd).offset(x = BADGE_OUT, y = -BADGE_UP))
@@ -240,6 +243,9 @@ private val STRIP_WIDTH = 40.dp
 private val STRIP_HEIGHT = 5.dp
 private val STRIP_LENGTH = 28.dp
 private val TAB_ICON = 24.dp
+
+/** Between a tab's icon and its label: tighter than any spacing step, so the pair reads as one mark. */
+private val TAB_LABEL_GAP = 2.dp
 private val BADGE_OUT = 12.dp
 private val BADGE_UP = 4.dp
 
