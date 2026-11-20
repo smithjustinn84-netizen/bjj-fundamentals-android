@@ -2,6 +2,8 @@
 
 BJJ Fundamentals for Android is the web app (`../bjj`) again, in Kotlin. The web app's one rule carries over unchanged: imports only point inward, `ui → bindings → storage → core`, and `libs/core` is the app; everything else is a replaceable shell round it.
 
+Why the larger choices were made, and what they cost, is in the decision records in `docs/adr/`.
+
 ## Modules
 
 | Module | What it is | Depends on |
